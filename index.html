@@ -273,34 +273,33 @@
    BOOKMARK BUTTON — состояния:
    disabled = gray, enabled = black, active = orange (TOKEN ONLY)
 ====================================================================== */
-.bookmark-btn{
-  position: fixed;
-  top: var(--logo-top);
+    .bookmark-btn{
+      position: absolute;
+      top: var(--logo-top);
+      left: 8px;
+      width: 28px;
+      height: 28px;
 
-  left: calc(var(--sidebar-w) + 8px);
-  width: 28px;
-  height: 28px;
+      border: none;
+      background: transparent;
+      padding: 0;
 
-  border: none;
-  background: transparent;
-  padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+      /* ✅ если можно использовать — черная */
+      color: var(--c-black);
+      opacity: .9;
+      z-index: 40;
 
-  /* ✅ если можно использовать — черная */
-  color: var(--c-black);
-  opacity: .9;
-  z-index: 40;
-
-  transition:
-    left 160ms ease,
-    opacity 120ms ease,
-    transform 80ms ease,
-    color 120ms ease;
-}
+      transition:
+        opacity 120ms ease,
+        transform 80ms ease,
+        color 120ms ease,
+        left 160ms ease;
+    }
 
 .bookmark-btn:hover{
   opacity: 1;
@@ -317,23 +316,20 @@
   fill: none;
 }
 
-.sidebar.is-collapsed ~ .main .bookmark-btn{
-  left: calc(var(--sidebar-w-collapsed) + 8px);
-}
+    /* ✅ активная (страница в избранном) */
+    .bookmark-btn.is-active{
+      color: var(--c-orange);
+      opacity: 1;
+    }
 
-/* ✅ активная (страница в избранном) */
-.bookmark-btn.is-active{
-  color: var(--c-orange);
-  opacity: 1;
-}
-
-/* ✅ заблокирована */
-.bookmark-btn.is-disabled{
-  opacity: .35;
-  cursor: default;
-  color: var(--c-gray) !important;
-  transform: none !important;
-}
+    /* ✅ заблокирована */
+    .bookmark-btn.is-disabled{
+      cursor: default;
+      color: var(--c-gray-light) !important;
+      transform: none !important;
+      pointer-events: none;
+      opacity: 1;
+    }
 
 /* ======================================================================
    SECTIONS + NAV
@@ -595,6 +591,8 @@
       return { ICONS };
     })();
 
+    const NON_BOOKMARKABLE_IDS = new Set(["cars", "content", "404"]);
+
     /* ======================================================================
        BLOCK 2) PAGES + INCLUDES + LOADER/404
     ====================================================================== */
@@ -726,37 +724,83 @@
        BLOCK 3) SIDEBAR DOMAIN (чистая логика)
     ====================================================================== */
     const SidebarDomain = (() => {
-      function createState({ items, activeId, collapsed = false } = {}) {
+      function normalizeBookmark(bm){
+        if (!bm || !bm.id || NON_BOOKMARKABLE_IDS.has(bm.id)) return null;
+        return {
+          id: bm.id,
+          label: bm.label || bm.id,
+          iconKey: bm.iconKey || "bookmark",
+          group: "bookmark",
+        };
+      }
+
+      function mergeItems(mainItems = [], bookmarks = []){
+        const baseMain = mainItems.map(i => ({ ...i, group: "main" }));
+        const normalizedBookmarks = bookmarks
+          .map(normalizeBookmark)
+          .filter(Boolean);
+        return [...baseMain, ...normalizedBookmarks];
+      }
+
+      function createState({ items, bookmarks = [], activeId, collapsed = false } = {}) {
         if (!Array.isArray(items) || items.length === 0) {
           throw new Error("SidebarState: items must be a non-empty array");
         }
-        const hasActive = items.some(i => i.id === activeId);
-        const initialActiveId = hasActive ? activeId : items[0].id;
-        return { items, activeId: initialActiveId, collapsed: Boolean(collapsed) };
+
+        const mergedItems = mergeItems(items, bookmarks);
+        const hasActive = mergedItems.some(i => i.id === activeId);
+        const initialActiveId = hasActive ? activeId : mergedItems[0].id;
+
+        return { items: mergedItems, activeId: initialActiveId, collapsed: Boolean(collapsed) };
       }
+
       function setActive(state, id) {
         if (!state.items.some(i => i.id === id)) return state;
         return { ...state, activeId: id };
       }
+
       function toggleCollapsed(state) { return { ...state, collapsed: !state.collapsed }; }
 
-      function addBookmark(state, pageId){
-        const pageItem = state.items.find(i => i.id === pageId && i.group === "main");
-        if (!pageItem) return state;
+      function toggleBookmark(state, mainItems, bookmark){
+        const normalized = normalizeBookmark(bookmark);
+        if (!normalized) return state;
 
-        const already = state.items.some(i => i.id === pageId && i.group === "bookmark");
-        if (already) return state;
+        const existingBookmarks = state.items.filter(i => i.group === "bookmark");
+        const hasBookmark = existingBookmarks.some(i => i.id === normalized.id);
+        const nextBookmarks = hasBookmark
+          ? existingBookmarks.filter(i => i.id !== normalized.id)
+          : [...existingBookmarks, normalized];
 
-        const bmItem = {
-          id: pageId,
-          label: pageItem.label,
-          iconKey: pageItem.iconKey,
-          group: "bookmark",
-        };
-        return { ...state, items: [...state.items, bmItem] };
+        return { ...state, items: mergeItems(mainItems, nextBookmarks) };
       }
 
-      return { createState, setActive, toggleCollapsed, addBookmark };
+      function replaceBookmarks(state, mainItems, bookmarks){
+        return { ...state, items: mergeItems(mainItems, bookmarks) };
+      }
+
+      function updateBookmark(state, mainItems, bookmark){
+        const normalized = normalizeBookmark(bookmark);
+        if (!normalized) return state;
+
+        const existingBookmarks = state.items.filter(i => i.group === "bookmark");
+        const hasBookmark = existingBookmarks.some(i => i.id === normalized.id);
+        if (!hasBookmark) return state;
+
+        const nextBookmarks = existingBookmarks.map(i =>
+          i.id === normalized.id ? { ...i, ...normalized } : i
+        );
+
+        return { ...state, items: mergeItems(mainItems, nextBookmarks) };
+      }
+
+      return {
+        createState,
+        setActive,
+        toggleCollapsed,
+        toggleBookmark,
+        replaceBookmarks,
+        updateBookmark,
+      };
     })();
 
     /* ======================================================================
@@ -782,38 +826,45 @@
        BLOCK 5) SIDEBAR APP (use-cases)
     ====================================================================== */
     const SidebarApp = (() => {
-      const { createState, setActive, toggleCollapsed, addBookmark } = SidebarDomain;
+      const {
+        createState,
+        setActive,
+        toggleCollapsed,
+        toggleBookmark,
+        replaceBookmarks,
+        updateBookmark,
+      } = SidebarDomain;
 
       function createService({ storageAdapter } = {}) {
         let state = null;
+        let mainItems = [];
         const listeners = new Set();
         const notify = () => listeners.forEach(fn => fn(state));
+
+        function save(){
+          storageAdapter?.save?.({
+            activeId: state?.activeId,
+            collapsed: state?.collapsed,
+            bookmarks: state?.items
+              ?.filter(i => i.group === "bookmark")
+              .map(({ group, ...rest }) => rest),
+          });
+        }
 
         function init({ items, defaultActiveId }) {
           const saved = storageAdapter?.load?.() || null;
 
           const savedBookmarks = Array.isArray(saved?.bookmarks) ? saved.bookmarks : [];
-          const mergedItems = [
-            ...items,
-            ...savedBookmarks
-              .filter(bm =>
-                bm && bm.id &&
-                !items.some(i => i.id === bm.id && i.group === "bookmark")
-              )
-              .map(bm => ({ ...bm, group: "bookmark" }))
-          ];
+          mainItems = items;
 
           state = createState({
-            items: mergedItems,
+            items,
+            bookmarks: savedBookmarks,
             activeId: saved?.activeId ?? defaultActiveId,
             collapsed: true, // меню всегда свернуто на старте
           });
 
-          storageAdapter?.save?.({
-            activeId: state.activeId,
-            collapsed: true,
-            bookmarks: state.items.filter(i => i.group === "bookmark"),
-          });
+          save();
           notify();
         }
 
@@ -821,43 +872,52 @@
 
         function selectItem(id) {
           state = setActive(state, id);
-          storageAdapter?.save?.({
-            activeId: state.activeId,
-            collapsed: state.collapsed,
-            bookmarks: state.items.filter(i => i.group === "bookmark"),
-          });
+          save();
           notify();
         }
 
         function toggle() {
           state = toggleCollapsed(state);
-          storageAdapter?.save?.({
-            activeId: state.activeId,
-            collapsed: state.collapsed,
-            bookmarks: state.items.filter(i => i.group === "bookmark"),
-          });
+          save();
           notify();
         }
 
-        function addBookmarkCurrent(){
-          const excluded = new Set(["cars","content"]);
-          const id = state.activeId;
+        function toggleBookmarkCurrent(bookmark){
+          if (!bookmark?.id || NON_BOOKMARKABLE_IDS.has(bookmark.id)) return;
 
-          if (excluded.has(id)) return; // 404 теперь можно
+          state = toggleBookmark(state, mainItems, { ...bookmark, iconKey: "bookmark" });
 
-          state = addBookmark(state, id);
+          save();
+          notify();
+        }
 
-          storageAdapter?.save?.({
-            activeId: state.activeId,
-            collapsed: state.collapsed,
-            bookmarks: state.items.filter(i => i.group === "bookmark"),
-          });
+        function syncBookmarkMeta(bookmark){
+          if (!bookmark?.id || NON_BOOKMARKABLE_IDS.has(bookmark.id)) return;
+
+          state = updateBookmark(state, mainItems, { ...bookmark, iconKey: "bookmark" });
+
+          save();
+          notify();
+        }
+
+        function hydrateBookmarks(bookmarks){
+          state = replaceBookmarks(state, mainItems, bookmarks);
+          save();
           notify();
         }
 
         function getState() { return state; }
 
-        return { init, onChange, selectItem, toggle, addBookmarkCurrent, getState };
+        return {
+          init,
+          onChange,
+          selectItem,
+          toggle,
+          toggleBookmarkCurrent,
+          syncBookmarkMeta,
+          hydrateBookmarks,
+          getState,
+        };
       }
 
       return { createService };
@@ -1267,6 +1327,7 @@ const SidebarView = (() => {
     let rootEl = null;
     let lastCollapsed = null;
     let logoTyping = null;
+    let lastPageOk = true;
 
     function mount(container) {
       rootEl = document.createElement("div");
@@ -1313,7 +1374,14 @@ const SidebarView = (() => {
       const bookmarkBtn = rootEl.querySelector("#bookmarkBtn");
       bookmarkBtn.innerHTML = Icons.ICONS.bookmark;
 
-      window.addEventListener("page:loaded", ()=>{
+      window.addEventListener("page:loaded", (e)=>{
+        lastPageOk = Boolean(e?.detail?.ok);
+
+        const meta = getActivePageMeta(service.getState());
+        if (lastPageOk) {
+          service.syncBookmarkMeta(meta);
+        }
+
         updateBookmarkState(service.getState());
       });
 
@@ -1326,16 +1394,40 @@ const SidebarView = (() => {
       const btn = rootEl.querySelector("#bookmarkBtn");
       if (!btn) return;
 
-      const excluded = new Set(["cars","content"]);
-      const canBookmark = !excluded.has(state.activeId);
+      const isBookmarkable = state.activeId && !NON_BOOKMARKABLE_IDS.has(state.activeId);
+      const isDisabled = !isBookmarkable || !lastPageOk;
 
       const isBookmarked = state.items.some(
         i => i.group === "bookmark" && i.id === state.activeId
       );
 
-      btn.classList.toggle("is-disabled", !canBookmark);
-      btn.classList.toggle("is-active", isBookmarked);
-      btn.setAttribute("aria-pressed", String(isBookmarked));
+      const isActive = !isDisabled && isBookmarked;
+
+      btn.classList.toggle("is-disabled", isDisabled);
+      btn.classList.toggle("is-active", isActive);
+      btn.setAttribute("aria-pressed", String(isActive));
+      btn.setAttribute(
+        "aria-label",
+        isDisabled
+          ? "Добавить в закладки"
+          : isActive
+            ? "Убрать из закладок"
+            : "Добавить в закладки"
+      );
+    }
+
+    function getActivePageMeta(state){
+      const id = state?.activeId;
+      const pageRoot = rootEl.querySelector("#pageRoot");
+      const titleNode = pageRoot?.querySelector("[data-page-title], h1");
+      const titleText = (titleNode?.textContent || "").trim();
+
+      const navItem = state?.items?.find(i => i.id === id);
+
+      return {
+        id,
+        label: titleText || navItem?.label || id || "",
+      };
     }
 
     function render(state) {
@@ -1392,8 +1484,10 @@ const SidebarView = (() => {
         const bookmarkBtn = e.target.closest("#bookmarkBtn");
         if (bookmarkBtn){
           e.preventDefault();
-          if (bookmarkBtn.classList.contains("is-disabled")) return;
-          service.addBookmarkCurrent();
+          if (bookmarkBtn.classList.contains("is-disabled") || !lastPageOk) return;
+          const meta = getActivePageMeta(service.getState());
+          if (!meta?.id || NON_BOOKMARKABLE_IDS.has(meta.id)) return;
+          service.toggleBookmarkCurrent(meta);
           return;
         }
 
