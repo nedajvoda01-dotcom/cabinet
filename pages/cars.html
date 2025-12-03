@@ -1,0 +1,236 @@
+<section class="cars-page">
+  <header class="cars-head">
+    <h1 class="ty-title">Поиск автомобилей</h1>
+    <p class="ty-body cars-sub">
+      Тестовая страница. Если ты видишь её — подгрузка из <b>./pages/cars.html</b> работает.
+    </p>
+  </header>
+
+  <div class="cars-grid">
+    <form class="cars-form" id="carsForm" autocomplete="off">
+      <label class="cars-label ty-section">
+        Марка
+        <input class="cars-input ty-body" name="brand" placeholder="например, Toyota" />
+      </label>
+
+      <label class="cars-label ty-section">
+        Модель
+        <input class="cars-input ty-body" name="model" placeholder="например, Camry" />
+      </label>
+
+      <label class="cars-label ty-section">
+        Год от
+        <input class="cars-input ty-body" name="yearFrom" type="number" min="1980" max="2099" placeholder="2015" />
+      </label>
+
+      <label class="cars-label ty-section">
+        Год до
+        <input class="cars-input ty-body" name="yearTo" type="number" min="1980" max="2099" placeholder="2024" />
+      </label>
+
+      <button class="cars-btn ty-section" type="submit">
+        Искать (тест)
+      </button>
+
+      <button class="cars-btn ghost ty-section" type="button" id="carsReset">
+        Сброс
+      </button>
+    </form>
+
+    <aside class="cars-panel">
+      <div class="cars-panel-card">
+        <div class="ty-section cars-panel-title">Статус</div>
+        <div class="ty-body" id="carsStatus">Ожидание…</div>
+      </div>
+
+      <div class="cars-panel-card">
+        <div class="ty-section cars-panel-title">Время на клиенте</div>
+        <div class="ty-body" id="carsClock">--:--:--</div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="cars-results">
+    <div class="ty-section cars-results-title">Результаты (фейковые)</div>
+    <div class="cars-list" id="carsList"></div>
+  </div>
+</section>
+
+<style>
+  .cars-page{
+    padding: 22px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    color: var(--c-black);
+    background: var(--c-white);
+    min-height: 100vh;
+  }
+
+  .cars-head{ display:flex; flex-direction:column; gap:6px; }
+  .cars-sub{ color: var(--c-gray); }
+
+  .cars-grid{
+    display:grid;
+    grid-template-columns: 1fr 260px;
+    gap:14px;
+    align-items:start;
+  }
+
+  .cars-form{
+    border:1px solid var(--c-gray-light);
+    border-radius:14px;
+    padding:14px;
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap:10px 12px;
+    background: var(--c-white);
+  }
+
+  .cars-label{ display:flex; flex-direction:column; gap:6px; color: var(--c-black); }
+
+  .cars-input{
+    width:100%;
+    border:1px solid var(--c-gray-light);
+    border-radius:10px;
+    padding:8px 10px;
+    background: var(--c-white);
+    color: var(--c-black);
+    outline:none;
+  }
+  .cars-input::placeholder{ color: var(--c-gray-light); }
+  .cars-input:focus{ border-color: var(--c-gray); }
+
+  .cars-btn{
+    grid-column: span 1;
+    border:none;
+    border-radius:10px;
+    padding:10px 12px;
+    background: var(--c-black);
+    color: var(--c-white);
+    cursor:pointer;
+    text-align:center;
+  }
+  .cars-btn.ghost{
+    background: var(--c-white);
+    color: var(--c-black);
+    border:1px solid var(--c-gray-light);
+  }
+
+  .cars-panel{ display:flex; flex-direction:column; gap:10px; }
+  .cars-panel-card{
+    border:1px solid var(--c-gray-light);
+    border-radius:14px;
+    padding:12px;
+    background: var(--c-white);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .cars-panel-title{ color: var(--c-gray); }
+
+  .cars-results{
+    border:1px solid var(--c-gray-light);
+    border-radius:14px;
+    padding:12px;
+    background: var(--c-white);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .cars-results-title{ color: var(--c-gray); }
+
+  .cars-list{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap:10px;
+  }
+
+  .car-card{
+    border:1px solid var(--c-gray-light);
+    border-radius:12px;
+    padding:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background: var(--c-white);
+  }
+  .car-name{ font-weight: var(--fw-semibold); }
+  .car-meta{ color: var(--c-gray); font-size: var(--fs-12); }
+
+  @media (max-width: 900px){
+    .cars-grid{ grid-template-columns: 1fr; }
+    .cars-list{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
+  @media (max-width: 560px){
+    .cars-form{ grid-template-columns: 1fr; }
+    .cars-list{ grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  const form = document.getElementById("carsForm");
+  const resetBtn = document.getElementById("carsReset");
+  const list = document.getElementById("carsList");
+  const status = document.getElementById("carsStatus");
+  const clock = document.getElementById("carsClock");
+
+  function renderFakeResults({ brand="", model="", yearFrom="", yearTo="" }){
+    const sample = [
+      { brand:"Toyota", model:"Camry", year:2019, price:"2 150 000 ₽" },
+      { brand:"BMW", model:"3 Series", year:2018, price:"2 990 000 ₽" },
+      { brand:"Kia", model:"Sportage", year:2021, price:"2 450 000 ₽" },
+      { brand:"Skoda", model:"Octavia", year:2017, price:"1 650 000 ₽" },
+      { brand:"Hyundai", model:"Solaris", year:2020, price:"1 250 000 ₽" },
+    ];
+
+    const b = brand.trim().toLowerCase();
+    const m = model.trim().toLowerCase();
+    const yf = Number(yearFrom) || 0;
+    const yt = Number(yearTo) || 9999;
+
+    const filtered = sample.filter(x => {
+      const okBrand = !b || x.brand.toLowerCase().includes(b);
+      const okModel = !m || x.model.toLowerCase().includes(m);
+      const okYear = x.year >= yf && x.year <= yt;
+      return okBrand && okModel && okYear;
+    });
+
+    list.innerHTML = filtered.length
+      ? filtered.map(x => `
+          <div class="car-card">
+            <div class="ty-body car-name">${x.brand} ${x.model}</div>
+            <div class="car-meta">Год: ${x.year}</div>
+            <div class="ty-body">${x.price}</div>
+          </div>
+        `).join("")
+      : `<div class="ty-body" style="color:var(--c-gray);">Ничего не найдено (тест).</div>`;
+  }
+
+  function setStatus(text){ status.textContent = text; }
+
+  renderFakeResults({});
+  setStatus("Готово к поиску.");
+
+  form.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const fd = new FormData(form);
+    const data = Object.fromEntries(fd.entries());
+    setStatus("Ищем… (фейк)");
+    renderFakeResults(data);
+    setTimeout(()=>setStatus("Поиск завершен."), 250);
+  });
+
+  resetBtn.addEventListener("click", ()=>{
+    form.reset();
+    renderFakeResults({});
+    setStatus("Сброшено.");
+  });
+
+  function tick(){
+    const d = new Date();
+    clock.textContent = d.toLocaleTimeString("ru-RU");
+  }
+  tick();
+  setInterval(tick, 1000);
+</script>

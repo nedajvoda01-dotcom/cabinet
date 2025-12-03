@@ -1,0 +1,146 @@
+<section class="content-page">
+  <header class="content-head">
+    <h1 class="ty-title">Контент</h1>
+    <p class="ty-body content-sub">
+      Тестовая страница. Если ты видишь её — подгрузка из <b>./pages/content.html</b> работает.
+    </p>
+  </header>
+
+  <div class="content-toolbar">
+    <input class="content-input ty-body" id="contentFilter" placeholder="фильтр по названию…" />
+    <button class="content-btn ty-section" id="contentAdd">Добавить карточку</button>
+    <button class="content-btn ghost ty-section" id="contentClear">Очистить</button>
+  </div>
+
+  <div class="content-list" id="contentList"></div>
+</section>
+
+<style>
+  .content-page{
+    padding: 22px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    background: var(--c-white);
+    color: var(--c-black);
+    min-height:100vh;
+  }
+  .content-head{ display:flex; flex-direction:column; gap:6px; }
+  .content-sub{ color: var(--c-gray); }
+
+  .content-toolbar{
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    border:1px solid var(--c-gray-light);
+    background: var(--c-white);
+    padding:10px;
+    border-radius:12px;
+  }
+  .content-input{
+    flex:1 1 220px;
+    border:1px solid var(--c-gray-light);
+    border-radius:10px;
+    padding:8px 10px;
+    background: var(--c-white);
+    color: var(--c-black);
+    outline:none;
+  }
+  .content-input::placeholder{ color: var(--c-gray-light); }
+  .content-input:focus{ border-color: var(--c-gray); }
+
+  .content-btn{
+    border:none;
+    border-radius:10px;
+    padding:9px 12px;
+    background: var(--c-black);
+    color: var(--c-white);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .content-btn.ghost{
+    background: var(--c-white);
+    color: var(--c-black);
+    border:1px solid var(--c-gray-light);
+  }
+
+  .content-list{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap:10px;
+  }
+
+  .content-card{
+    border:1px solid var(--c-gray-light);
+    border-radius:12px;
+    padding:10px;
+    background: var(--c-white);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .content-card-title{
+    font-weight: var(--fw-semibold);
+  }
+  .content-card-meta{
+    color: var(--c-gray);
+    font-size: var(--fs-12);
+  }
+
+  @media (max-width: 900px){
+    .content-list{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
+  @media (max-width: 560px){
+    .content-list{ grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  const list = document.getElementById("contentList");
+  const filter = document.getElementById("contentFilter");
+  const addBtn = document.getElementById("contentAdd");
+  const clearBtn = document.getElementById("contentClear");
+
+  let items = [
+    { title: "Карточка №1", note: "пример контента", ts: Date.now() },
+    { title: "Карточка №2", note: "ещё пример", ts: Date.now() },
+    { title: "Карточка №3", note: "тест", ts: Date.now() },
+  ];
+
+  function render(){
+    const q = (filter.value || "").trim().toLowerCase();
+    const filtered = items.filter(i => !q || i.title.toLowerCase().includes(q));
+
+    list.innerHTML = filtered.length
+      ? filtered.map((i, idx) => `
+          <div class="content-card">
+            <div class="ty-body content-card-title">${i.title}</div>
+            <div class="content-card-meta">Создано: ${new Date(i.ts).toLocaleString("ru-RU")}</div>
+            <div class="ty-body">${i.note}</div>
+            <button class="content-btn ghost ty-section" data-del="${idx}">Удалить</button>
+          </div>
+        `).join("")
+      : `<div class="ty-body" style="color:var(--c-gray);">Пусто.</div>`;
+  }
+
+  filter.addEventListener("input", render);
+
+  addBtn.addEventListener("click", ()=>{
+    const n = items.length + 1;
+    items.unshift({ title: "Карточка №"+n, note: "добавлено вручную", ts: Date.now() });
+    render();
+  });
+
+  clearBtn.addEventListener("click", ()=>{
+    items = [];
+    render();
+  });
+
+  list.addEventListener("click", (e)=>{
+    const del = e.target.closest("[data-del]");
+    if (!del) return;
+    const idx = Number(del.getAttribute("data-del"));
+    items.splice(idx, 1);
+    render();
+  });
+
+  render();
+</script>
