@@ -499,6 +499,58 @@ function updateShowCount() {
   elements.showBtn.disabled = count === 0;
 }
 
+function updateFilterOptions() {
+  const source = state.status === "active" ? state.allCarsActive : state.allCarsRemoved;
+
+  const markFiltered = applyFilters(source, state.condition, { ...state.filters, mark: null });
+  const modelFiltered = applyFilters(source, state.condition, { ...state.filters, model: null });
+  const yearFiltered = applyFilters(source, state.condition, { ...state.filters, year: null });
+  const colorFiltered = applyFilters(source, state.condition, { ...state.filters, color: null });
+  const regionFiltered = applyFilters(source, state.condition, { ...state.filters, region: null });
+
+  const markOptions = mapFilters(markFiltered).marks;
+  const modelOptions = mapFilters(modelFiltered).models;
+  const yearOptions = mapFilters(yearFiltered).years;
+  const colorOptions = mapFilters(colorFiltered).colors;
+  const regionOptions = mapFilters(regionFiltered).regions;
+
+  fillSelect(elements.selectMark, markOptions, "Марка");
+  fillSelect(elements.selectModel, modelOptions, "Модель");
+  fillSelect(elements.selectYear, yearOptions, "Год");
+  fillSelect(elements.selectRegion, regionOptions, "Регион");
+  fillColorList(colorOptions);
+
+  if (state.filters.mark && markOptions.includes(state.filters.mark)) {
+    elements.selectMark.value = state.filters.mark;
+  } else {
+    elements.selectMark.value = "";
+    state.filters.mark = null;
+  }
+
+  if (state.filters.model && modelOptions.includes(state.filters.model)) {
+    elements.selectModel.value = state.filters.model;
+  } else {
+    elements.selectModel.value = "";
+    state.filters.model = null;
+  }
+
+  if (state.filters.year && yearOptions.includes(Number(state.filters.year))) {
+    elements.selectYear.value = state.filters.year;
+  } else {
+    elements.selectYear.value = "";
+    state.filters.year = null;
+  }
+
+  if (state.filters.region && regionOptions.includes(state.filters.region)) {
+    elements.selectRegion.value = state.filters.region;
+  } else {
+    elements.selectRegion.value = "";
+    state.filters.region = null;
+  }
+
+  updateFieldLabels();
+}
+
 function setSectorTitle(status) {
   elements.sectorTitle.textContent = status === "active" ? "Активные объявления" : "Снятые объявления";
 }
@@ -551,6 +603,7 @@ function bindTabs() {
       const value = btn.getAttribute("data-condition");
       state.condition = value;
       setTabsPressed(elements.tabsCondition, value, "data-condition");
+      updateFilterOptions();
       updateShowCount();
     });
   });
@@ -561,6 +614,7 @@ function bindTabs() {
       state.status = value;
       setTabsPressed(elements.tabsStatus, value, "data-status");
       setSectorTitle(value);
+      updateFilterOptions();
       updateShowCount();
     });
   });
@@ -569,16 +623,19 @@ function bindTabs() {
 function bindFilters() {
   elements.selectMark.addEventListener("change", () => {
     state.filters.mark = elements.selectMark.value || null;
+    updateFilterOptions();
     updateShowCount();
   });
 
   elements.selectModel.addEventListener("change", () => {
     state.filters.model = elements.selectModel.value || null;
+    updateFilterOptions();
     updateShowCount();
   });
 
   elements.selectYear.addEventListener("change", () => {
     state.filters.year = elements.selectYear.value || null;
+    updateFilterOptions();
     updateShowCount();
   });
 
@@ -590,6 +647,7 @@ function bindFilters() {
 
   elements.selectRegion.addEventListener("change", () => {
     state.filters.region = elements.selectRegion.value || null;
+    updateFilterOptions();
     updateShowCount();
   });
 
@@ -610,6 +668,7 @@ function bindActions() {
     elements.selectColor.value = "";
     elements.selectRegion.value = "";
     updateFieldLabels();
+    updateFilterOptions();
     updateShowCount();
   });
 
@@ -678,14 +737,7 @@ async function init() {
   state.allCarsActive = active;
   state.allCarsRemoved = removed;
 
-  const allCars = state.status === "active" ? state.allCarsActive : state.allCarsRemoved;
-  const filterMaps = mapFilters(allCars);
-
-  fillSelect(elements.selectMark, filterMaps.marks, "Марка");
-  fillSelect(elements.selectModel, filterMaps.models, "Модель");
-  fillSelect(elements.selectYear, filterMaps.years, "Год");
-  fillSelect(elements.selectRegion, filterMaps.regions, "Регион");
-  fillColorList(filterMaps.colors);
+  updateFilterOptions();
 
   updateShowCount();
   setStatus("Данные загружены. Нажмите «Показать».");
