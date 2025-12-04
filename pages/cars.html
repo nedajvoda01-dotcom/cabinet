@@ -4,394 +4,55 @@
   <meta charset="UTF-8" />
   <title>Поиск автомобилей</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <style>
-/* ======================================================================
-   BLOCK 1) CARS PAGE MARKUP + STYLES
-====================================================================== */
-.cars-page{
-  /* локальные типографические токены (не зависят от других страниц) */
-  --fs-11: 11px;
-  --fs-12: 12px;
-  --fs-13: 13px;
-  --fs-15: 15px;
-  --fs-20: 20px;
-  --fs-24: 24px;
-  --fw-semibold: 600;
-  --fw-bold: 700;
-  --lh-normal: 1.35;
-
-  font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
-
-  background: var(--c-white);
-  color: var(--c-black);
-  min-height: 100vh;
-  padding: 18px 18px;
-}
-
-/* локальная типографика (чтобы не ломаться от других страниц) */
-.cars-page .ty-title{
-  font-size: var(--fs-20);
-  font-weight: var(--fw-semibold);
-  line-height: 1.25;
-  color: var(--c-black);
-}
-.cars-page .ty-body{
-  font-size: var(--fs-15);
-  font-weight: 400;
-  line-height: var(--lh-normal);
-  color: var(--c-black);
-}
-.cars-page .ty-section{
-  font-size: var(--fs-13);
-  font-weight: 500;
-  line-height: var(--lh-normal);
-  color: var(--c-black);
-}
-
-.cars-shell{
-  max-width: 980px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.cars-filters{
-  border: 1px solid var(--c-gray-light);
-  border-radius: 14px;
-  padding: 12px;
-  background: var(--c-white);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.cars-tabs{
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.cars-tabs.tier-2{
-  border-top: 1px solid var(--c-gray-light);
-  padding-top: 8px;
-}
-
-.cars-tab{
-  border: 1px solid var(--c-gray-light);
-  border-radius: 10px;
-  padding: 7px 11px;
-  background: var(--c-white);
-  color: var(--c-black);
-  cursor: pointer;
-  transition: border-color 120ms ease, background 120ms ease;
-}
-.cars-tab[aria-pressed="true"]{
-  border-color: var(--c-gray);
-  background: color-mix(in srgb, var(--c-gray-light) 20%, transparent);
-}
-.cars-tab:hover{ border-color: var(--c-gray); }
-
-.cars-controls{
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  align-items: start;
-}
-
-.cars-selects{
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 10px;
-}
-
-.cars-field{
-  position: relative;
-  border: 1px solid var(--c-gray-light);
-  border-radius: 12px;
-  background: var(--c-white);
-  padding: 8px 10px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  transition: border-color 120ms ease;
-}
-.cars-field::before{
-  content: attr(data-label);
-  position: absolute;
-  left: 10px;
-  top: 8px;
-  font-size: var(--fs-11);
-  font-weight: var(--fw-semibold);
-  color: var(--c-gray);
-  background: var(--c-white);
-  padding: 2px 6px;
-  border: 1px solid var(--c-gray-light);
-  border-radius: 999px;
-  pointer-events: none;
-  transition: opacity 120ms ease, transform 120ms ease;
-}
-.cars-field.has-value::before{
-  opacity: 0;
-  transform: translateY(-2px);
-}
-.cars-field:focus-within{ border-color: var(--c-gray); }
-
-.cars-input{
-  width: 100%;
-  border: none;
-  background: transparent;
-  color: var(--c-black);
-  outline: none;
-  appearance: none;
-  padding-top: 6px;
-  font-size: var(--fs-15);
-}
-
-.cars-actions{
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
-}
-
-.cars-actions-btns{
-  display: flex;
-  gap: 8px;
-}
-
-.cars-btn{
-  border: none;
-  border-radius: 10px;
-  padding: 9px 12px;
-  background: var(--c-black);
-  color: var(--c-white);
-  cursor: pointer;
-  text-align: center;
-  min-width: 160px;
-  transition: background 120ms ease, border-color 120ms ease;
-}
-.cars-btn:hover{ background: var(--c-gray-dark); }
-.cars-btn:disabled{
-  background: var(--c-gray-light);
-  color: var(--c-gray);
-  cursor: not-allowed;
-}
-.cars-btn.ghost{
-  background: var(--c-white);
-  color: var(--c-black);
-  border: 1px solid var(--c-gray-light);
-}
-.cars-btn.ghost:hover{
-  border-color: var(--c-gray);
-  background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
-}
-
-.cars-status{
-  color: var(--c-gray);
-  text-align: right;
-  min-height: 1em;
-}
-
-.cars-results{
-  border: 1px solid var(--c-gray-light);
-  border-radius: 14px;
-  padding: 12px;
-  background: var(--c-white);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.cars-results-head{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.cars-results-note{ color: var(--c-gray); }
-
-.cars-grid{
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-}
-
-.cars-card{
-  border: 1px solid var(--c-gray-light);
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: var(--c-white);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  cursor: pointer;
-  transition: border-color 120ms ease, background 120ms ease;
-}
-.cars-card:hover{
-  border-color: var(--c-gray);
-  background: color-mix(in srgb, var(--c-gray-light) 10%, transparent);
-}
-.cars-card-title{
-  font-weight: var(--fw-bold);
-  font-size: var(--fs-15);
-}
-.cars-card-sub{
-  color: var(--c-gray);
-  font-size: var(--fs-12);
-  line-height: var(--lh-normal);
-}
-.cars-empty{ color: var(--c-gray); }
-
-/* MODAL */
-.cars-modal{
-  position: fixed;
-  inset: 0;
-  display: none;
-  z-index: 50;
-}
-.cars-modal.is-open{ display: block; }
-.cars-modal-backdrop{
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--c-black) 35%, transparent);
-}
-.cars-modal-card{
-  position: absolute;
-  inset: 16px;
-  margin: auto;
-  max-width: 980px;
-  max-height: calc(100vh - 32px);
-  background: var(--c-white);
-  border-radius: 16px;
-  border: 1px solid var(--c-gray-light);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.cars-modal-head{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--c-gray-light);
-  gap: 10px;
-}
-.cars-modal-title{
-  font-size: var(--fs-20);
-  font-weight: var(--fw-semibold);
-}
-.cars-modal-close{
-  background: var(--c-white);
-  border: 1px solid var(--c-gray-light);
-  border-radius: 10px;
-  padding: 7px 10px;
-  cursor: pointer;
-  color: var(--c-black);
-}
-.cars-modal-close:hover{ border-color: var(--c-gray); }
-.cars-modal-body{
-  padding: 12px 14px;
-  display: grid;
-  grid-template-columns: 1.1fr 1.4fr;
-  gap: 12px;
-  overflow: auto;
-}
-.cars-modal-media{
-  border: 1px solid var(--c-gray-light);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--c-white);
-  min-height: 200px;
-}
-.cars-modal-media img{
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
-}
-.cars-modal-info{
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.cars-modal-price{
-  font-size: var(--fs-24);
-  font-weight: var(--fw-semibold);
-}
-.cars-modal-sub{ color: var(--c-gray); }
-.cars-modal-list{
-  list-style: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 4px 8px;
-  color: var(--c-black);
-}
-.cars-modal-list li{
-  color: var(--c-gray);
-  font-size: var(--fs-13);
-}
-.cars-modal-link{
-  align-self: flex-start;
-  min-width: auto;
-  padding: 9px 12px;
-  text-decoration: none;
-}
-
-@media (max-width: 900px){
-  .cars-controls{ grid-template-columns: 1fr; }
-  .cars-actions{ align-items: stretch; }
-  .cars-actions-btns{ width: 100%; }
-  .cars-btn{ width: 100%; min-width: 0; }
-  .cars-modal-body{ grid-template-columns: 1fr; }
-}
-  </style>
 </head>
 
 <body>
 
-<section class="cars-page" aria-label="Поиск автомобилей">
+<!-- ======================================================================
+     BLOCK 1) CARS PAGE MARKUP (NO LOCAL STYLES)
+====================================================================== -->
+<section class="cars-page" aria-label="Поиск автомобилей" data-cars-root>
   <div class="cars-shell">
 
     <div class="cars-filters" role="region" aria-label="Фильтры поиска">
-      <div class="cars-tabs" role="tablist" aria-label="Тип авто">
-        <button class="cars-tab" data-condition="all" aria-pressed="true" type="button">Все</button>
-        <button class="cars-tab" data-condition="used" aria-pressed="false" type="button">С пробегом</button>
-        <button class="cars-tab" data-condition="new" aria-pressed="false" type="button">Новые</button>
+      <div class="cars-tabs cars-tabs--condition" role="tablist" aria-label="Тип авто">
+        <button class="cars-tab cars-tab--condition" data-condition="all" aria-pressed="true" type="button">Все</button>
+        <button class="cars-tab cars-tab--condition" data-condition="used" aria-pressed="false" type="button">С пробегом</button>
+        <button class="cars-tab cars-tab--condition" data-condition="new" aria-pressed="false" type="button">Новые</button>
       </div>
 
-      <div class="cars-tabs tier-2" role="tablist" aria-label="Статус объявления">
-        <button class="cars-tab" data-status="active" aria-pressed="true" type="button">Активные объявления</button>
-        <button class="cars-tab" data-status="removed" aria-pressed="false" type="button">Снятые объявления</button>
+      <div class="cars-tabs cars-tabs--status tier-2" role="tablist" aria-label="Статус объявления">
+        <button class="cars-tab cars-tab--status" data-status="active" aria-pressed="true" type="button">Активные объявления</button>
+        <button class="cars-tab cars-tab--status" data-status="removed" aria-pressed="false" type="button">Снятые объявления</button>
       </div>
 
       <div class="cars-controls">
         <div class="cars-selects">
-          <div class="cars-field" data-label="Марка">
+          <div class="cars-field cars-field--mark" data-label="Марка" data-field="mark">
             <select class="cars-input ty-body" id="filterMark" aria-label="Марка"></select>
           </div>
 
-          <div class="cars-field" data-label="Модель">
+          <div class="cars-field cars-field--model" data-label="Модель" data-field="model">
             <select class="cars-input ty-body" id="filterModel" aria-label="Модель"></select>
           </div>
 
-          <div class="cars-field" data-label="Год">
+          <div class="cars-field cars-field--year" data-label="Год" data-field="year">
             <select class="cars-input ty-body" id="filterYear" aria-label="Год"></select>
           </div>
 
-          <div class="cars-field" data-label="Цвет">
+          <div class="cars-field cars-field--color" data-label="Цвет" data-field="color">
             <select class="cars-input ty-body" id="filterColor" aria-label="Цвет"></select>
           </div>
 
-          <div class="cars-field" data-label="Регион">
+          <div class="cars-field cars-field--region" data-label="Регион" data-field="region">
             <select class="cars-input ty-body" id="filterRegion" aria-label="Регион"></select>
           </div>
         </div>
 
         <div class="cars-actions">
           <div class="cars-actions-btns">
-            <button class="cars-btn ghost ty-section" type="button" id="carsReset">Сбросить</button>
-            <button class="cars-btn ty-section" type="button" id="carsShow" disabled>Показать 0 объявлений</button>
+            <button class="cars-btn cars-btn--reset ghost ty-section" type="button" id="carsReset">Сбросить</button>
+            <button class="cars-btn cars-btn--show ty-section" type="button" id="carsShow" disabled>Показать 0 объявлений</button>
           </div>
           <div class="cars-status ty-section" id="carsStatus" aria-live="polite">Загружаем данные…</div>
         </div>
@@ -403,7 +64,7 @@
         <div class="ty-section" id="sectorTitle">Активные объявления</div>
         <div class="ty-body cars-results-note">Выдача обновляется по кнопке “Показать”.</div>
       </div>
-      <div class="cars-grid" id="carsGrid">
+      <div class="cars-grid" id="carsGrid" aria-live="polite">
         <div class="ty-body cars-empty">Выбор фильтров не применён. Нажмите «Показать».</div>
       </div>
     </div>
@@ -428,7 +89,6 @@
       </div>
     </div>
   </div>
-
 </section>
 
 <script>
@@ -478,6 +138,7 @@ const state = {
 };
 
 const elements = {
+  root: document.querySelector("[data-cars-root]"),
   status: document.getElementById("carsStatus"),
   tabsCondition: [...document.querySelectorAll("[data-condition]")],
   tabsStatus: [...document.querySelectorAll("[data-status]")],
@@ -843,6 +504,11 @@ function updateCounts(filtered, baseTitle) {
   elements.showBtn.textContent = `Показать ${n} объявлений`;
   elements.showBtn.disabled = n === 0;
   elements.sectorTitle.textContent = `${baseTitle} · ${n}`;
+  if (elements.root) {
+    elements.root.setAttribute("data-status", state.status);
+    elements.root.setAttribute("data-condition", state.condition);
+    elements.root.setAttribute("data-count", String(n));
+  }
 }
 
 function syncFieldCapsules() {
@@ -877,7 +543,7 @@ function buildCardSub(car) {
 function renderCards(filtered) {
   elements.grid.innerHTML = "";
   if (filtered.length === 0) {
-    elements.grid.innerHTML = '<div class="ty-body cars-empty">Нет объявлений</div>';
+    elements.grid.innerHTML = '<div class="ty-body cars-empty">Нет объявлений<\/div>';
     return;
   }
 
@@ -885,6 +551,7 @@ function renderCards(filtered) {
     const card = document.createElement("article");
     card.className = "cars-card";
     card.dataset.key = car.dedupeKey;
+    if (car.url) card.dataset.url = car.url;
 
     const title = document.createElement("div");
     title.className = "cars-card-title";
