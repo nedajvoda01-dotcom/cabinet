@@ -1,236 +1,906 @@
 <section class="cars-page">
   <header class="cars-head">
-    <h1 class="ty-title">Поиск автомобилей</h1>
+    <div class="cars-head-top">
+      <h1 class="ty-title">Поиск автомобилей</h1>
+      <div class="cars-status" id="carsStatus">Загружаем данные…</div>
+    </div>
     <p class="ty-body cars-sub">
-      Тестовая страница. Если ты видишь её — подгрузка из <b>./pages/cars.html</b> работает.
+      Фильтрация по CSV: активные и снятые объявления, каскадные селекты, ленивая выдача.
     </p>
   </header>
 
-  <div class="cars-grid">
-    <form class="cars-form" id="carsForm" autocomplete="off">
-      <label class="cars-label ty-section">
-        Марка
-        <input class="cars-input ty-body" name="brand" placeholder="например, Toyota" />
-      </label>
+  <div class="cars-filters">
+    <div class="cars-tabs" role="tablist" aria-label="Тип авто">
+      <button class="cars-tab" data-condition="all" aria-pressed="true">Все</button>
+      <button class="cars-tab" data-condition="used">С пробегом</button>
+      <button class="cars-tab" data-condition="new">Новые</button>
+    </div>
 
-      <label class="cars-label ty-section">
-        Модель
-        <input class="cars-input ty-body" name="model" placeholder="например, Camry" />
-      </label>
+    <div class="cars-tabs tier-2" role="tablist" aria-label="Статус объявления">
+      <button class="cars-tab" data-status="active" aria-pressed="true">Активные объявления</button>
+      <button class="cars-tab" data-status="removed">Снятые объявления</button>
+    </div>
 
-      <label class="cars-label ty-section">
-        Год от
-        <input class="cars-input ty-body" name="yearFrom" type="number" min="1980" max="2099" placeholder="2015" />
-      </label>
+    <div class="cars-controls">
+      <div class="cars-selects">
+        <label class="cars-label ty-section">
+          Марка
+          <select class="cars-input ty-body" id="filterMark"></select>
+        </label>
 
-      <label class="cars-label ty-section">
-        Год до
-        <input class="cars-input ty-body" name="yearTo" type="number" min="1980" max="2099" placeholder="2024" />
-      </label>
+        <label class="cars-label ty-section">
+          Модель
+          <select class="cars-input ty-body" id="filterModel"></select>
+        </label>
 
-      <button class="cars-btn ty-section" type="submit">
-        Искать (тест)
-      </button>
+        <label class="cars-label ty-section">
+          Год
+          <select class="cars-input ty-body" id="filterYear"></select>
+        </label>
 
-      <button class="cars-btn ghost ty-section" type="button" id="carsReset">
-        Сброс
-      </button>
-    </form>
+        <label class="cars-label ty-section">
+          Цвет
+          <select class="cars-input ty-body" id="filterColor"></select>
+        </label>
 
-    <aside class="cars-panel">
-      <div class="cars-panel-card">
-        <div class="ty-section cars-panel-title">Статус</div>
-        <div class="ty-body" id="carsStatus">Ожидание…</div>
+        <label class="cars-label ty-section">
+          Регион
+          <select class="cars-input ty-body" id="filterRegion"></select>
+        </label>
       </div>
 
-      <div class="cars-panel-card">
-        <div class="ty-section cars-panel-title">Время на клиенте</div>
-        <div class="ty-body" id="carsClock">--:--:--</div>
+      <div class="cars-checkboxes">
+        <label class="cars-check ty-body">
+          <input type="checkbox" id="available" checked />
+          <span>Доступные автомобили</span>
+        </label>
+        <label class="cars-check ty-body">
+          <input type="checkbox" id="drafts" />
+          <span>Черновики автомобилей</span>
+        </label>
+        <label class="cars-check ty-body">
+          <input type="checkbox" id="ready" />
+          <span>Готовые автомобили</span>
+        </label>
       </div>
-    </aside>
+
+      <div class="cars-actions">
+        <div class="cars-found ty-section" id="carsFound">Найдено: 0 автомобилей</div>
+        <div class="cars-actions-btns">
+          <button class="cars-btn ghost ty-section" type="button" id="carsReset">Сбросить</button>
+          <button class="cars-btn ty-section" type="button" id="carsShow" disabled>Показать 0 объявлений</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="cars-results">
-    <div class="ty-section cars-results-title">Результаты (фейковые)</div>
-    <div class="cars-list" id="carsList"></div>
+    <div class="cars-results-head">
+      <div class="ty-section" id="sectorTitle">Активные объявления</div>
+      <div class="ty-body cars-results-note">Выдача обновляется по кнопке “Показать”.</div>
+    </div>
+    <div class="cars-grid" id="carsGrid">
+      <div class="ty-body cars-empty">Выбор фильтров не применён. Нажмите «Показать».</div>
+    </div>
   </div>
 </section>
 
 <style>
-  .cars-page{
+  .cars-page {
     padding: 22px 24px;
-    display:flex;
-    flex-direction:column;
-    gap:18px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
     color: var(--c-black);
     background: var(--c-white);
     min-height: 100vh;
   }
 
-  .cars-head{ display:flex; flex-direction:column; gap:6px; }
-  .cars-sub{ color: var(--c-gray); }
-
-  .cars-grid{
-    display:grid;
-    grid-template-columns: 1fr 260px;
-    gap:14px;
-    align-items:start;
+  .cars-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
-  .cars-form{
-    border:1px solid var(--c-gray-light);
-    border-radius:14px;
-    padding:14px;
-    display:grid;
-    grid-template-columns: repeat(2, minmax(0,1fr));
-    gap:10px 12px;
+  .cars-head-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .cars-status {
+    color: var(--c-gray);
+    font-size: var(--fs-13);
+  }
+
+  .cars-sub {
+    color: var(--c-gray);
+  }
+
+  .cars-filters {
+    border: 1px solid var(--c-gray-light);
+    border-radius: 14px;
+    padding: 14px;
     background: var(--c-white);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
-  .cars-label{ display:flex; flex-direction:column; gap:6px; color: var(--c-black); }
+  .cars-tabs {
+    display: flex;
+    gap: 8px;
+  }
 
-  .cars-input{
-    width:100%;
-    border:1px solid var(--c-gray-light);
-    border-radius:10px;
-    padding:8px 10px;
+  .cars-tabs.tier-2 {
+    border-top: 1px solid var(--c-gray-light);
+    padding-top: 10px;
+  }
+
+  .cars-tab {
+    border: 1px solid var(--c-gray-light);
+    border-radius: 10px;
+    padding: 8px 12px;
     background: var(--c-white);
     color: var(--c-black);
-    outline:none;
+    cursor: pointer;
+    transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
   }
-  .cars-input::placeholder{ color: var(--c-gray-light); }
-  .cars-input:focus{ border-color: var(--c-gray); }
 
-  .cars-btn{
-    grid-column: span 1;
-    border:none;
-    border-radius:10px;
-    padding:10px 12px;
+  .cars-tab[aria-pressed="true"] {
+    border-color: var(--c-gray);
+    color: var(--c-black);
+    background: color-mix(in srgb, var(--c-gray-light) 20%, transparent);
+  }
+
+  .cars-tab:hover {
+    border-color: var(--c-gray);
+  }
+
+  .cars-controls {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .cars-selects {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px 12px;
+  }
+
+  .cars-label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--c-black);
+  }
+
+  .cars-input {
+    width: 100%;
+    border: 1px solid var(--c-gray-light);
+    border-radius: 10px;
+    padding: 8px 10px;
+    background: var(--c-white);
+    color: var(--c-black);
+    outline: none;
+    appearance: none;
+  }
+
+  .cars-input:focus {
+    border-color: var(--c-gray);
+  }
+
+  .cars-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid var(--c-gray-light);
+    border-radius: 12px;
+    padding: 10px;
+    background: var(--c-white);
+  }
+
+  .cars-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--c-black);
+  }
+
+  .cars-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .cars-found {
+    color: var(--c-black);
+  }
+
+  .cars-actions-btns {
+    display: flex;
+    gap: 10px;
+  }
+
+  .cars-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 12px;
     background: var(--c-black);
     color: var(--c-white);
-    cursor:pointer;
-    text-align:center;
+    cursor: pointer;
+    text-align: center;
+    min-width: 160px;
+    transition: background 120ms ease, border-color 120ms ease;
   }
-  .cars-btn.ghost{
+
+  .cars-btn:hover {
+    background: var(--c-gray-dark);
+  }
+
+  .cars-btn:disabled {
+    background: var(--c-gray-light);
+    color: var(--c-gray);
+    cursor: not-allowed;
+  }
+
+  .cars-btn.ghost {
     background: var(--c-white);
     color: var(--c-black);
-    border:1px solid var(--c-gray-light);
+    border: 1px solid var(--c-gray-light);
   }
 
-  .cars-panel{ display:flex; flex-direction:column; gap:10px; }
-  .cars-panel-card{
-    border:1px solid var(--c-gray-light);
-    border-radius:14px;
-    padding:12px;
+  .cars-btn.ghost:hover {
+    border-color: var(--c-gray);
+    background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
+  }
+
+  .cars-results {
+    border: 1px solid var(--c-gray-light);
+    border-radius: 14px;
+    padding: 14px;
     background: var(--c-white);
-    display:flex;
-    flex-direction:column;
-    gap:6px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
-  .cars-panel-title{ color: var(--c-gray); }
 
-  .cars-results{
-    border:1px solid var(--c-gray-light);
-    border-radius:14px;
-    padding:12px;
+  .cars-results-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .cars-results-note {
+    color: var(--c-gray);
+  }
+
+  .cars-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 12px;
+  }
+
+  .cars-card {
+    border: 1px solid var(--c-gray-light);
+    border-radius: 12px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 10px;
     background: var(--c-white);
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  .cars-results-title{ color: var(--c-gray); }
-
-  .cars-list{
-    display:grid;
-    grid-template-columns: repeat(3, minmax(0,1fr));
-    gap:10px;
+    transition: border-color 120ms ease;
   }
 
-  .car-card{
-    border:1px solid var(--c-gray-light);
-    border-radius:12px;
-    padding:10px;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    background: var(--c-white);
+  .cars-card:hover {
+    border-color: var(--c-gray);
   }
-  .car-name{ font-weight: var(--fw-semibold); }
-  .car-meta{ color: var(--c-gray); font-size: var(--fs-12); }
 
-  @media (max-width: 900px){
-    .cars-grid{ grid-template-columns: 1fr; }
-    .cars-list{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .cars-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    background: var(--c-gray-light);
+    aspect-ratio: 16 / 9;
   }
-  @media (max-width: 560px){
-    .cars-form{ grid-template-columns: 1fr; }
-    .cars-list{ grid-template-columns: 1fr; }
+
+  .cars-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    background: var(--c-gray-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c-white);
+    font-weight: var(--fw-semibold);
+    aspect-ratio: 16 / 9;
+  }
+
+  .cars-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cars-card-title {
+    font-weight: var(--fw-semibold);
+    font-size: var(--fs-15);
+  }
+
+  .cars-card-price {
+    font-weight: var(--fw-bold);
+    font-size: var(--fs-15);
+  }
+
+  .cars-card-sub {
+    color: var(--c-gray);
+    font-size: var(--fs-12);
+    line-height: var(--lh-normal);
+  }
+
+  .cars-specs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 4px 8px;
+  }
+
+  .cars-spec-item {
+    color: var(--c-gray);
+    font-size: var(--fs-12);
+  }
+
+  .cars-details summary {
+    cursor: pointer;
+    color: var(--c-black);
+    font-weight: var(--fw-semibold);
+  }
+
+  .cars-details ul {
+    margin-top: 6px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 4px 8px;
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .cars-details li {
+    color: var(--c-gray);
+    font-size: var(--fs-12);
+  }
+
+  .cars-cta {
+    margin-top: 4px;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .cars-cta.disabled {
+    background: var(--c-gray-light);
+    color: var(--c-gray);
+    cursor: not-allowed;
+  }
+
+  .cars-empty {
+    color: var(--c-gray);
+  }
+
+  @media (max-width: 960px) {
+    .cars-controls {
+      grid-template-columns: 1fr;
+    }
+
+    .cars-card {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 
 <script>
-  const form = document.getElementById("carsForm");
-  const resetBtn = document.getElementById("carsReset");
-  const list = document.getElementById("carsList");
-  const status = document.getElementById("carsStatus");
-  const clock = document.getElementById("carsClock");
+  const state = {
+    carsActive: [],
+    carsRemoved: [],
+    filtered: [],
+    condition: "all",
+    status: "active",
+    filters: {
+      mark: null,
+      model: null,
+      year: null,
+      color: null,
+      region: null,
+    },
+    availability: new Set(["available"]),
+  };
 
-  function renderFakeResults({ brand="", model="", yearFrom="", yearTo="" }){
-    const sample = [
-      { brand:"Toyota", model:"Camry", year:2019, price:"2 150 000 ₽" },
-      { brand:"BMW", model:"3 Series", year:2018, price:"2 990 000 ₽" },
-      { brand:"Kia", model:"Sportage", year:2021, price:"2 450 000 ₽" },
-      { brand:"Skoda", model:"Octavia", year:2017, price:"1 650 000 ₽" },
-      { brand:"Hyundai", model:"Solaris", year:2020, price:"1 250 000 ₽" },
-    ];
+  const elements = {
+    status: document.getElementById("carsStatus"),
+    tabsCondition: [...document.querySelectorAll("[data-condition]")],
+    tabsStatus: [...document.querySelectorAll("[data-status]")],
+    selectMark: document.getElementById("filterMark"),
+    selectModel: document.getElementById("filterModel"),
+    selectYear: document.getElementById("filterYear"),
+    selectColor: document.getElementById("filterColor"),
+    selectRegion: document.getElementById("filterRegion"),
+    checkAvailable: document.getElementById("available"),
+    checkDraft: document.getElementById("drafts"),
+    checkReady: document.getElementById("ready"),
+    resetBtn: document.getElementById("carsReset"),
+    showBtn: document.getElementById("carsShow"),
+    found: document.getElementById("carsFound"),
+    grid: document.getElementById("carsGrid"),
+    sectorTitle: document.getElementById("sectorTitle"),
+  };
 
-    const b = brand.trim().toLowerCase();
-    const m = model.trim().toLowerCase();
-    const yf = Number(yearFrom) || 0;
-    const yt = Number(yearTo) || 9999;
+  const EXCLUDED_DETAILS = new Set([
+    "mark", "model", "year", "price_rub", "km_age", "body_type", "generation",
+    "complectation", "engine_type", "displacement", "horse_power", "transmission",
+    "drive_type", "color", "region", "city", "url", "image_urls", "condition",
+    "availability",
+  ]);
 
-    const filtered = sample.filter(x => {
-      const okBrand = !b || x.brand.toLowerCase().includes(b);
-      const okModel = !m || x.model.toLowerCase().includes(m);
-      const okYear = x.year >= yf && x.year <= yt;
-      return okBrand && okModel && okYear;
+  function cleanValue(v) {
+    if (v === undefined || v === null) return null;
+    const str = String(v).trim();
+    if (!str) return null;
+    const lower = str.toLowerCase();
+    if (["nan", "null", "undefined"].includes(lower)) return null;
+    return str;
+  }
+
+  function normalizeLower(v) {
+    const val = cleanValue(v);
+    return val ? val.toLowerCase() : null;
+  }
+
+  function parseNumber(value) {
+    const digits = cleanValue(value)?.replace(/[^0-9-]/g, "");
+    if (!digits) return null;
+    const num = Number(digits);
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function detectDelimiter(text) {
+    const firstLine = text.split(/\r?\n/)[0] || "";
+    const countSemicolon = (firstLine.match(/;/g) || []).length;
+    const countComma = (firstLine.match(/,/g) || []).length;
+    if (countSemicolon > countComma) return ";";
+    if (countComma > countSemicolon) return ",";
+    return ";";
+  }
+
+  function parseCSV(text) {
+    const delimiter = detectDelimiter(text);
+    const lines = text.split(/\r?\n/).filter(Boolean);
+    if (lines.length === 0) return [];
+    const header = lines.shift().split(delimiter).map(h => h.trim());
+
+    return lines.map(line => {
+      const cells = line.split(delimiter);
+      const row = {};
+      header.forEach((key, idx) => {
+        row[key] = cells[idx] !== undefined ? cells[idx] : "";
+      });
+      return row;
+    });
+  }
+
+  function getFirstImage(urls) {
+    const val = cleanValue(urls);
+    if (!val) return null;
+    const parts = val.split(/\s*\|\s*|\s*,\s*/).filter(Boolean);
+    return parts[0] || null;
+  }
+
+  function buildCar(row) {
+    const mark = cleanValue(row.mark);
+    const model = cleanValue(row.model);
+    const year = parseNumber(row.year);
+    const color = cleanValue(row.color);
+    const region = cleanValue(row.region);
+    const city = cleanValue(row.city);
+    const kmAge = parseNumber(row.km_age);
+    const priceValue = parseNumber(row.price_rub);
+    const priceText = priceValue ? new Intl.NumberFormat("ru-RU").format(priceValue) + " ₽" : cleanValue(row.price_rub);
+    const engineType = cleanValue(row.engine_type);
+    const displacement = cleanValue(row.displacement);
+    const horsePower = cleanValue(row.horse_power);
+    const transmission = cleanValue(row.transmission);
+    const driveType = cleanValue(row.drive_type);
+
+    return {
+      raw: row,
+      mark,
+      markNorm: normalizeLower(mark),
+      model,
+      modelNorm: normalizeLower(model),
+      year,
+      color,
+      colorNorm: normalizeLower(color),
+      region,
+      regionNorm: normalizeLower(region),
+      city,
+      kmAge,
+      condition: kmAge > 0 ? "used" : "new",
+      availability: "available",
+      priceValue,
+      priceText,
+      bodyType: cleanValue(row.body_type),
+      generation: cleanValue(row.generation),
+      complectation: cleanValue(row.complectation),
+      engineType,
+      displacement,
+      horsePower,
+      transmission,
+      driveType,
+      image: getFirstImage(row.image_urls),
+      url: cleanValue(row.url),
+    };
+  }
+
+  function uniqOptions(cars, key, displayKey = key) {
+    const map = new Map();
+    cars.forEach(car => {
+      const norm = car[`${key}Norm`];
+      if (!norm) return;
+      if (!map.has(norm)) {
+        const labelSource = car[displayKey] || car[key];
+        map.set(norm, labelSource || "");
+      }
+    });
+    return [...map.entries()].map(([value, label]) => ({ value, label }));
+  }
+
+  function uniqYears(cars) {
+    const set = new Set();
+    cars.forEach(car => { if (car.year) set.add(car.year); });
+    return [...set].sort((a, b) => b - a).map(y => ({ value: String(y), label: String(y) }));
+  }
+
+ function applyFilters(cars, current) {
+    return cars.filter(car => {
+      if (current.condition !== "all" && car.condition !== current.condition) return false;
+      if (current.filters.mark && car.markNorm !== current.filters.mark) return false;
+      if (current.filters.model && car.modelNorm !== current.filters.model) return false;
+      if (current.filters.year && String(car.year) !== current.filters.year) return false;
+      if (current.filters.color && car.colorNorm !== current.filters.color) return false;
+      if (current.filters.region && car.regionNorm !== current.filters.region) return false;
+      if (current.availability.size === 0) return false;
+      if (!current.availability.has(car.availability)) return false;
+      return true;
+    });
+  }
+
+  function filteredExcept(baseCars, key) {
+    const copy = {
+      condition: state.condition,
+      status: state.status,
+      filters: { ...state.filters },
+      availability: new Set(state.availability),
+    };
+    copy.filters[key] = null;
+    return applyFilters(baseCars, copy);
+  }
+
+  function renderOptions(select, options, placeholder) {
+    select.innerHTML = "";
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = placeholder;
+    select.appendChild(empty);
+    options.forEach(opt => {
+      const option = document.createElement("option");
+      option.value = opt.value;
+      option.textContent = opt.label;
+      select.appendChild(option);
+    });
+    const current = state.filters[select.dataset.key];
+    select.value = current || "";
+  }
+
+  function updateOptions(baseCars) {
+    const marks = uniqOptions(filteredExcept(baseCars, "mark"), "mark");
+    const models = uniqOptions(filteredExcept(baseCars, "model"), "model");
+    const years = uniqYears(filteredExcept(baseCars, "year"));
+    const colors = uniqOptions(filteredExcept(baseCars, "color"), "color");
+    const regions = uniqOptions(filteredExcept(baseCars, "region"), "region");
+
+    const selectAvailability = new Map([
+      ["mark", marks],
+      ["model", models],
+      ["year", years],
+      ["color", colors],
+      ["region", regions],
+    ]);
+
+    let invalid = false;
+    Object.entries(selectAvailability).forEach(([key, opts]) => {
+      const current = state.filters[key];
+      if (current && !opts.some(o => o.value === current)) {
+        state.filters[key] = null;
+        invalid = true;
+      }
     });
 
-    list.innerHTML = filtered.length
-      ? filtered.map(x => `
-          <div class="car-card">
-            <div class="ty-body car-name">${x.brand} ${x.model}</div>
-            <div class="car-meta">Год: ${x.year}</div>
-            <div class="ty-body">${x.price}</div>
-          </div>
-        `).join("")
-      : `<div class="ty-body" style="color:var(--c-gray);">Ничего не найдено (тест).</div>`;
+    if (invalid) return true;
+
+    elements.selectMark.dataset.key = "mark";
+    elements.selectModel.dataset.key = "model";
+    elements.selectYear.dataset.key = "year";
+    elements.selectColor.dataset.key = "color";
+    elements.selectRegion.dataset.key = "region";
+
+    renderOptions(elements.selectMark, marks.sort((a, b) => a.label.localeCompare(b.label)), "Не выбрана");
+    renderOptions(elements.selectModel, models.sort((a, b) => a.label.localeCompare(b.label)), "Не выбрана");
+    renderOptions(elements.selectYear, years, "Не выбран");
+    renderOptions(elements.selectColor, colors.sort((a, b) => a.label.localeCompare(b.label)), "Не выбран");
+    renderOptions(elements.selectRegion, regions.sort((a, b) => a.label.localeCompare(b.label)), "Не выбран");
+
+    return false;
   }
 
-  function setStatus(text){ status.textContent = text; }
-
-  renderFakeResults({});
-  setStatus("Готово к поиску.");
-
-  form.addEventListener("submit", (e)=>{
-    e.preventDefault();
-    const fd = new FormData(form);
-    const data = Object.fromEntries(fd.entries());
-    setStatus("Ищем… (фейк)");
-    renderFakeResults(data);
-    setTimeout(()=>setStatus("Поиск завершен."), 250);
-  });
-
-  resetBtn.addEventListener("click", ()=>{
-    form.reset();
-    renderFakeResults({});
-    setStatus("Сброшено.");
-  });
-
-  function tick(){
-    const d = new Date();
-    clock.textContent = d.toLocaleTimeString("ru-RU");
+  function updateCounts(filtered) {
+    const n = filtered.length;
+    elements.found.textContent = `Найдено: ${n} автомобилей`;
+    elements.showBtn.textContent = `Показать ${n} объявлений`;
+    elements.showBtn.disabled = n === 0;
   }
-  tick();
-  setInterval(tick, 1000);
+
+  function buildSubline(car) {
+    const bits = [];
+    if (car.year) bits.push(car.year);
+    if (car.kmAge !== null && car.kmAge !== undefined) bits.push(`${new Intl.NumberFormat("ru-RU").format(car.kmAge)} км`);
+    const body = [car.bodyType, car.generation, car.complectation].filter(Boolean).join(" /");
+    if (body) bits.push(body);
+    const location = [car.region, car.city].filter(Boolean).join(", ");
+    if (location) bits.push(location);
+    return bits.join(" · ");
+  }
+
+  function buildSpecs(car) {
+    const specs = [];
+    if (car.engineType || car.displacement) specs.push(["Двигатель", [car.engineType, car.displacement].filter(Boolean).join(" ")]);
+    if (car.horsePower) specs.push(["Мощность", `${car.horsePower} л.с.`]);
+    if (car.transmission) specs.push(["Трансмиссия", car.transmission]);
+    if (car.driveType) specs.push(["Привод", car.driveType]);
+    if (car.color) specs.push(["Цвет", car.color]);
+    return specs;
+  }
+
+  function buildDetailsList(car) {
+    const items = [];
+    Object.entries(car.raw).forEach(([key, value]) => {
+      if (EXCLUDED_DETAILS.has(key)) return;
+      const cleaned = cleanValue(value);
+      if (!cleaned) return;
+      items.push(`${key}: ${cleaned}`);
+    });
+    return items;
+  }
+
+  function renderCards(filtered) {
+    elements.grid.innerHTML = "";
+    const title = state.status === "active" ? "Активные объявления" : "Снятые объявления";
+    elements.sectorTitle.textContent = title;
+
+    if (filtered.length === 0) {
+      elements.grid.innerHTML = '<div class="ty-body cars-empty">Нет объявлений</div>';
+      return;
+    }
+
+    const cards = filtered.map(car => {
+      const card = document.createElement("article");
+      card.className = "cars-card";
+
+      const media = document.createElement("div");
+      if (car.image) {
+        const img = document.createElement("img");
+        img.src = car.image;
+        img.alt = `${car.mark || "Авто"} ${car.model || ""}`.trim();
+        media.appendChild(img);
+      } else {
+        const placeholder = document.createElement("div");
+        placeholder.className = "cars-placeholder";
+        placeholder.textContent = "Нет фото";
+        media.appendChild(placeholder);
+      }
+
+      const body = document.createElement("div");
+      body.className = "cars-card-body";
+
+      const titleEl = document.createElement("div");
+      titleEl.className = "cars-card-title";
+      titleEl.textContent = [car.mark, car.model].filter(Boolean).join(" ");
+      body.appendChild(titleEl);
+
+      if (car.priceText) {
+        const priceEl = document.createElement("div");
+        priceEl.className = "cars-card-price";
+        priceEl.textContent = car.priceText;
+        body.appendChild(priceEl);
+      }
+
+      const sub = document.createElement("div");
+      sub.className = "cars-card-sub";
+      sub.textContent = buildSubline(car);
+      body.appendChild(sub);
+
+      const specs = buildSpecs(car);
+      if (specs.length > 0) {
+        const specsWrap = document.createElement("div");
+        specsWrap.className = "cars-specs";
+        specs.forEach(([label, val]) => {
+          const item = document.createElement("div");
+          item.className = "cars-spec-item";
+          item.textContent = `${label}: ${val}`;
+          specsWrap.appendChild(item);
+        });
+        body.appendChild(specsWrap);
+      }
+
+      const detailsItems = buildDetailsList(car);
+      if (detailsItems.length > 0) {
+        const details = document.createElement("details");
+        details.className = "cars-details";
+        const summary = document.createElement("summary");
+        summary.textContent = "Характеристики";
+        details.appendChild(summary);
+        const list = document.createElement("ul");
+        detailsItems.forEach(text => {
+          const li = document.createElement("li");
+          li.textContent = text;
+          list.appendChild(li);
+        });
+        details.appendChild(list);
+        body.appendChild(details);
+      }
+
+      const cta = document.createElement("a");
+      cta.className = "cars-btn cars-cta ty-section";
+      if (car.url) {
+        cta.href = car.url;
+        cta.target = "_blank";
+        cta.rel = "noopener";
+        cta.textContent = "Перейти к объявлению";
+      } else {
+        cta.textContent = "Объявление недоступно";
+        cta.classList.add("disabled");
+      }
+      body.appendChild(cta);
+
+      card.appendChild(media);
+      card.appendChild(body);
+      return card;
+    });
+
+    cards.forEach(c => elements.grid.appendChild(c));
+  }
+
+  function updateAll(clearCards = true) {
+    const baseCars = state.status === "active" ? state.carsActive : state.carsRemoved;
+    const filtered = applyFilters(baseCars, state);
+    state.filtered = filtered;
+
+    const needsRecalc = updateOptions(baseCars);
+    if (needsRecalc) {
+      updateAll(clearCards);
+      return;
+    }
+    updateCounts(filtered);
+    if (clearCards) {
+      elements.grid.innerHTML = '<div class="ty-body cars-empty">Выбор фильтров не применён. Нажмите «Показать».</div>';
+    }
+  }
+
+  async function loadData() {
+    elements.status.textContent = "Загружаем CSV…";
+    try {
+      const [activeRes, removedRes] = await Promise.all([
+        fetch("./data/active/autoru_car_active.csv"),
+        fetch("./data/removed/autoru_car_removed.csv"),
+      ]);
+      const [activeText, removedText] = await Promise.all([activeRes.text(), removedRes.text()]);
+      const activeRows = parseCSV(activeText).map(buildCar);
+      const removedRows = parseCSV(removedText).map(buildCar);
+      state.carsActive = activeRows;
+      state.carsRemoved = removedRows;
+      elements.status.textContent = "Данные загружены";
+      updateAll();
+    } catch (err) {
+      elements.status.textContent = "Ошибка загрузки CSV";
+      console.error(err);
+    }
+  }
+
+  function bindTabs() {
+    elements.tabsCondition.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (btn.getAttribute("aria-pressed") === "true") return;
+        elements.tabsCondition.forEach(b => b.setAttribute("aria-pressed", "false"));
+        btn.setAttribute("aria-pressed", "true");
+        state.condition = btn.dataset.condition;
+        updateAll();
+      });
+    });
+
+    elements.tabsStatus.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (btn.getAttribute("aria-pressed") === "true") return;
+        elements.tabsStatus.forEach(b => b.setAttribute("aria-pressed", "false"));
+        btn.setAttribute("aria-pressed", "true");
+        state.status = btn.dataset.status;
+        elements.sectorTitle.textContent = btn.textContent;
+        updateAll();
+      });
+    });
+  }
+
+  function bindSelects() {
+    [
+      elements.selectMark,
+      elements.selectModel,
+      elements.selectYear,
+      elements.selectColor,
+      elements.selectRegion,
+    ].forEach(select => {
+      select.addEventListener("change", () => {
+        const key = select.dataset.key;
+        const value = select.value || null;
+        state.filters[key] = value ? value : null;
+        updateAll();
+      });
+    });
+  }
+
+  function bindCheckboxes() {
+    const syncAvailability = () => {
+      const next = new Set();
+      if (elements.checkAvailable.checked) next.add("available");
+      if (elements.checkDraft.checked) next.add("draft");
+      if (elements.checkReady.checked) next.add("ready");
+      state.availability = next;
+      updateAll();
+    };
+
+    elements.checkAvailable.addEventListener("change", syncAvailability);
+    elements.checkDraft.addEventListener("change", syncAvailability);
+    elements.checkReady.addEventListener("change", syncAvailability);
+  }
+
+  function bindActions() {
+    elements.resetBtn.addEventListener("click", () => {
+      state.condition = "all";
+      state.status = "active";
+      state.filters = { mark: null, model: null, year: null, color: null, region: null };
+      state.availability = new Set(["available"]);
+      elements.tabsCondition.forEach(btn => btn.setAttribute("aria-pressed", btn.dataset.condition === "all" ? "true" : "false"));
+      elements.tabsStatus.forEach(btn => btn.setAttribute("aria-pressed", btn.dataset.status === "active" ? "true" : "false"));
+      elements.checkAvailable.checked = true;
+      elements.checkDraft.checked = false;
+      elements.checkReady.checked = false;
+      elements.sectorTitle.textContent = "Активные объявления";
+      updateAll();
+    });
+
+    elements.showBtn.addEventListener("click", () => {
+      if (state.filtered.length === 0) return;
+      renderCards(state.filtered);
+    });
+  }
+
+  loadData();
+  bindTabs();
+  bindSelects();
+  bindCheckboxes();
+  bindActions();
 </script>
