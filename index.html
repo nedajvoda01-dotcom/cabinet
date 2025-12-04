@@ -1842,3 +1842,314 @@ const SidebarView = (() => {
   </script>
 </body>
 </html>
+
+/* ======================================================================
+   CARS PAGE (styles in parent)
+   Стили только для страницы поиска авто.
+   Скопированы из бывшего cars.html и слегка заскоуплены.
+====================================================================== */
+
+#pageRoot .cars-page{
+  background: var(--c-white);
+  color: var(--c-black);
+  min-height: 100vh;
+  padding: 18px;
+  font-family: var(--font-sans);
+}
+
+/* типографика берётся из .ty-* родителя, но если надо — можно локально подправить */
+#pageRoot .cars-shell{
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#pageRoot .cars-filters{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--c-white);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#pageRoot .cars-tabs{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+#pageRoot .cars-tabs.tier-2{
+  border-top: 1px solid var(--c-gray-light);
+  padding-top: 8px;
+}
+
+#pageRoot .cars-tab{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 10px;
+  padding: 7px 11px;
+  background: var(--c-white);
+  color: var(--c-black);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+#pageRoot .cars-tab[aria-pressed="true"]{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 20%, transparent);
+}
+#pageRoot .cars-tab:hover{ border-color: var(--c-gray); }
+
+#pageRoot .cars-controls{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+#pageRoot .cars-selects{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+#pageRoot .cars-field{
+  position: relative;
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  background: var(--c-white);
+  padding: 8px 10px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  transition: border-color 120ms ease;
+}
+#pageRoot .cars-field::before{
+  content: attr(data-label);
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  color: var(--c-gray);
+  background: var(--c-white);
+  padding: 2px 6px;
+  border: 1px solid var(--c-gray-light);
+  border-radius: 999px;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+#pageRoot .cars-field.has-value::before{
+  opacity: 0;
+  transform: translateY(-2px);
+}
+#pageRoot .cars-field:focus-within{ border-color: var(--c-gray); }
+
+#pageRoot .cars-input{
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--c-black);
+  outline: none;
+  appearance: none;
+  padding-top: 6px;
+  font-size: var(--fs-15);
+}
+
+#pageRoot .cars-actions{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+#pageRoot .cars-actions-btns{
+  display: flex;
+  gap: 8px;
+}
+
+#pageRoot .cars-btn{
+  border: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: var(--c-black);
+  color: var(--c-white);
+  cursor: pointer;
+  text-align: center;
+  min-width: 160px;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+#pageRoot .cars-btn:hover{ background: var(--c-gray-dark); }
+#pageRoot .cars-btn:disabled{
+  background: var(--c-gray-light);
+  color: var(--c-gray);
+  cursor: not-allowed;
+}
+#pageRoot .cars-btn.ghost{
+  background: var(--c-white);
+  color: var(--c-black);
+  border: 1px solid var(--c-gray-light);
+}
+#pageRoot .cars-btn.ghost:hover{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
+}
+
+#pageRoot .cars-status{
+  color: var(--c-gray);
+  text-align: right;
+  min-height: 1em;
+}
+
+#pageRoot .cars-results{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--c-white);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#pageRoot .cars-results-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+#pageRoot .cars-results-note{ color: var(--c-gray); }
+
+#pageRoot .cars-grid{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+#pageRoot .cars-card{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--c-white);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+#pageRoot .cars-card:hover{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 10%, transparent);
+}
+#pageRoot .cars-card-title{
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-15);
+}
+#pageRoot .cars-card-sub{
+  color: var(--c-gray);
+  font-size: var(--fs-12);
+  line-height: var(--lh-normal);
+}
+#pageRoot .cars-empty{ color: var(--c-gray); }
+
+/* MODAL */
+#pageRoot .cars-modal{
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 50;
+}
+#pageRoot .cars-modal.is-open{ display: block; }
+#pageRoot .cars-modal-backdrop{
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--c-black) 35%, transparent);
+}
+#pageRoot .cars-modal-card{
+  position: absolute;
+  inset: 16px;
+  margin: auto;
+  max-width: 980px;
+  max-height: calc(100vh - 32px);
+  background: var(--c-white);
+  border-radius: 16px;
+  border: 1px solid var(--c-gray-light);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#pageRoot .cars-modal-head{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--c-gray-light);
+  gap: 10px;
+}
+#pageRoot .cars-modal-title{
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+}
+#pageRoot .cars-modal-close{
+  background: var(--c-white);
+  border: 1px solid var(--c-gray-light);
+  border-radius: 10px;
+  padding: 7px 10px;
+  cursor: pointer;
+  color: var(--c-black);
+}
+#pageRoot .cars-modal-close:hover{ border-color: var(--c-gray); }
+#pageRoot .cars-modal-body{
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr;
+  gap: 12px;
+  overflow: auto;
+}
+#pageRoot .cars-modal-media{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--c-white);
+  min-height: 200px;
+}
+#pageRoot .cars-modal-media img{
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+#pageRoot .cars-modal-info{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#pageRoot .cars-modal-price{
+  font-size: var(--fs-24);
+  font-weight: var(--fw-semibold);
+}
+#pageRoot .cars-modal-sub{ color: var(--c-gray); }
+#pageRoot .cars-modal-list{
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 4px 8px;
+  color: var(--c-black);
+}
+#pageRoot .cars-modal-list li{
+  color: var(--c-gray);
+  font-size: var(--fs-13);
+}
+#pageRoot .cars-modal-link{
+  align-self: flex-start;
+  min-width: auto;
+  padding: 9px 12px;
+  text-decoration: none;
+}
+
+@media (max-width: 900px){
+  #pageRoot .cars-controls{ grid-template-columns: 1fr; }
+  #pageRoot .cars-actions{ align-items: stretch; }
+  #pageRoot .cars-actions-btns{ width: 100%; }
+  #pageRoot .cars-btn{ width: 100%; min-width: 0; }
+  #pageRoot .cars-modal-body{ grid-template-columns: 1fr; }
+}
