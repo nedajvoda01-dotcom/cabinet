@@ -2063,46 +2063,253 @@ const SidebarView = (() => {
 
       await Pages.showPage(service.getState().activeId);
 
-      /* ============================================================
-         cars tabs + floating labels behavior
-         (чтобы вкладки переключались и лейблы прятались)
-      ============================================================ */
-      function initCarsUI(){
-        const root = document.querySelector(".cars-page");
-        if (!root) return;
+/* ======================================================================
+   CARS PAGE — НОВЫЙ ЛЭЙАУТ (POLISH)
+   цель: меньше шума, больше иерархии, всё в твоём стиле
+====================================================================== */
+#pageRoot .cars-page{
+  background: var(--c-white);
+  color: var(--c-black);
+  min-height: 100vh;
+  padding: 18px;
+  font-family: var(--font-sans);
+}
 
-        // переключение вкладок в каждом таб-группе
-        root.querySelectorAll(".cars-tabs").forEach(group=>{
-          group.addEventListener("click", (e)=>{
-            const btn = e.target.closest(".cars-tab");
-            if (!btn) return;
+#pageRoot .cars-shell{
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
-            group.querySelectorAll(".cars-tab")
-              .forEach(b => b.setAttribute("aria-pressed", "false"));
-            btn.setAttribute("aria-pressed", "true");
-          });
-        });
+/* panel чуть отделяем от фона, но без новых цветов */
+#pageRoot .cars-panel{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 14px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--c-gray-light) 6%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
-        // поведение лейблов у фильтров
-        root.querySelectorAll(".cars-input").forEach(inp=>{
-          const field = inp.closest(".cars-field");
-          if (!field) return;
+/* ======================================================================
+   вкладки: слева и справа
+   делаем 2 группы читаемыми, убираем “пять одинаковых кнопок”
+====================================================================== */
+#pageRoot .cars-tabs-row{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
-          const sync = () => {
-            field.classList.toggle("has-value", Boolean(inp.value.trim()));
-          };
+/* подложка-группа */
+#pageRoot .cars-tabs{
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  background: var(--c-white);
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  padding: 4px;
+}
 
-          inp.addEventListener("input", sync);
-          inp.addEventListener("blur", sync);
-          sync();
-        });
-      }
+/* сами вкладки легче и компактнее */
+#pageRoot .cars-tab{
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding: 6px 10px;
+  background: transparent;
+  color: var(--c-black);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+  white-space: nowrap;
 
-      // первый запуск (когда cars уже показан)
-      initCarsUI();
-      // запуск при каждом открытии страницы cars заново
-      window.addEventListener("page:loaded", initCarsUI);
-    }
+  font-size: var(--fs-13);
+  line-height: 1;
+}
+
+/* активная вкладка — плашка */
+#pageRoot .cars-tab[aria-pressed="true"]{
+  border-color: var(--c-gray-light);
+  background: color-mix(in srgb, var(--c-gray-light) 30%, transparent);
+}
+#pageRoot .cars-tab:hover{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
+}
+
+/* ======================================================================
+   фильтры
+====================================================================== */
+#pageRoot .cars-filters{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 12px;
+}
+#pageRoot .cars-filters.row-2{
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  margin-top: -2px;
+}
+
+/* поле */
+#pageRoot .cars-field{
+  position: relative;
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  background: var(--c-white);
+  padding: 9px 10px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  transition: border-color 120ms ease;
+}
+
+/* лейбл — без капсулы-рамки, чтобы не дробило */
+#pageRoot .cars-field::before{
+  content: attr(data-label);
+  position: absolute;
+  left: 10px;
+  top: 8px;
+
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  color: var(--c-gray);
+  background: var(--c-white);
+  padding: 0 6px;
+
+  border: none;                 /* ключевое изменение */
+  border-radius: 999px;
+
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease, font-size 120ms ease;
+  opacity: .8;
+}
+
+/* при вводе — не исчезает, а уезжает вверх */
+#pageRoot .cars-field.has-value::before{
+  opacity: 1;
+  transform: translateY(-14px);
+  font-size: 10px;
+}
+
+#pageRoot .cars-field:focus-within{
+  border-color: var(--c-gray);
+}
+
+#pageRoot .cars-input{
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--c-black);
+  outline: none;
+  appearance: none;
+  padding-top: 6px;
+  font-size: var(--fs-15);
+}
+
+/* ======================================================================
+   кнопки действий
+====================================================================== */
+#pageRoot .cars-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+#pageRoot .cars-btn{
+  border: none;
+  border-radius: 10px;
+  padding: 9px 14px;
+  background: var(--c-black);
+  color: var(--c-white);
+  cursor: pointer;
+  text-align: center;
+  min-width: 0;                 /* убрали “плиту” */
+  font-size: var(--fs-13);
+  transition: background 120ms ease, border-color 120ms ease;
+}
+#pageRoot .cars-btn:hover{
+  background: var(--c-gray-dark);
+}
+#pageRoot .cars-btn:disabled{
+  background: var(--c-gray-light);
+  color: var(--c-gray);
+  cursor: not-allowed;
+}
+
+#pageRoot .cars-btn.ghost{
+  background: var(--c-white);
+  color: var(--c-black);
+  border: 1px solid var(--c-gray-light);
+  min-width: auto;
+  padding: 9px 12px;
+  font-size: var(--fs-13);
+}
+#pageRoot .cars-btn.ghost:hover{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
+}
+
+/* ======================================================================
+   результаты
+====================================================================== */
+#pageRoot .cars-results{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--c-white);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#pageRoot .cars-grid{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+#pageRoot .cars-card{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--c-white);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+#pageRoot .cars-card:hover{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 10%, transparent);
+}
+#pageRoot .cars-card-title{
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-15);
+}
+#pageRoot .cars-card-sub{
+  color: var(--c-gray);
+  font-size: var(--fs-12);
+  line-height: var(--lh-normal);
+}
+#pageRoot .cars-empty{
+  color: var(--c-gray);
+}
+
+@media (max-width: 900px){
+  #pageRoot .cars-filters{ grid-template-columns: 1fr; }
+  #pageRoot .cars-filters.row-2{ grid-template-columns: 1fr; }
+  #pageRoot .cars-actions{ justify-content: stretch; }
+  #pageRoot .cars-btn{ width: 100%; }
+}
+
 
     main();
   </script>
