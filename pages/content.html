@@ -1,346 +1,110 @@
 <section class="content-page">
-  <div class="content-head">
-    <button class="content-back ty-section" type="button" aria-label="Вернуться назад">
-      ← Назад
-    </button>
-    <h1 class="ty-title">Поиск контента</h1>
-    <p class="ty-body content-sub">
-      Сверка расположения элементов фильтрации. Кнопки поиска и статусы выстроены так, как на референсе.
-    </p>
-  </div>
+  <div class="content-wrap">
+    <header class="content-head">
+      <div class="content-title ty-title">Контент</div>
+      <div class="content-status ty-body">Раздел в разработке</div>
+    </header>
 
-  <div class="content-search">
-    <div class="content-chips">
-      <button class="content-chip is-active" type="button" data-group="scope" data-value="all">Все</button>
-      <button class="content-chip" type="button" data-group="scope" data-value="issues">С проблемой</button>
-      <button class="content-chip" type="button" data-group="scope" data-value="new">Новые</button>
-    </div>
-    <div class="content-chips align-end">
-      <button class="content-chip is-active" type="button" data-group="status" data-value="active">Активные объявления</button>
-      <button class="content-chip" type="button" data-group="status" data-value="archived">Снятые объявления</button>
-    </div>
-
-    <form class="content-form" id="contentForm" autocomplete="off">
-      <label class="content-label ty-section">
-        Марка
-        <input class="content-input ty-body" name="brand" placeholder="например, Toyota" />
-      </label>
-
-      <label class="content-label ty-section">
-        Модель
-        <input class="content-input ty-body" name="model" placeholder="например, Camry" />
-      </label>
-
-      <label class="content-label ty-section">
-        Год
-        <input class="content-input ty-body" name="year" type="number" min="1990" max="2099" placeholder="2020" />
-      </label>
-
-      <label class="content-label ty-section">
-        Цвет
-        <input class="content-input ty-body" name="color" placeholder="например, Белый" />
-      </label>
-
-      <label class="content-label ty-section">
-        Регион
-        <input class="content-input ty-body" name="region" placeholder="например, Москва" />
-      </label>
-
-      <label class="content-label ty-section wide">
-        Ключевые слова
-        <input class="content-input ty-body" name="keywords" placeholder="марка, модель, статус" />
-      </label>
+    <div class="content-card">
+      <div class="content-card-title ty-section">Скоро здесь появятся материалы</div>
+      <div class="content-card-sub ty-body">
+        Мы готовим этот раздел: структура, фильтры и выдача будут добавлены в следующих обновлениях.
+      </div>
 
       <div class="content-actions">
-        <div class="content-checks">
-          <label class="content-check ty-section">
-            <input type="checkbox" name="available" checked /> Доступные автомобили
-          </label>
-          <label class="content-check ty-section">
-            <input type="checkbox" name="draft" /> Черновики автомобилей
-          </label>
-          <label class="content-check ty-section">
-            <input type="checkbox" name="ready" /> Готовые автомобили
-          </label>
-        </div>
-        <div class="content-buttons">
-          <button class="content-btn ghost ty-section" type="button" id="contentReset">Сбросить</button>
-          <button class="content-btn ty-section" type="submit" id="contentSubmit">Показать 0 объявлений</button>
-        </div>
+        <button class="content-btn ghost ty-section" type="button" disabled>Скоро</button>
       </div>
-    </form>
-  </div>
-
-  <div class="content-results">
-    <div class="ty-section content-results-title">Найденные карточки</div>
-    <div class="content-list" id="contentList"></div>
+    </div>
   </div>
 </section>
 
 <style>
   .content-page{
-    padding:22px 24px;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
     background: var(--c-white);
     color: var(--c-black);
-    min-height:100vh;
-  }
-  .content-head{ display:flex; flex-direction:column; gap:8px; }
-  .content-sub{ color: var(--c-gray); }
-  .content-back{
-    align-self:flex-start;
-    border:none;
-    background: var(--c-white);
-    color: var(--c-black);
-    cursor:pointer;
-    padding:4px 0;
+    min-height: 100vh;
+    padding: 22px 24px;
   }
 
-  .content-search{
-    border:1px solid var(--c-gray-light);
-    border-radius:14px;
-    padding:14px;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    background: var(--c-white);
+  /* центрируем в контентной области как в кабинете */
+  .content-wrap{
+    max-width: 980px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
 
-  .content-chips{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-  .content-chips.align-end{ justify-content:flex-end; }
-
-  .content-chip{
-    border:1px solid var(--c-gray-light);
-    background: var(--c-white);
-    color: var(--c-black);
-    border-radius:999px;
-    padding:8px 12px;
-    cursor:pointer;
-    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
-  }
-  .content-chip.is-active{
-    background: var(--c-black);
-    color: var(--c-white);
-    border-color: var(--c-black);
+  .content-head{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--c-gray-light);
   }
 
-  .content-form{
-    display:grid;
-    grid-template-columns: repeat(3, minmax(0,1fr));
-    gap:10px 12px;
-    align-items:start;
-  }
-  .content-label{ display:flex; flex-direction:column; gap:6px; color: var(--c-black); }
-  .content-label.wide{ grid-column: span 3; }
-
-  .content-input{
-    width:100%;
-    border:1px solid var(--c-gray-light);
-    border-radius:10px;
-    padding:8px 10px;
-    background: var(--c-white);
-    color: var(--c-black);
-    outline:none;
-  }
-  .content-input::placeholder{ color: var(--c-gray-light); }
-  .content-input:focus{ border-color: var(--c-gray); }
-
-  .content-actions{
-    grid-column: span 3;
-    display:flex;
-    align-items:flex-start;
-    gap:12px;
-    flex-wrap:wrap;
-  }
-  .content-checks{
-    display:flex;
-    gap:12px;
-    flex-wrap:wrap;
+  .content-title{
     color: var(--c-black);
   }
-  .content-check{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    cursor:pointer;
-  }
-  .content-check input{ accent-color: var(--c-black); }
 
-  .content-buttons{
-    display:flex;
-    gap:8px;
-    margin-left:auto;
-  }
-
-  .content-btn{
-    border:none;
-    border-radius:10px;
-    padding:10px 14px;
-    background: var(--c-black);
-    color: var(--c-white);
-    cursor:pointer;
-    white-space:nowrap;
-  }
-  .content-btn.ghost{
-    background: var(--c-white);
-    color: var(--c-black);
-    border:1px solid var(--c-gray-light);
-  }
-
-  .content-results{
-    border:1px solid var(--c-gray-light);
-    border-radius:14px;
-    padding:12px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    background: var(--c-white);
-  }
-  .content-results-title{ color: var(--c-gray); }
-
-  .content-list{
-    display:grid;
-    grid-template-columns: repeat(3, minmax(0,1fr));
-    gap:10px;
+  .content-status{
+    color: var(--c-gray);
+    font-size: var(--fs-13);
   }
 
   .content-card{
-    border:1px solid var(--c-gray-light);
-    border-radius:12px;
-    padding:10px;
+    border: 1px solid var(--c-gray-light);
+    border-radius: 14px;
+    padding: 16px;
     background: var(--c-white);
-    display:flex;
-    flex-direction:column;
-    gap:6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-  .content-card-title{ font-weight: var(--fw-semibold); }
-  .content-card-meta{ color: var(--c-gray); font-size: var(--fs-12); }
 
-  @media (max-width: 1024px){
-    .content-form{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-    .content-label.wide{ grid-column: span 2; }
-    .content-actions{ grid-column: span 2; }
-    .content-list{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .content-card-title{
+    color: var(--c-black);
+    font-weight: var(--fw-semibold);
   }
-  @media (max-width: 680px){
-    .content-form{ grid-template-columns: 1fr; }
-    .content-label.wide, .content-actions{ grid-column: span 1; }
-    .content-buttons{ width:100%; justify-content:flex-end; }
-    .content-list{ grid-template-columns: 1fr; }
+
+  .content-card-sub{
+    color: var(--c-gray);
+    line-height: var(--lh-normal);
+  }
+
+  .content-actions{
+    margin-top: 6px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .content-btn{
+    border: none;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--c-black);
+    color: var(--c-white);
+    min-width: 120px;
+    text-align: center;
+  }
+
+  .content-btn.ghost{
+    background: var(--c-white);
+    color: var(--c-black);
+    border: 1px solid var(--c-gray-light);
+  }
+
+  .content-btn:disabled{
+    background: var(--c-gray-light);
+    color: var(--c-gray);
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 720px){
+    .content-head{
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 </style>
-
-<script>
-  const contentData = [
-    { title: "Toyota Camry", note: "активное объявление без проблем", ts: Date.now(), brand:"Toyota", model:"Camry", year:2019, color:"Белый", region:"Москва", status:"active", availability:"available", isNew:false, hasIssue:false },
-    { title: "BMW 3 Series", note: "новое объявление, черновик", ts: Date.now() - 3600_000, brand:"BMW", model:"3 Series", year:2022, color:"Черный", region:"Санкт-Петербург", status:"active", availability:"draft", isNew:true, hasIssue:false },
-    { title: "Kia Sportage", note: "есть вопросы по комплектации", ts: Date.now() - 86400_000, brand:"Kia", model:"Sportage", year:2018, color:"Красный", region:"Казань", status:"active", availability:"available", isNew:false, hasIssue:true },
-    { title: "Skoda Octavia", note: "снято с публикации", ts: Date.now() - 172800_000, brand:"Skoda", model:"Octavia", year:2017, color:"Серый", region:"Екатеринбург", status:"archived", availability:"ready", isNew:false, hasIssue:false },
-    { title: "Hyundai Solaris", note: "готовое объявление", ts: Date.now() - 5400_000, brand:"Hyundai", model:"Solaris", year:2020, color:"Белый", region:"Москва", status:"active", availability:"ready", isNew:true, hasIssue:false },
-    { title: "Lada Vesta", note: "с замечаниями по фото", ts: Date.now() - 7200_000, brand:"Lada", model:"Vesta", year:2019, color:"Синий", region:"Самара", status:"active", availability:"available", isNew:false, hasIssue:true },
-    { title: "Volkswagen Polo", note: "архив, но сдан в работу", ts: Date.now() - 3600_000 * 12, brand:"Volkswagen", model:"Polo", year:2016, color:"Белый", region:"Пермь", status:"archived", availability:"draft", isNew:false, hasIssue:false },
-    { title: "Nissan Qashqai", note: "новая заявка", ts: Date.now() - 1800_000, brand:"Nissan", model:"Qashqai", year:2021, color:"Черный", region:"Москва", status:"active", availability:"available", isNew:true, hasIssue:false },
-  ];
-
-  const contentList = document.getElementById("contentList");
-  const contentForm = document.getElementById("contentForm");
-  const contentSubmit = document.getElementById("contentSubmit");
-  const contentReset = document.getElementById("contentReset");
-  const chipGroups = document.querySelectorAll("[data-group]");
-
-  const chipState = { scope:"all", status:"active" };
-
-  function setActiveChip(group, value){
-    document.querySelectorAll(`[data-group="${group}"]`).forEach(btn => {
-      btn.classList.toggle("is-active", btn.dataset.value === value);
-    });
-    chipState[group] = value;
-  }
-
-  chipGroups.forEach(btn => {
-    btn.addEventListener("click", ()=>{
-      setActiveChip(btn.dataset.group, btn.dataset.value);
-      applyFilters();
-    });
-  });
-
-  function formatTs(ts){
-    return new Date(ts).toLocaleString("ru-RU");
-  }
-
-  function plural(count){
-    const mod10 = count % 10;
-    const mod100 = count % 100;
-    if (mod10 === 1 && mod100 !== 11) return "объявление";
-    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "объявления";
-    return "объявлений";
-  }
-
-  function render(list){
-    contentList.innerHTML = list.length
-      ? list.map(item => `
-          <div class="content-card">
-            <div class="ty-body content-card-title">${item.title}</div>
-            <div class="content-card-meta">${item.brand} ${item.model} • ${item.year} • ${item.region}</div>
-            <div class="ty-body">${item.note}</div>
-            <div class="content-card-meta">${formatTs(item.ts)}</div>
-          </div>
-        `).join("")
-      : `<div class="ty-body" style="color:var(--c-gray);">Ничего не найдено.</div>`;
-  }
-
-  function applyFilters(){
-    const fd = new FormData(contentForm);
-    const brand = (fd.get("brand") || "").trim().toLowerCase();
-    const model = (fd.get("model") || "").trim().toLowerCase();
-    const year = Number(fd.get("year")) || 0;
-    const color = (fd.get("color") || "").trim().toLowerCase();
-    const region = (fd.get("region") || "").trim().toLowerCase();
-    const keywords = (fd.get("keywords") || "").trim().toLowerCase();
-
-    const allowedAvailability = ["available", "draft", "ready"].filter(key => fd.get(key));
-
-    const filtered = contentData.filter(item => {
-      if (chipState.scope === "issues" && !item.hasIssue) return false;
-      if (chipState.scope === "new" && !item.isNew) return false;
-      if (chipState.status === "active" && item.status !== "active") return false;
-      if (chipState.status === "archived" && item.status !== "archived") return false;
-
-      if (brand && !item.brand.toLowerCase().includes(brand)) return false;
-      if (model && !item.model.toLowerCase().includes(model)) return false;
-      if (year && item.year !== year) return false;
-      if (color && !item.color.toLowerCase().includes(color)) return false;
-      if (region && !item.region.toLowerCase().includes(region)) return false;
-      if (allowedAvailability.length && !allowedAvailability.includes(item.availability)) return false;
-
-      if (keywords){
-        const text = `${item.title} ${item.brand} ${item.model} ${item.region} ${item.note}`.toLowerCase();
-        if (!text.includes(keywords)) return false;
-      }
-      return true;
-    });
-
-    contentSubmit.textContent = `Показать ${filtered.length} ${plural(filtered.length)}`;
-    render(filtered);
-  }
-
-  contentForm.addEventListener("submit", (e)=>{
-    e.preventDefault();
-    applyFilters();
-  });
-
-  contentReset.addEventListener("click", ()=>{
-    contentForm.reset();
-    setActiveChip("scope", "all");
-    setActiveChip("status", "active");
-    applyFilters();
-  });
-
-  applyFilters();
-</script>
