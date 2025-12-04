@@ -1,906 +1,1034 @@
-<section class="cars-page">
-  <header class="cars-head">
-    <div class="cars-head-top">
-      <h1 class="ty-title">Поиск автомобилей</h1>
-      <div class="cars-status" id="carsStatus">Загружаем данные…</div>
-    </div>
-    <p class="ty-body cars-sub">
-      Фильтрация по CSV: активные и снятые объявления, каскадные селекты, ленивая выдача.
-    </p>
-  </header>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Поиск автомобилей</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <div class="cars-filters">
-    <div class="cars-tabs" role="tablist" aria-label="Тип авто">
-      <button class="cars-tab" data-condition="all" aria-pressed="true">Все</button>
-      <button class="cars-tab" data-condition="used">С пробегом</button>
-      <button class="cars-tab" data-condition="new">Новые</button>
-    </div>
+  <style>
+/* ======================================================================
+   BLOCK 1) CARS PAGE MARKUP + STYLES
+====================================================================== */
+.cars-page{
+  background: var(--c-white);
+  color: var(--c-black);
+  min-height: 100vh;
+  padding: 18px 18px;
+}
+.cars-shell{
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cars-filters{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--c-white);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cars-tabs{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cars-tabs.tier-2{
+  border-top: 1px solid var(--c-gray-light);
+  padding-top: 8px;
+}
+.cars-tab{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 10px;
+  padding: 7px 11px;
+  background: var(--c-white);
+  color: var(--c-black);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.cars-tab[aria-pressed="true"]{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 20%, transparent);
+}
+.cars-tab:hover{ border-color: var(--c-gray); }
 
-    <div class="cars-tabs tier-2" role="tablist" aria-label="Статус объявления">
-      <button class="cars-tab" data-status="active" aria-pressed="true">Активные объявления</button>
-      <button class="cars-tab" data-status="removed">Снятые объявления</button>
-    </div>
+.cars-controls{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+.cars-selects{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+.cars-field{
+  position: relative;
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  background: var(--c-white);
+  padding: 8px 10px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  transition: border-color 120ms ease;
+}
+.cars-field::before{
+  content: attr(data-label);
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  color: var(--c-gray);
+  background: var(--c-white);
+  padding: 2px 6px;
+  border: 1px solid var(--c-gray-light);
+  border-radius: 999px;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.cars-field.has-value::before{
+  opacity: 0;
+  transform: translateY(-2px);
+}
+.cars-field:focus-within{ border-color: var(--c-gray); }
 
-    <div class="cars-controls">
-      <div class="cars-selects">
-        <label class="cars-label ty-section">
-          Марка
-          <select class="cars-input ty-body" id="filterMark"></select>
-        </label>
+.cars-input{
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--c-black);
+  outline: none;
+  appearance: none;
+  padding-top: 6px;
+  font-size: var(--fs-15);
+}
 
-        <label class="cars-label ty-section">
-          Модель
-          <select class="cars-input ty-body" id="filterModel"></select>
-        </label>
+.cars-actions{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+.cars-actions-btns{
+  display: flex;
+  gap: 8px;
+}
+.cars-btn{
+  border: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: var(--c-black);
+  color: var(--c-white);
+  cursor: pointer;
+  text-align: center;
+  min-width: 160px;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.cars-btn:hover{ background: var(--c-gray-dark); }
+.cars-btn:disabled{
+  background: var(--c-gray-light);
+  color: var(--c-gray);
+  cursor: not-allowed;
+}
+.cars-btn.ghost{
+  background: var(--c-white);
+  color: var(--c-black);
+  border: 1px solid var(--c-gray-light);
+}
+.cars-btn.ghost:hover{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
+}
+.cars-status{
+  color: var(--c-gray);
+  text-align: right;
+  min-height: 1em;
+}
 
-        <label class="cars-label ty-section">
-          Год
-          <select class="cars-input ty-body" id="filterYear"></select>
-        </label>
+.cars-results{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--c-white);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cars-results-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cars-results-note{ color: var(--c-gray); }
 
-        <label class="cars-label ty-section">
-          Цвет
-          <select class="cars-input ty-body" id="filterColor"></select>
-        </label>
+.cars-grid{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.cars-card{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--c-white);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.cars-card:hover{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 10%, transparent);
+}
+.cars-card-title{
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-15);
+}
+.cars-card-sub{
+  color: var(--c-gray);
+  font-size: var(--fs-12);
+  line-height: var(--lh-normal);
+}
+.cars-empty{ color: var(--c-gray); }
 
-        <label class="cars-label ty-section">
-          Регион
-          <select class="cars-input ty-body" id="filterRegion"></select>
-        </label>
+/* MODAL */
+.cars-modal{
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 50;
+}
+.cars-modal.is-open{ display: block; }
+.cars-modal-backdrop{
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--c-black) 35%, transparent);
+}
+.cars-modal-card{
+  position: absolute;
+  inset: 16px;
+  margin: auto;
+  max-width: 980px;
+  max-height: calc(100vh - 32px);
+  background: var(--c-white);
+  border-radius: 16px;
+  border: 1px solid var(--c-gray-light);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.cars-modal-head{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--c-gray-light);
+  gap: 10px;
+}
+.cars-modal-title{
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+}
+.cars-modal-close{
+  background: var(--c-white);
+  border: 1px solid var(--c-gray-light);
+  border-radius: 10px;
+  padding: 7px 10px;
+  cursor: pointer;
+  color: var(--c-black);
+}
+.cars-modal-close:hover{ border-color: var(--c-gray); }
+.cars-modal-body{
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr;
+  gap: 12px;
+  overflow: auto;
+}
+.cars-modal-media{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--c-white);
+  min-height: 200px;
+}
+.cars-modal-media img{
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+.cars-modal-info{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cars-modal-price{
+  font-size: var(--fs-24);
+  font-weight: var(--fw-semibold);
+}
+.cars-modal-sub{ color: var(--c-gray); }
+.cars-modal-list{
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 4px 8px;
+  color: var(--c-black);
+}
+.cars-modal-list li{ color: var(--c-gray); font-size: var(--fs-13); }
+.cars-modal-link{
+  align-self: flex-start;
+  min-width: auto;
+  padding: 9px 12px;
+  text-decoration: none;
+}
+
+@media (max-width: 900px){
+  .cars-controls{ grid-template-columns: 1fr; }
+  .cars-actions{ align-items: stretch; }
+  .cars-actions-btns{ width: 100%; }
+  .cars-btn{ width: 100%; min-width: 0; }
+  .cars-modal-body{ grid-template-columns: 1fr; }
+}
+  </style>
+</head>
+
+<body>
+
+<section class="cars-page" aria-label="Поиск автомобилей">
+  <div class="cars-shell">
+
+    <div class="cars-filters" role="region" aria-label="Фильтры поиска">
+      <div class="cars-tabs" role="tablist" aria-label="Тип авто">
+        <button class="cars-tab" data-condition="all" aria-pressed="true" type="button">Все</button>
+        <button class="cars-tab" data-condition="used" aria-pressed="false" type="button">С пробегом</button>
+        <button class="cars-tab" data-condition="new" aria-pressed="false" type="button">Новые</button>
       </div>
 
-      <div class="cars-checkboxes">
-        <label class="cars-check ty-body">
-          <input type="checkbox" id="available" checked />
-          <span>Доступные автомобили</span>
-        </label>
-        <label class="cars-check ty-body">
-          <input type="checkbox" id="drafts" />
-          <span>Черновики автомобилей</span>
-        </label>
-        <label class="cars-check ty-body">
-          <input type="checkbox" id="ready" />
-          <span>Готовые автомобили</span>
-        </label>
+      <div class="cars-tabs tier-2" role="tablist" aria-label="Статус объявления">
+        <button class="cars-tab" data-status="active" aria-pressed="true" type="button">Активные объявления</button>
+        <button class="cars-tab" data-status="removed" aria-pressed="false" type="button">Снятые объявления</button>
       </div>
 
-      <div class="cars-actions">
-        <div class="cars-found ty-section" id="carsFound">Найдено: 0 автомобилей</div>
-        <div class="cars-actions-btns">
-          <button class="cars-btn ghost ty-section" type="button" id="carsReset">Сбросить</button>
-          <button class="cars-btn ty-section" type="button" id="carsShow" disabled>Показать 0 объявлений</button>
+      <div class="cars-controls">
+        <div class="cars-selects">
+          <div class="cars-field" data-label="Марка">
+            <select class="cars-input ty-body" id="filterMark" aria-label="Марка"></select>
+          </div>
+
+          <div class="cars-field" data-label="Модель">
+            <select class="cars-input ty-body" id="filterModel" aria-label="Модель"></select>
+          </div>
+
+          <div class="cars-field" data-label="Год">
+            <select class="cars-input ty-body" id="filterYear" aria-label="Год"></select>
+          </div>
+
+          <div class="cars-field" data-label="Цвет">
+            <select class="cars-input ty-body" id="filterColor" aria-label="Цвет"></select>
+          </div>
+
+          <div class="cars-field" data-label="Регион">
+            <select class="cars-input ty-body" id="filterRegion" aria-label="Регион"></select>
+          </div>
+        </div>
+
+        <div class="cars-actions">
+          <div class="cars-actions-btns">
+            <button class="cars-btn ghost ty-section" type="button" id="carsReset">Сбросить</button>
+            <button class="cars-btn ty-section" type="button" id="carsShow" disabled>Показать 0 объявлений</button>
+          </div>
+          <div class="cars-status ty-section" id="carsStatus" aria-live="polite">Загружаем данные…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cars-results" role="region" aria-label="Результаты поиска">
+      <div class="cars-results-head">
+        <div class="ty-section" id="sectorTitle">Активные объявления</div>
+        <div class="ty-body cars-results-note">Выдача обновляется по кнопке “Показать”.</div>
+      </div>
+      <div class="cars-grid" id="carsGrid">
+        <div class="ty-body cars-empty">Выбор фильтров не применён. Нажмите «Показать».</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="cars-modal" id="carsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Детали объявления">
+    <div class="cars-modal-backdrop" data-modal-close></div>
+    <div class="cars-modal-card" role="document">
+      <div class="cars-modal-head">
+        <div class="cars-modal-title ty-title" id="carsModalTitle"></div>
+        <button class="cars-modal-close ty-section" type="button" data-modal-close aria-label="Закрыть">Закрыть</button>
+      </div>
+      <div class="cars-modal-body">
+        <div class="cars-modal-media" id="carsModalMedia"></div>
+        <div class="cars-modal-info">
+          <div class="cars-modal-price ty-title" id="carsModalPrice"></div>
+          <div class="cars-modal-sub ty-body" id="carsModalSub"></div>
+          <ul class="cars-modal-list ty-body" id="carsModalList"></ul>
+          <a class="cars-btn ty-section cars-modal-link" id="carsModalLink" target="_blank" rel="noopener">Перейти к объявлению</a>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="cars-results">
-    <div class="cars-results-head">
-      <div class="ty-section" id="sectorTitle">Активные объявления</div>
-      <div class="ty-body cars-results-note">Выдача обновляется по кнопке “Показать”.</div>
-    </div>
-    <div class="cars-grid" id="carsGrid">
-      <div class="ty-body cars-empty">Выбор фильтров не применён. Нажмите «Показать».</div>
-    </div>
-  </div>
 </section>
 
-<style>
-  .cars-page {
-    padding: 22px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    color: var(--c-black);
-    background: var(--c-white);
-    min-height: 100vh;
-  }
-
-  .cars-head {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .cars-head-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .cars-status {
-    color: var(--c-gray);
-    font-size: var(--fs-13);
-  }
-
-  .cars-sub {
-    color: var(--c-gray);
-  }
-
-  .cars-filters {
-    border: 1px solid var(--c-gray-light);
-    border-radius: 14px;
-    padding: 14px;
-    background: var(--c-white);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .cars-tabs {
-    display: flex;
-    gap: 8px;
-  }
-
-  .cars-tabs.tier-2 {
-    border-top: 1px solid var(--c-gray-light);
-    padding-top: 10px;
-  }
-
-  .cars-tab {
-    border: 1px solid var(--c-gray-light);
-    border-radius: 10px;
-    padding: 8px 12px;
-    background: var(--c-white);
-    color: var(--c-black);
-    cursor: pointer;
-    transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
-  }
-
-  .cars-tab[aria-pressed="true"] {
-    border-color: var(--c-gray);
-    color: var(--c-black);
-    background: color-mix(in srgb, var(--c-gray-light) 20%, transparent);
-  }
-
-  .cars-tab:hover {
-    border-color: var(--c-gray);
-  }
-
-  .cars-controls {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 16px;
-    align-items: start;
-  }
-
-  .cars-selects {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px 12px;
-  }
-
-  .cars-label {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    color: var(--c-black);
-  }
-
-  .cars-input {
-    width: 100%;
-    border: 1px solid var(--c-gray-light);
-    border-radius: 10px;
-    padding: 8px 10px;
-    background: var(--c-white);
-    color: var(--c-black);
-    outline: none;
-    appearance: none;
-  }
-
-  .cars-input:focus {
-    border-color: var(--c-gray);
-  }
-
-  .cars-checkboxes {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    border: 1px solid var(--c-gray-light);
-    border-radius: 12px;
-    padding: 10px;
-    background: var(--c-white);
-  }
-
-  .cars-check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--c-black);
-  }
-
-  .cars-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-end;
-  }
-
-  .cars-found {
-    color: var(--c-black);
-  }
-
-  .cars-actions-btns {
-    display: flex;
-    gap: 10px;
-  }
-
-  .cars-btn {
-    border: none;
-    border-radius: 10px;
-    padding: 10px 12px;
-    background: var(--c-black);
-    color: var(--c-white);
-    cursor: pointer;
-    text-align: center;
-    min-width: 160px;
-    transition: background 120ms ease, border-color 120ms ease;
-  }
-
-  .cars-btn:hover {
-    background: var(--c-gray-dark);
-  }
-
-  .cars-btn:disabled {
-    background: var(--c-gray-light);
-    color: var(--c-gray);
-    cursor: not-allowed;
-  }
-
-  .cars-btn.ghost {
-    background: var(--c-white);
-    color: var(--c-black);
-    border: 1px solid var(--c-gray-light);
-  }
-
-  .cars-btn.ghost:hover {
-    border-color: var(--c-gray);
-    background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
-  }
-
-  .cars-results {
-    border: 1px solid var(--c-gray-light);
-    border-radius: 14px;
-    padding: 14px;
-    background: var(--c-white);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .cars-results-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .cars-results-note {
-    color: var(--c-gray);
-  }
-
-  .cars-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 12px;
-  }
-
-  .cars-card {
-    border: 1px solid var(--c-gray-light);
-    border-radius: 12px;
-    padding: 12px;
-    display: grid;
-    grid-template-columns: 140px 1fr;
-    gap: 10px;
-    background: var(--c-white);
-    transition: border-color 120ms ease;
-  }
-
-  .cars-card:hover {
-    border-color: var(--c-gray);
-  }
-
-  .cars-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 10px;
-    background: var(--c-gray-light);
-    aspect-ratio: 16 / 9;
-  }
-
-  .cars-placeholder {
-    width: 100%;
-    height: 100%;
-    border-radius: 10px;
-    background: var(--c-gray-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--c-white);
-    font-weight: var(--fw-semibold);
-    aspect-ratio: 16 / 9;
-  }
-
-  .cars-card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .cars-card-title {
-    font-weight: var(--fw-semibold);
-    font-size: var(--fs-15);
-  }
-
-  .cars-card-price {
-    font-weight: var(--fw-bold);
-    font-size: var(--fs-15);
-  }
-
-  .cars-card-sub {
-    color: var(--c-gray);
-    font-size: var(--fs-12);
-    line-height: var(--lh-normal);
-  }
-
-  .cars-specs {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 4px 8px;
-  }
-
-  .cars-spec-item {
-    color: var(--c-gray);
-    font-size: var(--fs-12);
-  }
-
-  .cars-details summary {
-    cursor: pointer;
-    color: var(--c-black);
-    font-weight: var(--fw-semibold);
-  }
-
-  .cars-details ul {
-    margin-top: 6px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 4px 8px;
-    list-style: none;
-    padding-left: 0;
-  }
-
-  .cars-details li {
-    color: var(--c-gray);
-    font-size: var(--fs-12);
-  }
-
-  .cars-cta {
-    margin-top: 4px;
-    align-self: flex-start;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-
-  .cars-cta.disabled {
-    background: var(--c-gray-light);
-    color: var(--c-gray);
-    cursor: not-allowed;
-  }
-
-  .cars-empty {
-    color: var(--c-gray);
-  }
-
-  @media (max-width: 960px) {
-    .cars-controls {
-      grid-template-columns: 1fr;
-    }
-
-    .cars-card {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
-
 <script>
-  const state = {
-    carsActive: [],
-    carsRemoved: [],
-    filtered: [],
-    condition: "all",
-    status: "active",
-    filters: {
-      mark: null,
-      model: null,
-      year: null,
-      color: null,
-      region: null,
-    },
-    availability: new Set(["available"]),
-  };
+/* ======================================================================
+   BLOCK 2) CARS CONSTS / CONFIG
+====================================================================== */
+const CSV_SOURCES = {
+  active: [
+    "data/active/autoru_car_active.csv",
+    "data/active/autoru_car_active2.csv",
+    "data/active/autoru_car_active3.csv",
+  ],
+  removed: [
+    "data/removed/autoru_car_removed.csv",
+    "data/removed/autoru_car_removed2.csv",
+    "data/removed/autoru_car_removed3.csv",
+  ],
+};
 
-  const elements = {
-    status: document.getElementById("carsStatus"),
-    tabsCondition: [...document.querySelectorAll("[data-condition]")],
-    tabsStatus: [...document.querySelectorAll("[data-status]")],
-    selectMark: document.getElementById("filterMark"),
-    selectModel: document.getElementById("filterModel"),
-    selectYear: document.getElementById("filterYear"),
-    selectColor: document.getElementById("filterColor"),
-    selectRegion: document.getElementById("filterRegion"),
-    checkAvailable: document.getElementById("available"),
-    checkDraft: document.getElementById("drafts"),
-    checkReady: document.getElementById("ready"),
-    resetBtn: document.getElementById("carsReset"),
-    showBtn: document.getElementById("carsShow"),
-    found: document.getElementById("carsFound"),
-    grid: document.getElementById("carsGrid"),
-    sectorTitle: document.getElementById("sectorTitle"),
-  };
+const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
 
-  const EXCLUDED_DETAILS = new Set([
-    "mark", "model", "year", "price_rub", "km_age", "body_type", "generation",
-    "complectation", "engine_type", "displacement", "horse_power", "transmission",
-    "drive_type", "color", "region", "city", "url", "image_urls", "condition",
-    "availability",
+const EXCLUDED_DETAILS = new Set([
+  "image_urls",
+]);
+
+/* ======================================================================
+   BLOCK 3) CARS STATE + ELEMENTS
+====================================================================== */
+const state = {
+  allCarsActive: [],
+  allCarsRemoved: [],
+  filtered: [],
+  condition: "all",
+  status: "active",
+  filters: {
+    mark: null,
+    model: null,
+    year: null,
+    color: null,
+    region: null,
+  },
+  lastSignatures: {
+    active: null,
+    removed: null,
+  },
+  lastRenderKind: "active",
+};
+
+const elements = {
+  status: document.getElementById("carsStatus"),
+  tabsCondition: [...document.querySelectorAll("[data-condition]")],
+  tabsStatus: [...document.querySelectorAll("[data-status]")],
+  selectMark: document.getElementById("filterMark"),
+  selectModel: document.getElementById("filterModel"),
+  selectYear: document.getElementById("filterYear"),
+  selectColor: document.getElementById("filterColor"),
+  selectRegion: document.getElementById("filterRegion"),
+  resetBtn: document.getElementById("carsReset"),
+  showBtn: document.getElementById("carsShow"),
+  grid: document.getElementById("carsGrid"),
+  sectorTitle: document.getElementById("sectorTitle"),
+  fields: [...document.querySelectorAll(".cars-field")],
+  modal: document.getElementById("carsModal"),
+  modalTitle: document.getElementById("carsModalTitle"),
+  modalMedia: document.getElementById("carsModalMedia"),
+  modalPrice: document.getElementById("carsModalPrice"),
+  modalSub: document.getElementById("carsModalSub"),
+  modalList: document.getElementById("carsModalList"),
+  modalLink: document.getElementById("carsModalLink"),
+};
+
+/* ======================================================================
+   BLOCK 4) CARS DOMAIN: CLEAN / NORMALIZE / PARSE
+====================================================================== */
+function cleanValue(v) {
+  if (v === undefined || v === null) return null;
+  const str = String(v).trim();
+  if (!str) return null;
+  const lower = str.toLowerCase();
+  if (["nan", "null", "undefined"].includes(lower)) return null;
+  return str;
+}
+
+function normalizeLower(v) {
+  const val = cleanValue(v);
+  return val ? val.toLowerCase() : null;
+}
+
+function parseNumber(value) {
+  const digits = cleanValue(value)?.replace(/[^0-9-]/g, "");
+  if (!digits) return null;
+  const num = Number(digits);
+  return Number.isFinite(num) ? num : null;
+}
+
+function parseDate(value) {
+  const v = cleanValue(value);
+  if (!v) return null;
+  const d = new Date(v);
+  return Number.isFinite(d.getTime()) ? d : null;
+}
+
+function detectDelimiter(text) {
+  const firstLine = text.split(/\r?\n/)[0] || "";
+  const countSemicolon = (firstLine.match(/;/g) || []).length;
+  const countComma = (firstLine.match(/,/g) || []).length;
+  if (countSemicolon > countComma) return ";";
+  if (countComma > countSemicolon) return ",";
+  return ";";
+}
+
+function parseCSV(text) {
+  const delimiter = detectDelimiter(text);
+  const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+  if (lines.length === 0) return [];
+  const header = lines.shift().split(delimiter).map(h => h.trim());
+
+  return lines.map(line => {
+    const cells = line.split(delimiter);
+    const row = {};
+    header.forEach((key, idx) => {
+      row[key] = cells[idx] !== undefined ? cells[idx] : "";
+    });
+    return row;
+  });
+}
+
+function getFirstImage(urls) {
+  const val = cleanValue(urls);
+  if (!val) return null;
+  const parts = val.split(/\s*\|\s*|\s*,\s*/).filter(Boolean);
+  return parts[0] || null;
+}
+
+function buildCar(row, kind, fileIndex) {
+  const mark = cleanValue(row.mark);
+  const model = cleanValue(row.model);
+  const year = parseNumber(row.year);
+  const color = cleanValue(row.color);
+  const region = cleanValue(row.region);
+  const city = cleanValue(row.city);
+  const kmAge = parseNumber(row.km_age);
+  const priceValue = parseNumber(row.price_rub);
+  const priceText = priceValue
+    ? new Intl.NumberFormat("ru-RU").format(priceValue) + " ₽"
+    : cleanValue(row.price_rub);
+
+  const updatedAt = parseDate(row.updated_at);
+
+  const url = cleanValue(row.url);
+  const image = getFirstImage(row.image_urls);
+
+  const condition = kmAge > 0 ? "used" : "new";
+
+  const dedupeKey =
+    url ||
+    [
+      normalizeLower(mark) || "",
+      normalizeLower(model) || "",
+      year || "",
+      priceValue || "",
+      normalizeLower(region) || "",
+      normalizeLower(city) || "",
+      kmAge || ""
+    ].join("|");
+
+  return {
+    raw: row,
+    kind,
+    fileIndex,
+    dedupeKey,
+    updatedAt,
+    mark,
+    markNorm: normalizeLower(mark),
+    model,
+    modelNorm: normalizeLower(model),
+    year,
+    color,
+    colorNorm: normalizeLower(color),
+    region,
+    regionNorm: normalizeLower(region),
+    city,
+    kmAge,
+    condition,
+    priceValue,
+    priceText,
+    bodyType: cleanValue(row.body_type),
+    generation: cleanValue(row.generation),
+    complectation: cleanValue(row.complectation),
+    engineType: cleanValue(row.engine_type),
+    displacement: cleanValue(row.displacement),
+    horsePower: cleanValue(row.horse_power),
+    transmission: cleanValue(row.transmission),
+    driveType: cleanValue(row.drive_type),
+    image,
+    url,
+  };
+}
+
+function uniqOptions(cars, key, displayKey = key) {
+  const map = new Map();
+  cars.forEach(car => {
+    const norm = car[`${key}Norm`];
+    if (!norm) return;
+    if (!map.has(norm)) {
+      const labelSource = car[displayKey] || car[key];
+      map.set(norm, labelSource || "");
+    }
+  });
+  return [...map.entries()].map(([value, label]) => ({ value, label }));
+}
+
+function uniqYears(cars) {
+  const set = new Set();
+  cars.forEach(car => { if (car.year) set.add(car.year); });
+  return [...set].sort((a, b) => b - a).map(y => ({ value: String(y), label: String(y) }));
+}
+
+function applyFilters(cars, current) {
+  return cars.filter(car => {
+    if (!car.url) return false;
+    if (current.condition !== "all" && car.condition !== current.condition) return false;
+    if (current.filters.mark && car.markNorm !== current.filters.mark) return false;
+    if (current.filters.model && car.modelNorm !== current.filters.model) return false;
+    if (current.filters.year && String(car.year) !== current.filters.year) return false;
+    if (current.filters.color && car.colorNorm !== current.filters.color) return false;
+    if (current.filters.region && car.regionNorm !== current.filters.region) return false;
+    return true;
+  });
+}
+
+function filteredExcept(baseCars, key) {
+  const copy = {
+    condition: state.condition,
+    status: state.status,
+    filters: { ...state.filters },
+  };
+  copy.filters[key] = null;
+  return applyFilters(baseCars, copy);
+}
+
+function signatureFromText(texts) {
+  let acc = 0;
+  texts.forEach(t => {
+    for (let i = 0; i < t.length; i++) {
+      acc = (acc * 31 + t.charCodeAt(i)) >>> 0;
+    }
+    acc = (acc ^ t.length) >>> 0;
+  });
+  return String(acc);
+}
+
+function dedupeCars(cars) {
+  const map = new Map();
+  cars.forEach(car => {
+    const existing = map.get(car.dedupeKey);
+    if (!existing) {
+      map.set(car.dedupeKey, car);
+      return;
+    }
+    if (car.updatedAt && existing.updatedAt) {
+      if (car.updatedAt > existing.updatedAt) map.set(car.dedupeKey, car);
+      return;
+    }
+    if (car.updatedAt && !existing.updatedAt) {
+      map.set(car.dedupeKey, car);
+      return;
+    }
+    if (!car.updatedAt && !existing.updatedAt) {
+      if (car.fileIndex >= existing.fileIndex) map.set(car.dedupeKey, car);
+    }
+  });
+  return [...map.values()];
+}
+
+/* ======================================================================
+   BLOCK 5) CARS DATA LOADING + SYNC
+====================================================================== */
+async function fetchCsvSafe(url) {
+  try {
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) return null;
+    const text = await r.text();
+    return text;
+  } catch {
+    return null;
+  }
+}
+
+async function loadCarsKind(kind) {
+  const urls = CSV_SOURCES[kind] || [];
+  const texts = [];
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    const text = await fetchCsvSafe(url);
+    if (text) texts.push({ url, text, fileIndex: i });
+  }
+
+  const signature = signatureFromText(texts.map(x => x.text));
+  const rows = texts.flatMap(({ text }) => parseCSV(text));
+  const cars = texts.flatMap(({ text, fileIndex }) =>
+    parseCSV(text).map(row => buildCar(row, kind, fileIndex))
+  );
+
+  const deduped = dedupeCars(cars);
+  return { cars: deduped, signature, rawCount: rows.length };
+}
+
+async function initialLoadAll() {
+  elements.status.textContent = "Загружаем CSV…";
+
+  const active = await loadCarsKind("active");
+  const removed = await loadCarsKind("removed");
+
+  console.log("CSV kind: active", "urls:", CSV_SOURCES.active);
+  console.log("parsed rows active:", active.rawCount);
+  console.log("deduped active:", active.cars.length);
+
+  console.log("CSV kind: removed", "urls:", CSV_SOURCES.removed);
+  console.log("parsed rows removed:", removed.rawCount);
+  console.log("deduped removed:", removed.cars.length);
+
+  state.allCarsActive = active.cars;
+  state.allCarsRemoved = removed.cars;
+  state.lastSignatures.active = active.signature;
+  state.lastSignatures.removed = removed.signature;
+
+  elements.status.textContent = "Данные загружены";
+  updateAll();
+}
+
+async function syncIfChanged(kind) {
+  const res = await loadCarsKind(kind);
+  if (res.signature === state.lastSignatures[kind]) return false;
+  state.lastSignatures[kind] = res.signature;
+  if (kind === "active") state.allCarsActive = res.cars;
+  else state.allCarsRemoved = res.cars;
+  return true;
+}
+
+function startHourlySync() {
+  setInterval(async () => {
+    const changedActive = await syncIfChanged("active");
+    const changedRemoved = await syncIfChanged("removed");
+    if (changedActive || changedRemoved) {
+      if (state.lastRenderKind === state.status) updateAll(false);
+    }
+  }, UPDATE_INTERVAL_MS);
+}
+
+/* ======================================================================
+   BLOCK 6) UI HELPERS
+====================================================================== */
+function renderOptions(select, options, placeholder) {
+  select.innerHTML = "";
+  const empty = document.createElement("option");
+  empty.value = "";
+  empty.textContent = placeholder;
+  select.appendChild(empty);
+  options.forEach(opt => {
+    const option = document.createElement("option");
+    option.value = opt.value;
+    option.textContent = opt.label;
+    select.appendChild(option);
+  });
+  const current = state.filters[select.dataset.key];
+  select.value = current || "";
+}
+
+function updateOptions(baseCars) {
+  const marks = uniqOptions(filteredExcept(baseCars, "mark"), "mark");
+  const models = uniqOptions(filteredExcept(baseCars, "model"), "model");
+  const years = uniqYears(filteredExcept(baseCars, "year"));
+  const colors = uniqOptions(filteredExcept(baseCars, "color"), "color");
+  const regions = uniqOptions(filteredExcept(baseCars, "region"), "region");
+
+  const selects = new Map([
+    ["mark", marks],
+    ["model", models],
+    ["year", years],
+    ["color", colors],
+    ["region", regions],
   ]);
 
-  function cleanValue(v) {
-    if (v === undefined || v === null) return null;
-    const str = String(v).trim();
-    if (!str) return null;
-    const lower = str.toLowerCase();
-    if (["nan", "null", "undefined"].includes(lower)) return null;
-    return str;
-  }
-
-  function normalizeLower(v) {
-    const val = cleanValue(v);
-    return val ? val.toLowerCase() : null;
-  }
-
-  function parseNumber(value) {
-    const digits = cleanValue(value)?.replace(/[^0-9-]/g, "");
-    if (!digits) return null;
-    const num = Number(digits);
-    return Number.isFinite(num) ? num : null;
-  }
-
-  function detectDelimiter(text) {
-    const firstLine = text.split(/\r?\n/)[0] || "";
-    const countSemicolon = (firstLine.match(/;/g) || []).length;
-    const countComma = (firstLine.match(/,/g) || []).length;
-    if (countSemicolon > countComma) return ";";
-    if (countComma > countSemicolon) return ",";
-    return ";";
-  }
-
-  function parseCSV(text) {
-    const delimiter = detectDelimiter(text);
-    const lines = text.split(/\r?\n/).filter(Boolean);
-    if (lines.length === 0) return [];
-    const header = lines.shift().split(delimiter).map(h => h.trim());
-
-    return lines.map(line => {
-      const cells = line.split(delimiter);
-      const row = {};
-      header.forEach((key, idx) => {
-        row[key] = cells[idx] !== undefined ? cells[idx] : "";
-      });
-      return row;
-    });
-  }
-
-  function getFirstImage(urls) {
-    const val = cleanValue(urls);
-    if (!val) return null;
-    const parts = val.split(/\s*\|\s*|\s*,\s*/).filter(Boolean);
-    return parts[0] || null;
-  }
-
-  function buildCar(row) {
-    const mark = cleanValue(row.mark);
-    const model = cleanValue(row.model);
-    const year = parseNumber(row.year);
-    const color = cleanValue(row.color);
-    const region = cleanValue(row.region);
-    const city = cleanValue(row.city);
-    const kmAge = parseNumber(row.km_age);
-    const priceValue = parseNumber(row.price_rub);
-    const priceText = priceValue ? new Intl.NumberFormat("ru-RU").format(priceValue) + " ₽" : cleanValue(row.price_rub);
-    const engineType = cleanValue(row.engine_type);
-    const displacement = cleanValue(row.displacement);
-    const horsePower = cleanValue(row.horse_power);
-    const transmission = cleanValue(row.transmission);
-    const driveType = cleanValue(row.drive_type);
-
-    return {
-      raw: row,
-      mark,
-      markNorm: normalizeLower(mark),
-      model,
-      modelNorm: normalizeLower(model),
-      year,
-      color,
-      colorNorm: normalizeLower(color),
-      region,
-      regionNorm: normalizeLower(region),
-      city,
-      kmAge,
-      condition: kmAge > 0 ? "used" : "new",
-      availability: "available",
-      priceValue,
-      priceText,
-      bodyType: cleanValue(row.body_type),
-      generation: cleanValue(row.generation),
-      complectation: cleanValue(row.complectation),
-      engineType,
-      displacement,
-      horsePower,
-      transmission,
-      driveType,
-      image: getFirstImage(row.image_urls),
-      url: cleanValue(row.url),
-    };
-  }
-
-  function uniqOptions(cars, key, displayKey = key) {
-    const map = new Map();
-    cars.forEach(car => {
-      const norm = car[`${key}Norm`];
-      if (!norm) return;
-      if (!map.has(norm)) {
-        const labelSource = car[displayKey] || car[key];
-        map.set(norm, labelSource || "");
-      }
-    });
-    return [...map.entries()].map(([value, label]) => ({ value, label }));
-  }
-
-  function uniqYears(cars) {
-    const set = new Set();
-    cars.forEach(car => { if (car.year) set.add(car.year); });
-    return [...set].sort((a, b) => b - a).map(y => ({ value: String(y), label: String(y) }));
-  }
-
- function applyFilters(cars, current) {
-    return cars.filter(car => {
-      if (current.condition !== "all" && car.condition !== current.condition) return false;
-      if (current.filters.mark && car.markNorm !== current.filters.mark) return false;
-      if (current.filters.model && car.modelNorm !== current.filters.model) return false;
-      if (current.filters.year && String(car.year) !== current.filters.year) return false;
-      if (current.filters.color && car.colorNorm !== current.filters.color) return false;
-      if (current.filters.region && car.regionNorm !== current.filters.region) return false;
-      if (current.availability.size === 0) return false;
-      if (!current.availability.has(car.availability)) return false;
-      return true;
-    });
-  }
-
-  function filteredExcept(baseCars, key) {
-    const copy = {
-      condition: state.condition,
-      status: state.status,
-      filters: { ...state.filters },
-      availability: new Set(state.availability),
-    };
-    copy.filters[key] = null;
-    return applyFilters(baseCars, copy);
-  }
-
-  function renderOptions(select, options, placeholder) {
-    select.innerHTML = "";
-    const empty = document.createElement("option");
-    empty.value = "";
-    empty.textContent = placeholder;
-    select.appendChild(empty);
-    options.forEach(opt => {
-      const option = document.createElement("option");
-      option.value = opt.value;
-      option.textContent = opt.label;
-      select.appendChild(option);
-    });
-    const current = state.filters[select.dataset.key];
-    select.value = current || "";
-  }
-
-  function updateOptions(baseCars) {
-    const marks = uniqOptions(filteredExcept(baseCars, "mark"), "mark");
-    const models = uniqOptions(filteredExcept(baseCars, "model"), "model");
-    const years = uniqYears(filteredExcept(baseCars, "year"));
-    const colors = uniqOptions(filteredExcept(baseCars, "color"), "color");
-    const regions = uniqOptions(filteredExcept(baseCars, "region"), "region");
-
-    const selectAvailability = new Map([
-      ["mark", marks],
-      ["model", models],
-      ["year", years],
-      ["color", colors],
-      ["region", regions],
-    ]);
-
-    let invalid = false;
-    Object.entries(selectAvailability).forEach(([key, opts]) => {
-      const current = state.filters[key];
-      if (current && !opts.some(o => o.value === current)) {
-        state.filters[key] = null;
-        invalid = true;
-      }
-    });
-
-    if (invalid) return true;
-
-    elements.selectMark.dataset.key = "mark";
-    elements.selectModel.dataset.key = "model";
-    elements.selectYear.dataset.key = "year";
-    elements.selectColor.dataset.key = "color";
-    elements.selectRegion.dataset.key = "region";
-
-    renderOptions(elements.selectMark, marks.sort((a, b) => a.label.localeCompare(b.label)), "Не выбрана");
-    renderOptions(elements.selectModel, models.sort((a, b) => a.label.localeCompare(b.label)), "Не выбрана");
-    renderOptions(elements.selectYear, years, "Не выбран");
-    renderOptions(elements.selectColor, colors.sort((a, b) => a.label.localeCompare(b.label)), "Не выбран");
-    renderOptions(elements.selectRegion, regions.sort((a, b) => a.label.localeCompare(b.label)), "Не выбран");
-
-    return false;
-  }
-
-  function updateCounts(filtered) {
-    const n = filtered.length;
-    elements.found.textContent = `Найдено: ${n} автомобилей`;
-    elements.showBtn.textContent = `Показать ${n} объявлений`;
-    elements.showBtn.disabled = n === 0;
-  }
-
-  function buildSubline(car) {
-    const bits = [];
-    if (car.year) bits.push(car.year);
-    if (car.kmAge !== null && car.kmAge !== undefined) bits.push(`${new Intl.NumberFormat("ru-RU").format(car.kmAge)} км`);
-    const body = [car.bodyType, car.generation, car.complectation].filter(Boolean).join(" /");
-    if (body) bits.push(body);
-    const location = [car.region, car.city].filter(Boolean).join(", ");
-    if (location) bits.push(location);
-    return bits.join(" · ");
-  }
-
-  function buildSpecs(car) {
-    const specs = [];
-    if (car.engineType || car.displacement) specs.push(["Двигатель", [car.engineType, car.displacement].filter(Boolean).join(" ")]);
-    if (car.horsePower) specs.push(["Мощность", `${car.horsePower} л.с.`]);
-    if (car.transmission) specs.push(["Трансмиссия", car.transmission]);
-    if (car.driveType) specs.push(["Привод", car.driveType]);
-    if (car.color) specs.push(["Цвет", car.color]);
-    return specs;
-  }
-
-  function buildDetailsList(car) {
-    const items = [];
-    Object.entries(car.raw).forEach(([key, value]) => {
-      if (EXCLUDED_DETAILS.has(key)) return;
-      const cleaned = cleanValue(value);
-      if (!cleaned) return;
-      items.push(`${key}: ${cleaned}`);
-    });
-    return items;
-  }
-
-  function renderCards(filtered) {
-    elements.grid.innerHTML = "";
-    const title = state.status === "active" ? "Активные объявления" : "Снятые объявления";
-    elements.sectorTitle.textContent = title;
-
-    if (filtered.length === 0) {
-      elements.grid.innerHTML = '<div class="ty-body cars-empty">Нет объявлений</div>';
-      return;
-    }
-
-    const cards = filtered.map(car => {
-      const card = document.createElement("article");
-      card.className = "cars-card";
-
-      const media = document.createElement("div");
-      if (car.image) {
-        const img = document.createElement("img");
-        img.src = car.image;
-        img.alt = `${car.mark || "Авто"} ${car.model || ""}`.trim();
-        media.appendChild(img);
-      } else {
-        const placeholder = document.createElement("div");
-        placeholder.className = "cars-placeholder";
-        placeholder.textContent = "Нет фото";
-        media.appendChild(placeholder);
-      }
-
-      const body = document.createElement("div");
-      body.className = "cars-card-body";
-
-      const titleEl = document.createElement("div");
-      titleEl.className = "cars-card-title";
-      titleEl.textContent = [car.mark, car.model].filter(Boolean).join(" ");
-      body.appendChild(titleEl);
-
-      if (car.priceText) {
-        const priceEl = document.createElement("div");
-        priceEl.className = "cars-card-price";
-        priceEl.textContent = car.priceText;
-        body.appendChild(priceEl);
-      }
-
-      const sub = document.createElement("div");
-      sub.className = "cars-card-sub";
-      sub.textContent = buildSubline(car);
-      body.appendChild(sub);
-
-      const specs = buildSpecs(car);
-      if (specs.length > 0) {
-        const specsWrap = document.createElement("div");
-        specsWrap.className = "cars-specs";
-        specs.forEach(([label, val]) => {
-          const item = document.createElement("div");
-          item.className = "cars-spec-item";
-          item.textContent = `${label}: ${val}`;
-          specsWrap.appendChild(item);
-        });
-        body.appendChild(specsWrap);
-      }
-
-      const detailsItems = buildDetailsList(car);
-      if (detailsItems.length > 0) {
-        const details = document.createElement("details");
-        details.className = "cars-details";
-        const summary = document.createElement("summary");
-        summary.textContent = "Характеристики";
-        details.appendChild(summary);
-        const list = document.createElement("ul");
-        detailsItems.forEach(text => {
-          const li = document.createElement("li");
-          li.textContent = text;
-          list.appendChild(li);
-        });
-        details.appendChild(list);
-        body.appendChild(details);
-      }
-
-      const cta = document.createElement("a");
-      cta.className = "cars-btn cars-cta ty-section";
-      if (car.url) {
-        cta.href = car.url;
-        cta.target = "_blank";
-        cta.rel = "noopener";
-        cta.textContent = "Перейти к объявлению";
-      } else {
-        cta.textContent = "Объявление недоступно";
-        cta.classList.add("disabled");
-      }
-      body.appendChild(cta);
-
-      card.appendChild(media);
-      card.appendChild(body);
-      return card;
-    });
-
-    cards.forEach(c => elements.grid.appendChild(c));
-  }
-
-  function updateAll(clearCards = true) {
-    const baseCars = state.status === "active" ? state.carsActive : state.carsRemoved;
-    const filtered = applyFilters(baseCars, state);
-    state.filtered = filtered;
-
-    const needsRecalc = updateOptions(baseCars);
-    if (needsRecalc) {
-      updateAll(clearCards);
-      return;
-    }
-    updateCounts(filtered);
-    if (clearCards) {
-      elements.grid.innerHTML = '<div class="ty-body cars-empty">Выбор фильтров не применён. Нажмите «Показать».</div>';
+  let invalid = false;
+  for (const [key, opts] of selects.entries()) {
+    const current = state.filters[key];
+    if (current && !opts.some(o => o.value === current)) {
+      state.filters[key] = null;
+      invalid = true;
     }
   }
+  if (invalid) return true;
 
-  async function loadData() {
-    elements.status.textContent = "Загружаем CSV…";
-    try {
-      const [activeRes, removedRes] = await Promise.all([
-        fetch("./data/active/autoru_car_active.csv"),
-        fetch("./data/removed/autoru_car_removed.csv"),
-      ]);
-      const [activeText, removedText] = await Promise.all([activeRes.text(), removedRes.text()]);
-      const activeRows = parseCSV(activeText).map(buildCar);
-      const removedRows = parseCSV(removedText).map(buildCar);
-      state.carsActive = activeRows;
-      state.carsRemoved = removedRows;
-      elements.status.textContent = "Данные загружены";
-      updateAll();
-    } catch (err) {
-      elements.status.textContent = "Ошибка загрузки CSV";
-      console.error(err);
-    }
+  elements.selectMark.dataset.key = "mark";
+  elements.selectModel.dataset.key = "model";
+  elements.selectYear.dataset.key = "year";
+  elements.selectColor.dataset.key = "color";
+  elements.selectRegion.dataset.key = "region";
+
+  renderOptions(elements.selectMark, marks.sort((a,b)=>a.label.localeCompare(b.label)), "Не выбрана");
+  renderOptions(elements.selectModel, models.sort((a,b)=>a.label.localeCompare(b.label)), "Не выбрана");
+  renderOptions(elements.selectYear, years, "Не выбран");
+  renderOptions(elements.selectColor, colors.sort((a,b)=>a.label.localeCompare(b.label)), "Не выбран");
+  renderOptions(elements.selectRegion, regions.sort((a,b)=>a.label.localeCompare(b.label)), "Не выбран");
+
+  return false;
+}
+
+function updateCounts(filtered, baseTitle) {
+  const n = filtered.length;
+  elements.showBtn.textContent = `Показать ${n} объявлений`;
+  elements.showBtn.disabled = n === 0;
+  elements.sectorTitle.textContent = `${baseTitle} · ${n}`;
+}
+
+function syncFieldCapsules() {
+  elements.fields.forEach(field => {
+    const select = field.querySelector("select");
+    if (!select) return;
+    field.classList.toggle("has-value", Boolean(select.value));
+  });
+}
+
+function buildCardMain(car) {
+  const bits = [];
+  if (car.mark) bits.push(car.mark);
+  if (car.model) bits.push(car.model);
+  if (car.year) bits.push(car.year);
+  if (car.color) bits.push(car.color);
+  return bits.join(" ");
+}
+
+function buildCardSub(car) {
+  const bits = [];
+  if (car.kmAge !== null && car.kmAge !== undefined) {
+    bits.push(`${new Intl.NumberFormat("ru-RU").format(car.kmAge)} км`);
+  }
+  const body = [car.complectation, car.generation].filter(Boolean).join(" / ");
+  if (body) bits.push(body);
+  const location = [car.region, car.city].filter(Boolean).join(", ");
+  if (location) bits.push(location);
+  return bits.join(" · ");
+}
+
+function renderCards(filtered) {
+  elements.grid.innerHTML = "";
+  if (filtered.length === 0) {
+    elements.grid.innerHTML = '<div class="ty-body cars-empty">Нет объявлений</div>';
+    return;
   }
 
-  function bindTabs() {
-    elements.tabsCondition.forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (btn.getAttribute("aria-pressed") === "true") return;
-        elements.tabsCondition.forEach(b => b.setAttribute("aria-pressed", "false"));
-        btn.setAttribute("aria-pressed", "true");
-        state.condition = btn.dataset.condition;
-        updateAll();
-      });
-    });
+  filtered.forEach(car => {
+    const card = document.createElement("article");
+    card.className = "cars-card";
+    card.dataset.key = car.dedupeKey;
 
-    elements.tabsStatus.forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (btn.getAttribute("aria-pressed") === "true") return;
-        elements.tabsStatus.forEach(b => b.setAttribute("aria-pressed", "false"));
-        btn.setAttribute("aria-pressed", "true");
-        state.status = btn.dataset.status;
-        elements.sectorTitle.textContent = btn.textContent;
-        updateAll();
-      });
-    });
+    const title = document.createElement("div");
+    title.className = "cars-card-title";
+    title.textContent = buildCardMain(car);
+
+    const sub = document.createElement("div");
+    sub.className = "cars-card-sub";
+    sub.textContent = buildCardSub(car);
+
+    card.appendChild(title);
+    card.appendChild(sub);
+
+    card.addEventListener("click", () => openModal(car));
+
+    elements.grid.appendChild(card);
+  });
+}
+
+function renderEmptyHint() {
+  elements.grid.innerHTML = '<div class="ty-body cars-empty">Выбор фильтров не применён. Нажмите «Показать».</div>';
+}
+
+/* ======================================================================
+   BLOCK 7) MODAL
+====================================================================== */
+function buildModalSub(car) {
+  const bits = [];
+  if (car.year) bits.push(car.year);
+  if (car.kmAge !== null && car.kmAge !== undefined) bits.push(`${new Intl.NumberFormat("ru-RU").format(car.kmAge)} км`);
+  const body = [car.bodyType, car.generation, car.complectation].filter(Boolean).join(" / ");
+  if (body) bits.push(body);
+  const location = [car.region, car.city].filter(Boolean).join(", ");
+  if (location) bits.push(location);
+  return bits.join(" · ");
+}
+
+function buildDetailsList(car) {
+  const items = [];
+  Object.entries(car.raw).forEach(([key, value]) => {
+    if (EXCLUDED_DETAILS.has(key)) return;
+    const cleaned = cleanValue(value);
+    if (!cleaned) return;
+    items.push([key, cleaned]);
+  });
+  return items;
+}
+
+function openModal(car) {
+  elements.modalTitle.textContent = buildCardMain(car);
+  elements.modalPrice.textContent = car.priceText || "";
+  elements.modalSub.textContent = buildModalSub(car);
+
+  elements.modalMedia.innerHTML = "";
+  if (car.image) {
+    const img = document.createElement("img");
+    img.src = car.image;
+    img.alt = elements.modalTitle.textContent;
+    elements.modalMedia.appendChild(img);
   }
 
-  function bindSelects() {
-    [
-      elements.selectMark,
-      elements.selectModel,
-      elements.selectYear,
-      elements.selectColor,
-      elements.selectRegion,
-    ].forEach(select => {
-      select.addEventListener("change", () => {
-        const key = select.dataset.key;
-        const value = select.value || null;
-        state.filters[key] = value ? value : null;
-        updateAll();
-      });
-    });
+  elements.modalList.innerHTML = "";
+  const details = buildDetailsList(car);
+  details.forEach(([k,v]) => {
+    const li = document.createElement("li");
+    li.textContent = `${k}: ${v}`;
+    elements.modalList.appendChild(li);
+  });
+
+  if (car.url) {
+    elements.modalLink.href = car.url;
+    elements.modalLink.style.display = "";
+  } else {
+    elements.modalLink.removeAttribute("href");
+    elements.modalLink.style.display = "none";
   }
 
-  function bindCheckboxes() {
-    const syncAvailability = () => {
-      const next = new Set();
-      if (elements.checkAvailable.checked) next.add("available");
-      if (elements.checkDraft.checked) next.add("draft");
-      if (elements.checkReady.checked) next.add("ready");
-      state.availability = next;
-      updateAll();
-    };
+  elements.modal.classList.add("is-open");
+  elements.modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
 
-    elements.checkAvailable.addEventListener("change", syncAvailability);
-    elements.checkDraft.addEventListener("change", syncAvailability);
-    elements.checkReady.addEventListener("change", syncAvailability);
+function closeModal() {
+  elements.modal.classList.remove("is-open");
+  elements.modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+elements.modal.addEventListener("click", (e) => {
+  if (e.target.closest("[data-modal-close]")) closeModal();
+});
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && elements.modal.classList.contains("is-open")) closeModal();
+});
+
+/* ======================================================================
+   BLOCK 8) UPDATE FLOW
+====================================================================== */
+function updateAll(clearCards = true) {
+  const baseCars = state.status === "active" ? state.allCarsActive : state.allCarsRemoved;
+  const filtered = applyFilters(baseCars, state);
+  state.filtered = filtered;
+  state.lastRenderKind = state.status;
+
+  const needsRecalc = updateOptions(baseCars);
+  if (needsRecalc) {
+    updateAll(clearCards);
+    return;
   }
 
-  function bindActions() {
-    elements.resetBtn.addEventListener("click", () => {
-      state.condition = "all";
-      state.status = "active";
-      state.filters = { mark: null, model: null, year: null, color: null, region: null };
-      state.availability = new Set(["available"]);
-      elements.tabsCondition.forEach(btn => btn.setAttribute("aria-pressed", btn.dataset.condition === "all" ? "true" : "false"));
-      elements.tabsStatus.forEach(btn => btn.setAttribute("aria-pressed", btn.dataset.status === "active" ? "true" : "false"));
-      elements.checkAvailable.checked = true;
-      elements.checkDraft.checked = false;
-      elements.checkReady.checked = false;
-      elements.sectorTitle.textContent = "Активные объявления";
+  const baseTitle = state.status === "active" ? "Активные объявления" : "Снятые объявления";
+  updateCounts(filtered, baseTitle);
+  syncFieldCapsules();
+
+  if (clearCards) renderEmptyHint();
+}
+
+/* ======================================================================
+   BLOCK 9) BINDINGS
+====================================================================== */
+function bindTabs() {
+  elements.tabsCondition.forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.getAttribute("aria-pressed") === "true") return;
+      elements.tabsCondition.forEach(b => b.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+      state.condition = btn.dataset.condition;
       updateAll();
     });
+  });
 
-    elements.showBtn.addEventListener("click", () => {
-      if (state.filtered.length === 0) return;
-      renderCards(state.filtered);
+  elements.tabsStatus.forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.getAttribute("aria-pressed") === "true") return;
+      elements.tabsStatus.forEach(b => b.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+      state.status = btn.dataset.status;
+      updateAll();
     });
-  }
+  });
+}
 
-  loadData();
-  bindTabs();
-  bindSelects();
-  bindCheckboxes();
-  bindActions();
+function bindSelects() {
+  [
+    elements.selectMark,
+    elements.selectModel,
+    elements.selectYear,
+    elements.selectColor,
+    elements.selectRegion,
+  ].forEach(select => {
+    select.addEventListener("change", () => {
+      const key = select.dataset.key;
+      const value = select.value || null;
+      state.filters[key] = value ? value : null;
+      updateAll();
+      syncFieldCapsules();
+    });
+  });
+}
+
+function bindActions() {
+  elements.resetBtn.addEventListener("click", () => {
+    state.condition = "all";
+    state.status = "active";
+    state.filters = { mark: null, model: null, year: null, color: null, region: null };
+
+    elements.tabsCondition.forEach(btn =>
+      btn.setAttribute("aria-pressed", btn.dataset.condition === "all" ? "true" : "false")
+    );
+    elements.tabsStatus.forEach(btn =>
+      btn.setAttribute("aria-pressed", btn.dataset.status === "active" ? "true" : "false")
+    );
+
+    updateAll();
+  });
+
+  elements.showBtn.addEventListener("click", () => {
+    if (state.filtered.length === 0) return;
+    renderCards(state.filtered);
+  });
+}
+
+/* ======================================================================
+   BLOCK 10) BOOT
+====================================================================== */
+initialLoadAll();
+bindTabs();
+bindSelects();
+bindActions();
+startHourlySync();
 </script>
+
+</body>
+</html>
