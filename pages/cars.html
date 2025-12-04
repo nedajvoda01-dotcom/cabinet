@@ -1,73 +1,67 @@
 <!-- pages/cars.html  ✅ ФРАГМЕНТ, НЕ ПОЛНЫЙ HTML-ДОКУМЕНТ -->
-
 <section class="cars-page" aria-label="Поиск автомобилей" data-cars-root>
   <style>
-    /* ======================================================================
-       CARS PAGE — MOCKUP MATCH + VERY LIGHT "SMOKE" SHADOW
-       ✔ одна капсула поиска
-       ✔ табы в линию
-       ✔ кнопки справа СНАРУЖИ
-       ✔ карточки авто — отдельные капсулы
-       ✔ нет общей капсулы/заголовков
-       ✔ лоадер 2с при старте и смене active/removed
-       ✔ только design tokens
-    ====================================================================== */
+    /* =========================================================
+      TOKENS / SPACING — 1:1 по макету
+    ========================================================= */
+    :root{
+      --cars-h: 32px;          /* единая высота всей UI */
+      --cars-gap: 8px;        /* единый хор. gap */
+      --cars-row-gap: 10px;   /* между рядами */
+      --cars-pad-x: 12px;
+      --cars-pad-y: 12px;
+    }
 
     .cars-page{
       width:100%;
       display:flex;
       justify-content:center;
       padding: 22px 24px 28px;
-      background: var(--c-white);
     }
     .cars-shell{
       width:100%;
       max-width: 980px;
       display:flex;
       flex-direction:column;
-      gap:8px;
+      gap:14px;
     }
 
-    /* ======== VERY LIGHT "SMOKE" (еле заметная дымка) ======== */
-    .cars-smoke{
-      box-shadow:
-        0 1px 0 color-mix(in srgb, var(--c-black) 6%, transparent),
-        0 8px 18px color-mix(in srgb, var(--c-black) 7%, transparent);
-    }
-
-    /* ------ Search capsule ------ */
+    /* =========================================================
+      FILTERS (внешняя капсула меню)
+    ========================================================= */
     .cars-filters{
       background: var(--c-white);
       border: 1px solid var(--c-gray-light);
-      border-radius: 18px;
-      padding: 10px 12px 12px;
+      border-radius: 16px;
+      padding: var(--cars-pad-y) var(--cars-pad-x);
       display:flex;
       flex-direction:column;
-      gap:10px;
+      gap: var(--cars-row-gap);
+      box-shadow: 0 4px 16px rgba(0,0,0,.04); /* легкая "дымка" */
     }
 
-    /* Tabs in one row */
+    /* Ряды таблеток сверху */
     .cars-tabs-row{
       display:flex;
-      align-items:center;
-      gap:8px;
+      gap: var(--cars-gap);
       flex-wrap:wrap;
+      align-items:center;
     }
 
+    /* КАПСУЛЫ-ТАБЫ */
     .cars-tabs{
       display:flex;
       border:1px solid var(--c-gray-light);
-      border-radius: 10px;
+      border-radius: 999px;
       background: var(--c-white);
       overflow:hidden;
-      height: 30px;
+      height: var(--cars-h);
     }
-
     .cars-tab{
       border:none;
-      background: transparent;
+      background: var(--c-white);
       color: var(--c-gray);
-      padding: 6px 12px 5px;
+      padding: 0 14px;
       cursor:pointer;
       transition: background 120ms ease, color 120ms ease;
       font: inherit;
@@ -76,29 +70,36 @@
       font-size: var(--fs-12);
       font-weight: var(--fw-menu);
       white-space:nowrap;
+      height: var(--cars-h);
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
     .cars-tab + .cars-tab{
       border-left:1px solid var(--c-gray-light);
     }
     .cars-tab[aria-pressed="true"]{
-      background: var(--c-gray-light);
-      color: var(--c-black);
+      background: var(--c-gray);
+      color: var(--c-white);
     }
     .cars-tab:hover{
       background: var(--c-gray-light);
       color: var(--c-black);
     }
 
-    /* greenlight: status looks wider */
-    .cars-tabs--status{ flex: 1 1 320px; }
-    .cars-tabs--condition,
-    .cars-tabs--seller{ flex: 0 0 auto; }
+    /* =========================================================
+      НИЖНИЕ ПОЛЯ — контейнеры
+    ========================================================= */
+    .cars-controls{
+      display:flex;
+      flex-direction:column;
+      gap: var(--cars-row-gap);
+    }
 
-    /* Select grid */
     .cars-selects{
       display:grid;
       grid-template-columns: repeat(5, minmax(0,1fr));
-      gap:10px;
+      gap: var(--cars-gap);
     }
     @media (max-width: 980px){
       .cars-selects{ grid-template-columns: repeat(3, minmax(0,1fr)); }
@@ -110,7 +111,6 @@
       .cars-selects{ grid-template-columns: 1fr; }
     }
 
-    /* Field */
     .cars-field{
       position:relative;
       display:flex;
@@ -118,67 +118,110 @@
       background: var(--c-white);
       border:1px solid var(--c-gray-light);
       border-radius: 8px;
-      padding: 6px 8px 4px;
-      min-height: 40px;
+      height: var(--cars-h);
+      min-height: var(--cars-h);
+      padding: 0 10px;
       transition: border 120ms ease, background 120ms ease;
-    }
-    .cars-field:hover{
-      border-color: var(--c-gray);
-      background: color-mix(in srgb, var(--c-gray-light) 18%, var(--c-white));
-    }
-    .cars-field:focus-within{
-      border-color: var(--c-gray-dark);
-      background: var(--c-white);
+      width:100%;
     }
 
-    /* soft placeholder label (не капсула) */
+    /* label внутри поля */
     .cars-field::before{
       content: attr(data-label);
       position:absolute;
-      top:6px;
       left:10px;
+      top:6px;
       font-size: var(--fs-11);
       font-weight: var(--fw-menu);
       letter-spacing: var(--ls-ui);
       color: var(--c-gray-light);
       pointer-events:none;
       opacity:1;
-      transition: color 140ms ease;
-    }
-    .cars-field.has-value::before{
-      color: var(--c-gray);
     }
 
+    /* выбранное поле = серый фон + белый текст */
+    .cars-field.has-value{
+      background: var(--c-gray);
+      border-color: var(--c-gray);
+    }
+    .cars-field.has-value::before{
+      color: var(--c-white);
+      opacity:.9;
+    }
+
+    /* select без нативных стрелок */
     .cars-input{
       width:100%;
+      height: var(--cars-h);
       border:none;
       outline:none;
       background:transparent;
-      padding: 14px 4px 2px;
+      padding: 12px 26px 0 0;  /* место под label и стрелку */
       font-size: var(--fs-13);
-      font-weight: var(--fw-regular);
+      font-weight: var(--fw-menu);
       line-height: var(--lh-ui);
       color: var(--c-black);
       appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
       cursor:pointer;
     }
-    .cars-input:disabled{
-      color: var(--c-gray-light);
-      cursor:not-allowed;
+    .cars-field.has-value .cars-input{
+      color: var(--c-white);
+    }
+    .cars-input::-ms-expand{ display:none; }
+    .cars-input::-webkit-search-cancel-button{ display:none; }
+    .cars-input::-webkit-clear-button{ display:none; }
+
+    /* наша стрелка */
+    .cars-field::after{
+      content:"";
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform: translateY(-20%);
+      width:0;height:0;
+      border-left:4px solid transparent;
+      border-right:4px solid transparent;
+      border-top:6px solid var(--c-gray);
+      pointer-events:none;
+    }
+    .cars-field.has-value::after{
+      border-top-color: var(--c-white);
     }
 
-    /* Actions OUTSIDE capsule (как на мокапе) */
+    /* опции (макс приближение к теме) */
+    .cars-input option,
+    .cars-input optgroup{
+      background: var(--c-white);
+      color: var(--c-black);
+      font-weight: var(--fw-regular);
+    }
+    .cars-input option:checked{
+      background: var(--c-black);
+      color: var(--c-white);
+    }
+
+    /* =========================================================
+      ДЕЙСТВИЯ СПРАВА — одинаковая высота и выплывание
+    ========================================================= */
     .cars-actions-outside{
       display:flex;
       align-items:center;
       justify-content:flex-end;
-      gap:8px;
-      margin-top:2px;
+      gap: var(--cars-gap);
+      margin-top:4px;
+      transition: transform 180ms ease, opacity 180ms ease;
+    }
+    .cars-actions-outside.is-loading{
+      opacity:0;
+      transform: translateY(-6px);
+      pointer-events:none;
     }
 
     .cars-btn{
-      border-radius: 10px;
-      padding: 7px 10px 6px;
+      border-radius: 8px;
+      padding: 7px 12px 6px;
       border:1px solid var(--c-gray-light);
       background: var(--c-white);
       cursor:pointer;
@@ -187,7 +230,10 @@
       letter-spacing: var(--ls-ui);
       transition: background 120ms ease, border 120ms ease, color 120ms ease, opacity 120ms ease;
       color: var(--c-gray);
-      height: 30px;
+      height: var(--cars-h);
+      display:inline-flex;
+      align-items:center;
+      white-space:nowrap;
     }
     .cars-btn:hover{
       background: var(--c-gray-light);
@@ -195,9 +241,10 @@
       color: var(--c-black);
     }
     .cars-btn:disabled{
-      opacity:.5;
+      opacity:.45;
       cursor:not-allowed;
     }
+
     .cars-btn--show{
       background: var(--c-black);
       color: var(--c-white);
@@ -209,42 +256,16 @@
       color: var(--c-white);
     }
 
-    /* loader ползунок */
-    .cars-loader{
-      position:relative;
-      height: 4px;
-      width: 120px;
-      border-radius: 999px;
-      background: var(--c-gray-light);
-      overflow:hidden;
-      opacity:0;
-      transform: translateY(2px);
-      transition: opacity 120ms ease;
-    }
-    .cars-loader.is-on{ opacity:1; }
-    .cars-loader-bar{
-      position:absolute; inset:0;
-      width:40%;
-      background: var(--c-black);
-      border-radius:999px;
-      transform: translateX(-120%);
-      animation: carsLoaderMove 900ms ease-in-out infinite;
-    }
-    @keyframes carsLoaderMove{
-      0%   { transform: translateX(-120%); }
-      50%  { transform: translateX(180%); }
-      100% { transform: translateX(180%); }
-    }
-
-    /* results list */
+    /* =========================================================
+      RESULTS — без общей капсулы и заголовков
+    ========================================================= */
     .cars-grid{
       display:flex;
       flex-direction:column;
       gap:8px;
-      min-height: 80px;
-      margin-top:6px;
+      min-height: 40px;
+      padding: 2px 0 0;
     }
-
     .cars-card{
       border:1px solid var(--c-gray-light);
       border-radius:12px;
@@ -254,8 +275,8 @@
       transition: background 120ms ease, border 120ms ease, transform 120ms ease;
     }
     .cars-card:hover{
-      background: var(--c-gray-light);
-      border-color: var(--c-gray);
+      background:#fafafa;
+      border-color:#d7d7d7;
       transform: translateY(-1px);
     }
     .cars-card-title{
@@ -273,15 +294,24 @@
     }
     .cars-empty{
       color: var(--c-gray);
-      padding: 8px 2px;
+      padding: 6px 2px;
+      font-size: var(--fs-13);
     }
 
-    /* modal */
-    .cars-modal{ position:fixed; inset:0; display:none; z-index:999; }
+    /* =========================================================
+      MODAL
+    ========================================================= */
+    .cars-modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      z-index:999;
+    }
     .cars-modal.is-open{ display:block; }
+
     .cars-modal-backdrop{
       position:absolute; inset:0;
-      background: color-mix(in srgb, var(--c-black) 55%, transparent);
+      background: rgba(0,0,0,.55);
     }
     .cars-modal-card{
       position:relative;
@@ -295,7 +325,7 @@
     .cars-modal-head{
       display:flex; align-items:center; justify-content:space-between;
       gap:10px; padding: 4px 4px 8px;
-      border-bottom:1px solid var(--c-gray-light);
+      border-bottom:1px solid #eee;
     }
     .cars-modal-title{
       font-size: var(--fs-24);
@@ -310,12 +340,9 @@
       color: var(--c-gray);
       padding:6px 8px;
       border-radius:8px;
-      transition: background 120ms ease, color 120ms ease;
     }
-    .cars-modal-close:hover{
-      background: var(--c-gray-light);
-      color: var(--c-black);
-    }
+    .cars-modal-close:hover{ background:#f2f2f2; }
+
     .cars-modal-body{
       display:grid;
       grid-template-columns: 320px 1fr;
@@ -325,15 +352,20 @@
     @media (max-width: 700px){
       .cars-modal-body{ grid-template-columns: 1fr; }
     }
+
     .cars-modal-media{
       border-radius: 12px;
-      border:1px solid var(--c-gray-light);
+      border:1px solid #eee;
       min-height: 220px;
       display:grid; place-items:center;
       overflow:hidden;
-      background: var(--c-white);
+      background:#fff;
     }
-    .cars-modal-media img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .cars-modal-media img{
+      width:100%; height:100%; object-fit:cover;
+      display:block;
+    }
+
     .cars-modal-price{
       font-size: var(--fs-24);
       font-weight: var(--fw-semibold);
@@ -359,85 +391,81 @@
       background: var(--c-black);
       color: var(--c-white);
       border-radius:10px;
-      padding: 8px 12px 7px;
+      padding: 7px 10px 6px;
       font-size: var(--fs-12);
       font-weight: var(--fw-menu);
       letter-spacing: var(--ls-ui);
       width: fit-content;
-      transition: background 120ms ease;
     }
-    .cars-modal-link:hover{ background: var(--c-gray-dark); }
   </style>
 
   <div class="cars-shell">
+    <!-- FILTERS -->
+    <div class="cars-filters" role="region" aria-label="Фильтры поиска">
 
-    <!-- SEARCH CAPSULE -->
-    <div class="cars-filters cars-smoke" role="region" aria-label="Фильтры поиска">
-
+      <!-- row 1: статус / состояние / продавец -->
       <div class="cars-tabs-row">
-        <!-- Status -->
         <div class="cars-tabs cars-tabs--status" role="tablist" aria-label="Статус объявления">
-          <button class="cars-tab" data-status="removed" aria-pressed="false" type="button">Снятые объявления</button>
-          <button class="cars-tab" data-status="active" aria-pressed="true"  type="button">Активные объявления</button>
+          <button class="cars-tab cars-tab--status" data-status="removed" aria-pressed="false" type="button">Снятые объявления</button>
+          <button class="cars-tab cars-tab--status" data-status="active" aria-pressed="true" type="button">Активные объявления</button>
         </div>
 
-        <!-- Condition -->
         <div class="cars-tabs cars-tabs--condition" role="tablist" aria-label="Тип авто">
-          <button class="cars-tab" data-condition="all"  aria-pressed="true"  type="button">Все</button>
-          <button class="cars-tab" data-condition="used" aria-pressed="false" type="button">С пробегом</button>
-          <button class="cars-tab" data-condition="new"  aria-pressed="false" type="button">Новые</button>
+          <button class="cars-tab cars-tab--condition" data-condition="all" aria-pressed="true" type="button">Все</button>
+          <button class="cars-tab cars-tab--condition" data-condition="used" aria-pressed="false" type="button">С пробегом</button>
+          <button class="cars-tab cars-tab--condition" data-condition="new" aria-pressed="false" type="button">Новые</button>
         </div>
 
-        <!-- Seller -->
         <div class="cars-tabs cars-tabs--seller" role="tablist" aria-label="Продавец">
-          <button class="cars-tab" data-seller="all"    aria-pressed="true"  type="button">Все</button>
-          <button class="cars-tab" data-seller="owner"  aria-pressed="false" type="button">Собственник</button>
-          <button class="cars-tab" data-seller="dealer" aria-pressed="false" type="button">Диллер</button>
+          <button class="cars-tab cars-tab--seller" data-seller="all" aria-pressed="true" type="button">Все</button>
+          <button class="cars-tab cars-tab--seller" data-seller="owner" aria-pressed="false" type="button">Собственник</button>
+          <button class="cars-tab cars-tab--seller" data-seller="dealer" aria-pressed="false" type="button">Дилер</button>
         </div>
       </div>
 
-      <div class="cars-selects">
-        <div class="cars-field" data-label="Марка" data-field="mark">
-          <select class="cars-input ty-body" id="filterMark" aria-label="Марка"></select>
+      <!-- row 2: selects -->
+      <div class="cars-controls">
+        <div class="cars-selects">
+          <div class="cars-field" data-label="Марка" data-field="mark">
+            <select class="cars-input ty-body" id="filterMark" aria-label="Марка"></select>
+          </div>
+
+          <div class="cars-field" data-label="Модель" data-field="model">
+            <select class="cars-input ty-body" id="filterModel" aria-label="Модель"></select>
+          </div>
+
+          <div class="cars-field" data-label="Год" data-field="year">
+            <select class="cars-input ty-body" id="filterYear" aria-label="Год"></select>
+          </div>
+
+          <div class="cars-field" data-label="Цвет" data-field="color">
+            <select class="cars-input ty-body" id="filterColor" aria-label="Цвет"></select>
+          </div>
+
+          <div class="cars-field" data-label="Регион" data-field="region">
+            <select class="cars-input ty-body" id="filterRegion" aria-label="Регион"></select>
+          </div>
         </div>
 
-        <div class="cars-field" data-label="Модель" data-field="model">
-          <select class="cars-input ty-body" id="filterModel" aria-label="Модель" disabled></select>
-        </div>
-
-        <div class="cars-field" data-label="Год" data-field="year">
-          <select class="cars-input ty-body" id="filterYear" aria-label="Год"></select>
-        </div>
-
-        <div class="cars-field" data-label="Цвет" data-field="color">
-          <select class="cars-input ty-body" id="filterColor" aria-label="Цвет"></select>
-        </div>
-
-        <div class="cars-field" data-label="Регион" data-field="region">
-          <select class="cars-input ty-body" id="filterRegion" aria-label="Регион"></select>
+        <!-- actions -->
+        <div class="cars-actions-outside is-loading" id="carsActions">
+          <button class="cars-btn cars-btn--reset ty-section" type="button" id="carsReset">Сбросить</button>
+          <button class="cars-btn cars-btn--show ty-section" type="button" id="carsShow" disabled>Найдено 0 объявлений</button>
         </div>
       </div>
-    </div>
-
-    <!-- ACTIONS (outside, right) -->
-    <div class="cars-actions-outside">
-      <button class="cars-btn cars-btn--reset ty-section" type="button" id="carsReset">Сбросить</button>
-      <button class="cars-btn cars-btn--show ty-section" type="button" id="carsShow" disabled>Найдено 0 объявлений</button>
-      <div class="cars-loader" id="carsLoader" aria-hidden="true"><div class="cars-loader-bar"></div></div>
     </div>
 
     <!-- RESULTS -->
     <div class="cars-grid" id="carsGrid" aria-live="polite"></div>
-
   </div>
 
   <!-- MODAL -->
-  <div class="cars-modal" id="carsModal" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="cars-modal" id="carsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Детали объявления">
     <div class="cars-modal-backdrop" data-modal-close></div>
     <div class="cars-modal-card" role="document">
       <div class="cars-modal-head">
         <div class="cars-modal-title ty-title" id="carsModalTitle"></div>
-        <button class="cars-modal-close ty-section" type="button" data-modal-close>Закрыть</button>
+        <button class="cars-modal-close ty-section" type="button" data-modal-close aria-label="Закрыть">Закрыть</button>
       </div>
       <div class="cars-modal-body">
         <div class="cars-modal-media" id="carsModalMedia"></div>
@@ -452,9 +480,9 @@
   </div>
 
   <script>
-  /* ======================================================================
-     CONFIG
-  ====================================================================== */
+  /* =========================================================
+     CONFIG: multiple CSV per kind + hourly sync + dedupe
+  ========================================================= */
   const CSV_SOURCES = {
     active: [
       "data/active/autoru_car_active.csv",
@@ -470,282 +498,102 @@
   const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
   const EXCLUDED_DETAILS = new Set(["image_urls"]);
 
-  /* ======================================================================
-     DOMAIN: RU labels + value translations
-  ====================================================================== */
-  const FIELD_LABELS_RU = {
-    id: "ID объявления",
-    inner_id: "Внутренний ID",
-    seller_id: "ID аккаунта",
+  /* =========================================================
+     VALIDATION LISTS
+  ========================================================= */
+  const VALID_REGIONS = [
+    "москва","московская область","санкт-петербург","ленинградская область",
+    "краснодарский край","ростовская область","воронежская область","самарская область",
+    "татарстан","свердловская область","нижегородская область","пермский край",
+    "новосибирская область","красноярский край","челябинская область","омская область",
+    "приморский край","хабаровский край","иркутская область","алтайский край",
+    "ставропольский край","башкортостан","удмуртия","тюменская область",
+    // ... (можешь расширять при необходимости)
+  ].map(s=>s.toLowerCase());
+
+  const MOSCOW_AO = [
+    "цао","сзао","свао","вао","ювао","юао","юзао","зао","сао","тинaо","троицкий","новомосковский"
+  ].map(s=>s.toLowerCase());
+
+  const DEALER_HINTS = [
+    "рольф","автодом","major","мейджор","авилон","fresh","исток","транс","автоцентр",
+    "ооо","ао","зао","ип ","dealer","trade","group","motors","cars","auto"
+  ].map(s=>s.toLowerCase());
+
+  /* =========================================================
+     TRANSLATION MAP for UI
+  ========================================================= */
+  const FIELD_RU = {
+    id: "Айди объявления",
+    inner_id: "Внутренний айди",
     mark: "Марка",
     model: "Модель",
     generation: "Поколение",
-    configuration: "Кузов/конфиг",
+    configuration: "Кузов",
     complectation: "Комплектация",
     url: "Ссылка",
-    price_rub: "Цена ₽",
-    price_usd: "Цена $",
-    price_eur: "Цена €",
+    price_rub: "Цена (₽)",
+    price_usd: "Цена ($)",
+    price_eur: "Цена (€)",
     year: "Год",
-    km_age: "Пробег, км",
     color: "Цвет",
     wheel: "Руль",
     vin: "VIN",
-    pts: "ПТС",
     owners_count: "Владельцев",
     section: "Раздел",
     condition: "Состояние",
-    in_stock: "Наличие",
-    custom: "Таможня/кастом",
-    seller: "Продавец",
-    address: "Адрес",
+    in_stock: "В наличии",
+    custom: "Особое",
+    km_age: "Пробег",
     region: "Регион",
     city: "Город",
-    offer_updated_at: "Обновлено",
-    options: "Опции",
-    engine_type: "Двигатель",
-    displacement: "Объём, л",
-    horse_power: "Л.с.",
-    body_type: "Кузов",
-    transmission: "Коробка",
-    drive_type: "Привод",
-    no_accidents: "Без ДТП",
-    seller_url: "Ссылка продавца",
+    seller: "Продавец",
+    account_id: "Айди аккаунта",
   };
 
-  const VALUE_MAP = {
-    section: { NEW: "Новая", USED: "С пробегом" },
-    in_stock: { IN_STOCK: "В наличии", OUT_OF_STOCK: "Нет в наличии" },
-    no_accidents: { TRUE: "Да", FALSE: "Нет", true:"Да", false:"Нет" },
-    wheel: { left:"Левый", right:"Правый" },
-  };
-
-  function translateValue(key, val){
-    if(val===undefined || val===null) return null;
-    const s = String(val).trim();
-    if(!s) return null;
-    const map = VALUE_MAP[key];
-    if(map){
-      const hit = map[s] ?? map[s.toUpperCase()] ?? map[s.toLowerCase()];
-      if(hit) return hit;
-    }
-    return s;
-  }
-
-  /* ======================================================================
-     DOMAIN: REGIONS РФ + МОСКВА (округа/районы) + жёсткая валидация
-  ====================================================================== */
-  const REGIONS = [
-    "Алтайский край","Амурская область","Архангельская область","Астраханская область",
-    "Белгородская область","Брянская область","Владимирская область","Волгоградская область",
-    "Вологодская область","Воронежская область","Донецкая Народная Республика",
-    "Еврейская автономная область","Забайкальский край","Запорожская область",
-    "Ивановская область","Иркутская область","Кабардино-Балкарская Республика",
-    "Калининградская область","Калужская область","Камчатский край",
-    "Карачаево-Черкесская Республика","Кемеровская область — Кузбасс","Кировская область",
-    "Костромская область","Краснодарский край","Красноярский край","Курганская область",
-    "Курская область","Ленинградская область","Липецкая область","Луганская Народная Республика",
-    "Магаданская область","Москва","Московская область","Мурманская область",
-    "Ненецкий автономный округ","Нижегородская область","Новгородская область",
-    "Новосибирская область","Омская область","Оренбургская область","Орловская область",
-    "Пензенская область","Пермский край","Приморский край","Псковская область",
-    "Республика Адыгея","Республика Алтай","Республика Башкортостан","Республика Бурятия",
-    "Республика Дагестан","Республика Ингушетия","Республика Калмыкия","Республика Карелия",
-    "Республика Коми","Республика Крым","Республика Марий Эл","Республика Мордовия",
-    "Республика Саха (Якутия)","Республика Северная Осетия — Алания","Республика Татарстан",
-    "Республика Тыва","Республика Хакасия","Ростовская область","Рязанская область",
-    "Самарская область","Санкт-Петербург","Саратовская область","Сахалинская область",
-    "Свердловская область","Севастополь","Смоленская область","Ставропольский край",
-    "Тамбовская область","Тверская область","Томская область","Тульская область",
-    "Тюменская область","Удмуртская Республика","Ульяновская область",
-    "Хабаровский край","Ханты-Мансийский автономный округ — Югра","Херсонская область",
-    "Челябинская область","Чеченская Республика","Чувашская Республика",
-    "Чукотский автономный округ","Ямало-Ненецкий автономный округ","Ярославская область"
-  ];
-
-  const REGION_ALIASES = {
-    "спб":"санкт-петербург","питер":"санкт-петербург",
-    "краснодар":"краснодарский край","краснодарский":"краснодарский край",
-    "москва":"москва","московская":"московская область",
-    "ленинградская":"ленинградская область","югра":"ханты-мансийский автономный округ — югра",
-    "якутия":"республика саха (якутия)"
-  };
-
-  const MOSCOW_AO = [
-    { group:"ЦАО", items:["Арбат","Басманный","Замоскворечье","Красносельский","Мещанский","Пресненский","Таганский","Тверской","Хамовники","Якиманка"]},
-    { group:"САО", items:["Аэропорт","Беговой","Бескудниковский","Войковский","Восточное Дегунино","Головинский","Дмитровский","Западное Дегунино","Коптево","Левобережный","Молжаниновский","Савёловский","Сокол","Тимирязевский","Ховрино","Хорошёвский"]},
-    { group:"СВАО", items:["Алексеевский","Алтуфьевский","Бабушкинский","Бибирево","Бутырский","Лианозово","Лосиноостровский","Марфино","Марьина Роща","Останкинский","Отрадное","Ростокино","Свиблово","Северное Медведково","Южное Медведково","Северный","Ярославский"]},
-    { group:"ВАО", items:["Богородское","Вешняки","Восточный","Гольяново","Ивановское","Измайлово","Косино-Ухтомский","Метрогородок","Новогиреево","Новокосино","Перово","Преображенское","Северное Измайлово","Соколиная Гора","Сокольники"]},
-    { group:"ЮВАО", items:["Выхино-Жулебино","Капотня","Кузьминки","Лефортово","Люблино","Марьино","Некрасовка","Нижегородский","Печатники","Рязанский","Текстильщики","Южнопортовый"]},
-    { group:"ЮАО", items:["Бирюлёво Восточное","Бирюлёво Западное","Братеево","Даниловский","Донской","Зябликово","Москворечье-Сабурово","Нагатино-Садовники","Нагатинский Затон","Нагорный","Орехово-Борисово Северное","Орехово-Борисово Южное","Царицыно","Чертаново Северное","Чертаново Центральное","Чертаново Южное"]},
-    { group:"ЮЗАО", items:["Академический","Гагаринский","Зюзино","Коньково","Котловка","Ломоносовский","Обручевский","Северное Бутово","Южное Бутово","Тёплый Стан","Черёмушки","Ясенево"]},
-    { group:"ЗАО", items:["Внуково","Дорогомилово","Крылатское","Кунцево","Можайский","Ново-Переделкино","Очаково-Матвеевское","Проспект Вернадского","Раменки","Солнцево","Тропарёво-Никулино","Филёвский Парк","Фили-Давыдково"]},
-    { group:"СЗАО", items:["Куркино","Митино","Покровское-Стрешнево","Северное Тушино","Строгино","Хорошёво-Мнёвники","Щукино","Южное Тушино"]},
-    { group:"ЗелАО", items:["Крюково","Матушкино","Савёлки","Силино","Старое Крюково"]},
-    { group:"ТиНАО", items:["Внуковское","Воскресенское","Десёновское","Кокошкино","Марушкинское","Мосрентген","Рязановское","Сосенское","Филимонковское","Щербинка","Троицк","Первомайское","Новофёдоровское","Киевский"]},
-  ];
-  const MOSCOW_DISTRICTS = MOSCOW_AO.flatMap(g => g.items);
-
-  function normalizeRegion(s){
-    return String(s||"")
-      .toLowerCase()
-      .replace(/ё/g,"е")
-      .replace(/[.\-,]/g," ")
-      .replace(/\s+/g," ")
-      .trim();
-  }
-
-  function matchRfRegion(raw){
-    const n = normalizeRegion(raw);
-    if(!n) return null;
-    if(REGION_ALIASES[n]){
-      const aliasNorm = REGION_ALIASES[n];
-      return REGIONS.find(r => normalizeRegion(r) === aliasNorm) || null;
-    }
-    return REGIONS.find(r => normalizeRegion(r) === n) || null;
-  }
-
-  function matchMoscowDistrict(raw){
-    const n = normalizeRegion(raw);
-    if(!n) return null;
-    const AO_ALIASES = {
-      "ювао":true,"цао":true,"сао":true,"свао":true,"вао":true,
-      "юао":true,"юзао":true,"зао":true,"сзао":true,"зелао":true,"тинао":true,
-    };
-    if(AO_ALIASES[n]) return null; // AO — только группировка, не регион
-    return MOSCOW_DISTRICTS.find(d => normalizeRegion(d) === n) || null;
-  }
-
-  function matchRegion(raw){
-    const moscow = matchMoscowDistrict(raw);
-    if(moscow) return moscow;
-    const rf = matchRfRegion(raw);
-    if(rf) return rf;
-    return null;
-  }
-
-  function buildGroupedRegions(baseCars){
-    const availableMoscow = new Set();
-    const availableRf = new Set();
-
-    baseCars.forEach(c=>{
-      if(!c.region) return;
-      const norm = normalizeRegion(c.region);
-      if(MOSCOW_DISTRICTS.some(d => normalizeRegion(d) === norm)){
-        availableMoscow.add(norm); return;
-      }
-      if(REGIONS.some(r => normalizeRegion(r) === norm)){
-        availableRf.add(norm); return;
-      }
-    });
-
-    const groups = [];
-
-    if(availableMoscow.size){
-      MOSCOW_AO.forEach(g=>{
-        const items = g.items
-          .filter(name => availableMoscow.has(normalizeRegion(name)))
-          .map(name => ({ value: normalizeRegion(name), label: name }));
-        if(items.length) groups.push({ group: g.group, items });
-      });
-    }
-
-    if(availableRf.size){
-      const rfItems = REGIONS
-        .filter(name => availableRf.has(normalizeRegion(name)))
-        .map(name => ({ value: normalizeRegion(name), label: name }));
-      if(rfItems.length) groups.push({ group: "Регионы РФ", items: rfItems });
-    }
-
-    return groups;
-  }
-
-  function isValidYear(value){
-    const s = String(value ?? "").trim();
-    if(!/^\d{4}$/.test(s)) return false;
-    const y = Number(s);
-    const max = new Date().getFullYear() + 1;
-    return y >= 1900 && y <= max;
-  }
-
-  /* ======================================================================
-     DOMAIN: SELLER DETECT
-  ====================================================================== */
-  const DEALER_KEYWORDS = [
-    "рольф","major","авилон","avilon","fresh","inchcape","ттс","expocar",
-    "автосалон","автосервис","дилер","dealer","trade-in","трейд-ин",
-    "group","групп","мотors","motors","auto","авто","центр",
-    "carprice","car price","select","selection","prime","premium"
-  ];
-  function looksLikePersonName(s){
-    if(!s) return false;
-    const t = s.trim();
-    if(/\b(ооо|оао|зао|пао|ип|ao|llc|inc|групп|group|авто|motors|dealer|дилер)\b/i.test(t)) return false;
-    const words = t.split(/\s+/).filter(Boolean);
-    if(words.length < 2 || words.length > 3) return false;
-    return words.every(w => /^[А-ЯЁ][а-яё\-]+$/.test(w));
-  }
-  function normalizeSellerType(sellerRaw){
-    const s = (sellerRaw||"").toString().toLowerCase().replace(/ё/g,"е");
-    if(!s.trim()) return null;
-    if(DEALER_KEYWORDS.some(k => s.includes(k))) return "dealer";
-    if(looksLikePersonName(sellerRaw)) return "owner";
-    return null;
-  }
-
-  /* ======================================================================
+  /* =========================================================
      STATE + ELEMENTS
-  ====================================================================== */
+  ========================================================= */
   const state = {
     allCarsActive: [],
     allCarsRemoved: [],
     filtered: [],
     condition: "all",
     status: "active",
-    filters: { mark:null, model:null, year:null, color:null, region:null, seller:"all" },
+    sellerType: "all", // all | owner | dealer
+    filters: { mark:null, model:null, year:null, color:null, region:null },
     lastSignatures: { active:null, removed:null },
     lastRenderKind: "active",
     isBooted: false,
-    hasShown: false,
   };
 
   const elements = {
     root: document.querySelector("[data-cars-root]"),
     tabsCondition: [...document.querySelectorAll("[data-condition]")],
-    tabsStatus:    [...document.querySelectorAll("[data-status]")],
-    tabsSeller:    [...document.querySelectorAll("[data-seller]")],
-    selectMark:   document.getElementById("filterMark"),
-    selectModel:  document.getElementById("filterModel"),
-    selectYear:   document.getElementById("filterYear"),
-    selectColor:  document.getElementById("filterColor"),
+    tabsStatus: [...document.querySelectorAll("[data-status]")],
+    tabsSeller: [...document.querySelectorAll("[data-seller]")],
+    selectMark: document.getElementById("filterMark"),
+    selectModel: document.getElementById("filterModel"),
+    selectYear: document.getElementById("filterYear"),
+    selectColor: document.getElementById("filterColor"),
     selectRegion: document.getElementById("filterRegion"),
-    resetBtn:     document.getElementById("carsReset"),
-    showBtn:      document.getElementById("carsShow"),
-    loader:       document.getElementById("carsLoader"),
-    grid:         document.getElementById("carsGrid"),
-    fields:       [...document.querySelectorAll(".cars-field")],
-    modal:        document.getElementById("carsModal"),
-    modalTitle:   document.getElementById("carsModalTitle"),
-    modalMedia:   document.getElementById("carsModalMedia"),
-    modalPrice:   document.getElementById("carsModalPrice"),
-    modalSub:     document.getElementById("carsModalSub"),
-    modalList:    document.getElementById("carsModalList"),
-    modalLink:    document.getElementById("carsModalLink"),
+    resetBtn: document.getElementById("carsReset"),
+    showBtn: document.getElementById("carsShow"),
+    actions: document.getElementById("carsActions"),
+    grid: document.getElementById("carsGrid"),
+    fields: [...document.querySelectorAll(".cars-field")],
+    modal: document.getElementById("carsModal"),
+    modalTitle: document.getElementById("carsModalTitle"),
+    modalMedia: document.getElementById("carsModalMedia"),
+    modalPrice: document.getElementById("carsModalPrice"),
+    modalSub: document.getElementById("carsModalSub"),
+    modalList: document.getElementById("carsModalList"),
+    modalLink: document.getElementById("carsModalLink"),
   };
 
-  function showLoader(ms=2000){
-    if(!elements.loader) return;
-    elements.loader.classList.add("is-on");
-    elements.loader.setAttribute("aria-hidden","false");
-    setTimeout(()=>{
-      elements.loader.classList.remove("is-on");
-      elements.loader.setAttribute("aria-hidden","true");
-    }, ms);
-  }
-
-  /* ======================================================================
+  /* =========================================================
      DOMAIN: CLEAN / PARSE / DEDUPE
-  ====================================================================== */
+  ========================================================= */
   function cleanValue(v){
     if (v===undefined||v===null) return null;
     const s=String(v).trim(); if(!s) return null;
@@ -754,15 +602,26 @@
     return s;
   }
   function normalizeLower(v){ const c=cleanValue(v); return c?c.toLowerCase():null; }
+
   function parseNumber(value){
     const digits = cleanValue(value)?.replace(/[^0-9-]/g,"");
     if(!digits) return null;
-    const n=Number(digits); return Number.isFinite(n)?n:null;
+    const n=Number(digits);
+    return Number.isFinite(n)?n:null;
   }
+
+  function parseYear(value){
+    const n = parseNumber(value);
+    if(!n) return null;
+    if(n < 1950 || n > 2050) return null;
+    return n;
+  }
+
   function parseDate(value){
     const v=cleanValue(value); if(!v) return null;
     const d=new Date(v); return Number.isFinite(d.getTime())?d:null;
   }
+
   function detectDelimiter(text){
     const first=text.split(/\r?\n/)[0]||"";
     const sc=(first.match(/;/g)||[]).length;
@@ -771,6 +630,7 @@
     if(cc>sc) return ",";
     return ";";
   }
+
   function parseCSV(text){
     const delimiter=detectDelimiter(text);
     const lines=text.split(/\r?\n/).filter(l=>l.trim()!=="");
@@ -783,47 +643,68 @@
       return row;
     });
   }
+
   function getFirstImage(urls){
     const val=cleanValue(urls); if(!val) return null;
     const parts=val.split(/\s*\|\s*|\s*,\s*/).filter(Boolean);
     return parts[0]||null;
   }
 
+  function normalizeRegion(region){
+    const r = normalizeLower(region);
+    if(!r) return null;
+    // AO Москвы пропускаем отдельно
+    if(MOSCOW_AO.includes(r)) return r;
+
+    // федеральные субъекты
+    if(VALID_REGIONS.includes(r)) return r;
+
+    // частичные совпадения (тип "краснодар" -> "краснодарский край")
+    const found = VALID_REGIONS.find(v =>
+      r === v ||
+      r.includes(v) ||
+      v.includes(r)
+    );
+    return found || null;
+  }
+
+  function isDealerBySellerName(name){
+    const n = normalizeLower(name);
+    if(!n) return false;
+    return DEALER_HINTS.some(h => n.includes(h));
+  }
+
   function buildCar(row, kind, fileIndex){
     const mark=cleanValue(row.mark);
     const model=cleanValue(row.model);
-
-    const rawYear=parseNumber(row.year);
-    const year=(rawYear && isValidYear(rawYear)) ? rawYear : null;
-
+    const year=parseYear(row.year);
     const color=cleanValue(row.color);
-
-    const regionMatched = matchRegion(row.region || row.city || "");
-    const region = regionMatched || null;
+    const region=cleanValue(row.region);
+    const regionNorm=normalizeRegion(region);
 
     const city=cleanValue(row.city);
     const kmAge=parseNumber(row.km_age);
-
-    const sellerName = cleanValue(row.seller);
-    const sellerType = normalizeSellerType(sellerName);
-    const sellerId   = cleanValue(row.seller_id);
-
     const priceValue=parseNumber(row.price_rub);
+
     const priceText=priceValue
       ? new Intl.NumberFormat("ru-RU").format(priceValue)+" ₽"
       : cleanValue(row.price_rub);
 
-    const updatedAt=parseDate(row.offer_updated_at || row.updated_at);
+    const updatedAt=parseDate(row.updated_at);
     const url=cleanValue(row.url);
     const image=getFirstImage(row.image_urls);
     const condition=kmAge>0 ? "used" : "new";
+
+    const sellerName = cleanValue(row.seller || row.seller_name || row.owner || row.dealer);
+    const sellerType = isDealerBySellerName(sellerName) ? "dealer" : "owner";
+    const accountId = cleanValue(row.account_id || row.seller_id || row.user_id);
 
     const dedupeKey = url || [
       normalizeLower(mark)||"",
       normalizeLower(model)||"",
       year||"",
       priceValue||"",
-      normalizeLower(region)||"",
+      regionNorm||"",
       normalizeLower(city)||"",
       kmAge||""
     ].join("|");
@@ -831,35 +712,32 @@
     return {
       raw: row, kind, fileIndex, dedupeKey, updatedAt,
       id: cleanValue(row.id),
-      innerId: cleanValue(row.inner_id),
-      sellerId,
-      sellerName,
-      sellerType,
+      inner_id: cleanValue(row.inner_id),
+      account_id: accountId,
+
       mark, markNorm: normalizeLower(mark),
       model, modelNorm: normalizeLower(model),
       year,
       color, colorNorm: normalizeLower(color),
-      region, regionNorm: normalizeLower(region),
-      city, kmAge, condition,
+
+      region, regionNorm,
+      city,
+
+      kmAge, condition,
       priceValue, priceText,
+
       bodyType: cleanValue(row.body_type),
       generation: cleanValue(row.generation),
-      configuration: cleanValue(row.configuration),
       complectation: cleanValue(row.complectation),
       engineType: cleanValue(row.engine_type),
       displacement: cleanValue(row.displacement),
       horsePower: cleanValue(row.horse_power),
       transmission: cleanValue(row.transmission),
       driveType: cleanValue(row.drive_type),
-      noAccidents: cleanValue(row.no_accidents),
-      wheel: cleanValue(row.wheel),
-      vin: cleanValue(row.vin),
-      ownersCount: cleanValue(row.owners_count),
-      section: cleanValue(row.section),
-      inStock: cleanValue(row.in_stock),
-      custom: cleanValue(row.custom),
-      address: cleanValue(row.address),
-      sellerUrl: cleanValue(row.seller_url),
+
+      sellerName,
+      sellerType,
+
       image, url,
     };
   }
@@ -893,9 +771,9 @@
     return [...map.values()];
   }
 
-  /* ======================================================================
-     DATA LOADING
-  ====================================================================== */
+  /* =========================================================
+     DATA LOADING + hourly sync
+  ========================================================= */
   async function fetchCsvSafe(url){
     try{
       const r=await fetch(url,{cache:"no-store"});
@@ -912,15 +790,17 @@
       const text=await fetchCsvSafe(url);
       if(text) texts.push({url,text,fileIndex:i});
     }
+
     const signature=signatureFromText(texts.map(x=>x.text));
     const cars=texts.flatMap(({text,fileIndex}) =>
       parseCSV(text).map(row=>buildCar(row,kind,fileIndex))
     );
-    return { cars: dedupeCars(cars), signature };
+    const deduped=dedupeCars(cars);
+
+    return { cars: deduped, signature };
   }
 
   async function initialLoadAll(){
-    showLoader(2000);
     const active=await loadCarsKind("active");
     const removed=await loadCarsKind("removed");
 
@@ -930,7 +810,7 @@
     state.lastSignatures.removed=removed.signature;
 
     state.isBooted=true;
-    updateAll();
+    updateAll(true);
   }
 
   async function syncIfChanged(kind){
@@ -952,9 +832,9 @@
     }, UPDATE_INTERVAL_MS);
   }
 
-  /* ======================================================================
-     FILTERS / OPTIONS
-  ====================================================================== */
+  /* =========================================================
+     FILTERING / OPTIONS / COUNTS
+  ========================================================= */
   function uniqOptions(cars,key,displayKey=key){
     const map=new Map();
     cars.forEach(car=>{
@@ -969,26 +849,23 @@
 
   function uniqYears(cars){
     const set=new Set();
-    cars.forEach(c=>{
-      if(c.year && isValidYear(c.year)) set.add(c.year);
-    });
+    cars.forEach(c=>{ if(c.year) set.add(c.year); });
     return [...set].sort((a,b)=>b-a).map(y=>({value:String(y),label:String(y)}));
   }
 
   function applyFilters(cars,current){
     return cars.filter(car=>{
       if(!car.url) return false;
-      if(current.condition!=="all" && car.condition!==current.condition) return false;
 
-      if(current.filters.seller && current.filters.seller!=="all"){
-        if(car.sellerType !== current.filters.seller) return false;
-      }
+      if(current.condition!=="all" && car.condition!==current.condition) return false;
+      if(current.sellerType!=="all" && car.sellerType!==current.sellerType) return false;
 
       if(current.filters.mark && car.markNorm!==current.filters.mark) return false;
       if(current.filters.model && car.modelNorm!==current.filters.model) return false;
       if(current.filters.year && String(car.year)!==current.filters.year) return false;
       if(current.filters.color && car.colorNorm!==current.filters.color) return false;
       if(current.filters.region && car.regionNorm!==current.filters.region) return false;
+
       return true;
     });
   }
@@ -997,21 +874,24 @@
     const copy={
       condition: state.condition,
       status: state.status,
+      sellerType: state.sellerType,
       filters: {...state.filters},
     };
     copy.filters[key]=null;
     return applyFilters(baseCars,copy);
   }
 
-  function renderOptions(select, options){
+  function renderOptions(select, options, placeholder){
     select.innerHTML="";
     const empty=document.createElement("option");
-    empty.value=""; empty.textContent=""; empty.disabled=true; empty.hidden=true;
+    empty.value="";
+    empty.textContent=placeholder;
     select.appendChild(empty);
 
     options.forEach(opt=>{
       const o=document.createElement("option");
-      o.value=opt.value; o.textContent=opt.label;
+      o.value=opt.value;
+      o.textContent=opt.label;
       select.appendChild(o);
     });
 
@@ -1019,40 +899,51 @@
     select.value=current||"";
   }
 
-  function renderGroupedRegionSelect(select, grouped){
+  function renderRegions(select, options){
     select.innerHTML="";
+
     const empty=document.createElement("option");
-    empty.value=""; empty.textContent=""; empty.disabled=true; empty.hidden=true;
+    empty.value="";
+    empty.textContent="Не выбран";
     select.appendChild(empty);
 
-    grouped.forEach(g=>{
+    const ao = options.filter(o=>MOSCOW_AO.includes(o.value));
+    const rf = options.filter(o=>!MOSCOW_AO.includes(o.value));
+
+    if(ao.length){
       const og=document.createElement("optgroup");
-      og.label=g.group;
-      g.items.forEach(opt=>{
+      og.label="Москва — округа";
+      ao.forEach(opt=>{
         const o=document.createElement("option");
-        o.value=opt.value;
-        o.textContent=opt.label;
+        o.value=opt.value; o.textContent=opt.label.toUpperCase();
         og.appendChild(o);
       });
       select.appendChild(og);
-    });
+    }
 
-    select.value = state.filters.region || "";
+    if(rf.length){
+      const og=document.createElement("optgroup");
+      og.label="Регионы РФ";
+      rf.sort((a,b)=>a.label.localeCompare(b.label)).forEach(opt=>{
+        const o=document.createElement("option");
+        o.value=opt.value; o.textContent=opt.label;
+        og.appendChild(o);
+      });
+      select.appendChild(og);
+    }
+
+    select.value=state.filters.region||"";
   }
 
   function updateOptions(baseCars){
-    const marks=uniqOptions(filteredExcept(baseCars,"mark"),"mark")
-      .sort((a,b)=>a.label.localeCompare(b.label,"ru"));
-    const models=uniqOptions(filteredExcept(baseCars,"model"),"model")
-      .sort((a,b)=>a.label.localeCompare(b.label,"ru"));
+    const marks=uniqOptions(filteredExcept(baseCars,"mark"),"mark");
+    const models=uniqOptions(filteredExcept(baseCars,"model"),"model");
     const years=uniqYears(filteredExcept(baseCars,"year"));
-    const colors=uniqOptions(filteredExcept(baseCars,"color"),"color")
-      .sort((a,b)=>a.label.localeCompare(b.label,"ru"));
-
-    const groupedRegions = buildGroupedRegions(filteredExcept(baseCars,"region"));
+    const colors=uniqOptions(filteredExcept(baseCars,"color"),"color");
+    const regions=uniqOptions(filteredExcept(baseCars,"region"),"region","region");
 
     const selects=new Map([
-      ["mark",marks],["model",models],["year",years],["color",colors]
+      ["mark",marks],["model",models],["year",years],["color",colors],["region",regions],
     ]);
 
     let invalid=false;
@@ -1060,13 +951,6 @@
       const current=state.filters[key];
       if(current && !opts.some(o=>o.value===current)){
         state.filters[key]=null; invalid=true;
-      }
-    }
-
-    if(state.filters.region){
-      const flat = groupedRegions.flatMap(g=>g.items||[]);
-      if(!flat.some(o=>o.value===state.filters.region)){
-        state.filters.region=null; invalid=true;
       }
     }
     if(invalid) return true;
@@ -1077,32 +961,35 @@
     elements.selectColor.dataset.key="color";
     elements.selectRegion.dataset.key="region";
 
-    renderOptions(elements.selectMark, marks);
-    renderOptions(elements.selectModel, models);
-    renderOptions(elements.selectYear, years);
-    renderOptions(elements.selectColor, colors);
-    renderGroupedRegionSelect(elements.selectRegion, groupedRegions);
+    renderOptions(elements.selectMark, marks.sort((a,b)=>a.label.localeCompare(b.label)),"Не выбрана");
+    renderOptions(elements.selectModel, models.sort((a,b)=>a.label.localeCompare(b.label)),"Не выбрана");
+    renderOptions(elements.selectYear, years,"Не выбран");
+    renderOptions(elements.selectColor, colors.sort((a,b)=>a.label.localeCompare(b.label)),"Не выбран");
+    renderRegions(elements.selectRegion, regions);
 
-    elements.selectModel.disabled = !state.filters.mark;
     return false;
   }
 
   function updateCounts(filtered){
     const n=filtered.length;
     elements.showBtn.textContent=`Найдено ${n} объявлений`;
-    elements.showBtn.disabled=n===0;
+    elements.showBtn.disabled = n===0;
   }
 
-  function syncFieldCapsules(){
+  function syncFieldContainers(){
     elements.fields.forEach(field=>{
       const select=field.querySelector("select");
       field.classList.toggle("has-value", Boolean(select?.value));
     });
   }
 
-  /* ======================================================================
+  function setActionsLoading(on){
+    elements.actions.classList.toggle("is-loading", on);
+  }
+
+  /* =========================================================
      RENDER CARDS
-  ====================================================================== */
+  ========================================================= */
   function buildCardMain(car){
     const bits=[];
     if(car.mark) bits.push(car.mark);
@@ -1132,7 +1019,7 @@
     }
     filtered.forEach(car=>{
       const card=document.createElement("article");
-      card.className="cars-card cars-smoke";
+      card.className="cars-card";
       card.dataset.key=car.dedupeKey;
 
       const title=document.createElement("div");
@@ -1150,9 +1037,9 @@
     });
   }
 
-  /* ======================================================================
+  /* =========================================================
      MODAL
-  ====================================================================== */
+  ========================================================= */
   function buildModalSub(car){
     const bits=[];
     if(car.year) bits.push(car.year);
@@ -1172,11 +1059,13 @@
       if(EXCLUDED_DETAILS.has(k)) return;
       const c=cleanValue(v);
       if(!c) return;
-      const label = FIELD_LABELS_RU[k] || k;
-      const valRu = translateValue(k, c);
-      items.push([label, valRu]);
+      const label = FIELD_RU[k] || k;
+      items.push([label,c]);
     });
-    if(car.sellerId) items.push(["ID аккаунта", car.sellerId]);
+
+    if(car.sellerName) items.push(["Продавец", car.sellerName]);
+    if(car.account_id) items.push(["Айди аккаунта", car.account_id]);
+
     return items;
   }
 
@@ -1194,9 +1083,9 @@
     }
 
     elements.modalList.innerHTML="";
-    buildDetailsList(car).forEach(([label,val])=>{
+    buildDetailsList(car).forEach(([k,v])=>{
       const li=document.createElement("li");
-      li.textContent=`${label}: ${val}`;
+      li.textContent=`${k}: ${v}`;
       elements.modalList.appendChild(li);
     });
 
@@ -1226,43 +1115,41 @@
     if(e.key==="Escape" && elements.modal.classList.contains("is-open")) closeModal();
   });
 
-  /* ======================================================================
+  /* =========================================================
      UPDATE FLOW
-  ====================================================================== */
-  function updateAll(clearCards=true){
+  ========================================================= */
+  function updateAll(render=true){
     const baseCars = state.status==="active" ? state.allCarsActive : state.allCarsRemoved;
     const filtered = applyFilters(baseCars, state);
     state.filtered = filtered;
     state.lastRenderKind = state.status;
 
     const needsRecalc = updateOptions(baseCars);
-    if(needsRecalc){ updateAll(clearCards); return; }
+    if(needsRecalc){ updateAll(render); return; }
 
     updateCounts(filtered);
-    syncFieldCapsules();
+    syncFieldContainers();
 
-    if(state.hasShown){
-      renderCards(filtered);
-      return;
-    }
-
-    if(clearCards) elements.grid.innerHTML="";
+    if(render) renderCards(filtered);
   }
 
-  /* ======================================================================
+  /* =========================================================
      BINDINGS
-  ====================================================================== */
+  ========================================================= */
   function bindTabs(){
+    // condition
     elements.tabsCondition.forEach(btn=>{
       btn.addEventListener("click",()=>{
         if(btn.getAttribute("aria-pressed")==="true") return;
         elements.tabsCondition.forEach(b=>b.setAttribute("aria-pressed","false"));
         btn.setAttribute("aria-pressed","true");
         state.condition=btn.dataset.condition;
-        updateAll();
+
+        updateAll(true);
       });
     });
 
+    // status
     elements.tabsStatus.forEach(btn=>{
       btn.addEventListener("click",()=>{
         if(btn.getAttribute("aria-pressed")==="true") return;
@@ -1270,19 +1157,28 @@
         btn.setAttribute("aria-pressed","true");
         state.status=btn.dataset.status;
 
-        showLoader(2000);
+        // 2 секунды "выплывание"
+        setActionsLoading(true);
+        elements.showBtn.disabled=true;
 
-        updateAll();
+        updateAll(true);
+
+        setTimeout(()=>{
+          setActionsLoading(false);
+          updateCounts(state.filtered);
+        }, 2000);
       });
     });
 
+    // seller
     elements.tabsSeller.forEach(btn=>{
       btn.addEventListener("click",()=>{
         if(btn.getAttribute("aria-pressed")==="true") return;
         elements.tabsSeller.forEach(b=>b.setAttribute("aria-pressed","false"));
         btn.setAttribute("aria-pressed","true");
-        state.filters.seller = btn.dataset.seller;
-        updateAll();
+        state.sellerType=btn.dataset.seller;
+
+        updateAll(true);
       });
     });
   }
@@ -1293,9 +1189,7 @@
         select.addEventListener("change",()=>{
           const key=select.dataset.key;
           state.filters[key]=select.value || null;
-          if(key==="mark") state.filters.model=null;
-          updateAll();
-          syncFieldCapsules();
+          updateAll(true);
         });
       });
   }
@@ -1304,8 +1198,8 @@
     elements.resetBtn.addEventListener("click",()=>{
       state.condition="all";
       state.status="active";
-      state.filters={mark:null,model:null,year:null,color:null,region:null,seller:"all"};
-      state.hasShown=false;
+      state.sellerType="all";
+      state.filters={mark:null,model:null,year:null,color:null,region:null};
 
       elements.tabsCondition.forEach(btn=>
         btn.setAttribute("aria-pressed", btn.dataset.condition==="all" ? "true":"false")
@@ -1317,25 +1211,30 @@
         btn.setAttribute("aria-pressed", btn.dataset.seller==="all" ? "true":"false")
       );
 
+      setActionsLoading(true);
       updateAll(true);
+      setTimeout(()=>setActionsLoading(false), 200);
     });
 
+    // show кнопка теперь просто перерендерит (на всякий)
     elements.showBtn.addEventListener("click",()=>{
       if(!state.filtered.length) return;
-      state.hasShown = true;
       renderCards(state.filtered);
     });
   }
 
-  /* ======================================================================
-     BOOT
-  ====================================================================== */
+  /* =========================================================
+     BOOT ONCE
+  ========================================================= */
   if(!state.isBooted){
     initialLoadAll();
     bindTabs();
     bindSelects();
     bindActions();
     startHourlySync();
+
+    // стартовое выплывание
+    setTimeout(()=>setActionsLoading(false), 2000);
   }
   </script>
 </section>
