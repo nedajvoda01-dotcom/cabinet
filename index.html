@@ -5,45 +5,72 @@
   <title>ООО "ТМЫВ ДЕНЕГ" – Кабинет</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- UI font (ChatGPT-ish) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    :root {
-      --bg: #ffffff;
+:root {
+  /* ======================================================================
+     COLOR SYSTEM (утверждено)
+  ====================================================================== */
+  --c-black: #000000;
+  --c-white: #F9F9F9;
+  --c-gray-dark: #333333;
+  --c-gray: #646464;
+  --c-gray-light: #A7A7A7;
 
-      /* Тёмный сайдбар как у ChatGPT */
-      --surface: #1a1a1b;
-      --border: #2a2a2b;
+  /* ✅ акценты (кастомим только по команде) */
+  --c-orange: #E85002;
+  --g-1: #000000;
+  --g-2: #C10801;
+  --g-3: #F16001;
+  --g-4: #D9C3AB;
 
-      --text: #f3f4f6;
-      --text-muted: #9ca3af;
+  /* ======================================================================
+     LAYOUT
+  ====================================================================== */
+  --radius-md: 12px;
+  --sidebar-w: 260px;
+  --sidebar-w-collapsed: 48px;
+  --logo-area-h: 76px;
 
-      --item-hover: #232324;
-      --item-active: #2b2d31;
-      --item-active-text: #ffffff;
+  /* ✅ общий верхний отступ (для collapsed SVG и кнопки) */
+  --logo-top: 18px;
 
-      --radius-md: 12px;
+  /* ======================================================================
+     FONTS
+  ====================================================================== */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-brand: "HandelGothic BT Rus By Me", var(--font-sans);
 
-      --sidebar-w: 260px;
-      --sidebar-w-collapsed: 48px;
+  /* font sizes */
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-15: 15px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+  --fs-44: 44px;
 
-      --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-      --font-ui-alt: "Inter", var(--font-ui);
+  /* font weights */
+  --fw-menu: 350;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
 
-      --font-logo: "HandelGothic BT Rus By Me", var(--font-ui-alt);
+  /* line heights */
+  --lh-tight: 1.1;
+  --lh-snug: 1.25;
+  --lh-normal: 1.45;
+  --lh-ui: 1.0;
 
-      --logo-font-size-base: 20px;
+  /* letter spacing */
+  --ls-ui: 0.02em;
+  --ls-brand: 0.2px;
 
-      /* BAN accent */
-      --ban-red: #ff3b30;
-
-      /* ВЫСОТА ЗОНЫ ЛОГО (чтобы nav не прыгал) */
-      --logo-area-h: 76px;
-
-      /* ТВОЁ base64-лого для свернутого состояния */
-      --collapsed-logo-data: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2Utd2lkdGg9IjIiIGQ9Ik0yIDd2OGEyIDIgMCAwIDAgMiAyaDFNMiA3VjVhMiAyIDAgMCAxIDItMmgyTTIgN2E0IDQgMCAwIDAgNC00bTAgMGgxM20tOS4yMzYgOUEzIDMgMCAwIDEgMTQgNy43NjRNMiAyMEwyMCAybTEuMjIgMTYuMDQ3bC41NDktNi4yNjFjLjA3NS0uODY1LS41OTgtMS42My0xLjUwNC0xLjcwbC0uODItLjA3MW0xLjc3NiA4LjA0MmwtLjEzNyAxLjU2NmMtLjA3Ni44NjQtLjg3MiAxLjUwMS0xLjc3OCAxLjQyMmwtMS42NC0uMTQ0bTMuNTU1LTIuODQ0Yy0xLjgxMy0uMTU4LTMuNDA1IDEuMTE1LTMuNTU2IDIuODQ0bTAgMEw3IDE5Ljk1OG00LjM0Ny0zLjQ3N2MuNDA5LjUyLjk0Ljc4NSAxLjY3Ljg0OWMxLjM1OS4xMTkgMi41NTMtLjgzNiAyLjY2Ni0yLjEzM2MuMDYxLS42OTYtLjA4NS0xLjI2OS0uNTUxLTEuNzQzIi8+PC9zdmc+");
-    }
+  /* collapsed logo svg */
+  --collapsed-logo-data: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2Utd2lkdGg9IjIiIGQ9Ik0yIDd2OGEyIDIgMCAwIDAgMiAyaDFNMiA3VjVhMiAyIDAgMCAxIDItMmgyTTIgN2E0IDQgMCAwIDAgNC00bTAgMGgxM20tOS4yMzYgOUEzIDMgMCAwIDEgMTQgNy43NjRNMiAyMEwyMCAybTEuMjIgMTYuMDQ3bC41NDktNi4yNjFjLjA3NS0uODY1LS41OTgtMS42My0xLjUwNC0xLjcxbC0uODItLjA3MW0xLjc3NiA4LjA0MmwtLjEzNyAxLjU2NmMtLjA3Ni44NjQtLjg3MiAxLjUwMS0xLjc3OCAxLjQyMmwtMS42NC0uMTQ0bTMuNTU1LTIuODQ0Yy0xLjgxMy0uMTU4LTMuNDA1IDEuMTE1LTMuNTU2IDIuODQ0bTAgMEw3IDE5Ljk1OG00LjM0Ny0zLjQ3N2MuNDA5LjUyLjk0Ljc4NSAxLjY3Ljg0OWMxLjM1OS4xMTkgMi41NTMtLjgzNiAyLjY2Ni0yLjEzM2MuMDYxLS42OTYtLjA4NS0xLjI2OS0uNTUxLTEuNzQzIi8+PC9zdmc+");
+}
 
     @font-face{
       font-family: "HandelGothic BT Rus By Me";
@@ -60,324 +87,1052 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: var(--font-ui-alt);
-      background: var(--bg);
-      color: #111827;
-      min-height: 100vh;
-    }
-    .layout {
-      display: flex;
-      width: 100%;
+      font-family: var(--font-sans);
+      background: var(--c-white);
+      color: var(--c-black);
       min-height: 100vh;
     }
 
+    .layout { display:flex; width:100%; min-height:100vh; position:relative; }
+
+    /* ======================================================================
+       TYPOGRAPHY ROLES
+    ====================================================================== */
+    .ty-logo{
+      font-family: var(--font-brand);
+      font-size: calc(var(--fs-20) + 2px); /* +2px по задаче */
+      font-weight: var(--fw-bold);
+      line-height: var(--lh-snug);
+      letter-spacing: var(--ls-brand);
+    }
+    .ty-pill{
+      font-family: var(--font-sans);
+      font-size: var(--fs-11);
+      font-weight: var(--fw-bold);
+      line-height: var(--lh-ui);
+    }
+    .ty-section{
+      font-family: var(--font-sans);
+      font-size: var(--fs-12);
+      font-weight: var(--fw-medium);
+      letter-spacing: var(--ls-ui);
+      line-height: var(--lh-ui);
+    }
+    .ty-nav{
+      font-family: var(--font-sans);
+      font-size: var(--fs-13);
+      font-weight: var(--fw-menu);
+      line-height: var(--lh-normal);
+    }
+    .ty-body{
+      font-family: var(--font-sans);
+      font-size: var(--fs-15);
+      font-weight: var(--fw-regular);
+      line-height: var(--lh-normal);
+    }
+    .ty-title{
+      font-family: var(--font-sans);
+      font-size: var(--fs-24);
+      font-weight: var(--fw-semibold);
+      line-height: var(--lh-snug);
+    }
+    .ty-hero{
+      font-family: var(--font-sans);
+      font-size: var(--fs-44);
+      font-weight: var(--fw-bold);
+      line-height: var(--lh-tight);
+    }
+
+    /* ======================================================================
+       MEME STYLE (кастом по запросу)
+    ====================================================================== */
+    .ban-big{
+      color: var(--c-orange);
+      font-family: var(--font-sans);
+      font-size: var(--fs-24);
+      font-weight: var(--fw-semibold);
+      line-height: var(--lh-snug);
+      letter-spacing: var(--ls-brand);
+    }
+
+    /* ======================================================================
+       SIDEBAR LAYOUT
+    ====================================================================== */
     .sidebar {
       width: var(--sidebar-w);
-      background: var(--surface);
-      border-right: 1px solid var(--border);
+      background: var(--c-black);
+      border-right: 1px solid var(--c-gray-dark);
       position: fixed;
       inset: 0 auto 0 0;
       padding: 16px 0 12px;
       display: flex;
       flex-direction: column;
       transition: width 160ms ease, padding 160ms ease;
-      color: var(--text);
+      color: var(--c-white);
+      z-index: 30;
     }
-    .sidebar.is-collapsed {
-      width: var(--sidebar-w-collapsed);
-      padding: 16px 0 12px;
-    }
+    .sidebar.is-collapsed { width: var(--sidebar-w-collapsed); }
 
     .main {
       margin-left: var(--sidebar-w);
       width: calc(100% - var(--sidebar-w));
       min-height: 100vh;
-      background: var(--bg);
+      background: var(--c-white);
       transition: margin-left 160ms ease, width 160ms ease;
-      color: #111827;
+      color: var(--c-black);
+      position: relative;
     }
     .sidebar.is-collapsed ~ .main {
       margin-left: var(--sidebar-w-collapsed);
       width: calc(100% - var(--sidebar-w-collapsed));
     }
 
-    /* ======================================================
-       Logo area (фиксируем высоту, чтобы nav не прыгал)
-       ====================================================== */
-
-    .logo-area{
-      height: var(--logo-area-h);
+    #pageRoot{
       position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 0 10px;
+      min-height: 100vh;
+      padding: 0;
     }
 
-    .logo-wrap {
+ /* ======================================================================
+   LOGO AREA
+====================================================================== */
+.logo-area{
+  height: var(--logo-area-h);
+  position: relative;
+  display: flex;
+  align-items: flex-start;   /* было center — теперь к верху */
+  justify-content: center;
+  margin: 0 0 10px;
+}
+
+.logo-wrap {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  justify-content:flex-start; /* было center — теперь лого сверху */
+  gap:6px;
+  width:100%;
+  padding:6px 10px 8px;       /* top = 6px как у collapsed */
+  border-radius: var(--radius-md);
+  user-select:none; white-space:nowrap; overflow:hidden;
+}
+
+.logo-main {
+  color: var(--c-white);
+  width:100%;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  min-height: 1.2em;
+}
+
+.logo-pill {
+  color: var(--c-white);
+  background: var(--c-black);
+  border:1px solid var(--c-white);
+  border-radius:9px;
+  padding:3px 9px 2px;
+  text-transform:lowercase;
+  align-self:flex-end;
+  display:inline-flex; align-items:center; justify-content:center;
+
+  opacity:0; transform: translateY(-10px);
+  transition: opacity 280ms ease-out, transform 280ms ease-out;
+  pointer-events:none;
+}
+.logo-pill.is-revealed{ opacity:1; transform:translateY(0); pointer-events:auto; }
+.logo-pill span{ display:block; transform: translateY(-1px); }
+
+.logo-collapsed {
+  position:absolute; inset:0;
+  display:none;
+  width:100%;
+  background:transparent;
+  color: var(--c-white);
+  align-items:center;
+  justify-content:center;
+  user-select:none;
+}
+
+.mini-logo-stage{
+  position: relative;
+  width: 22px;
+  height: 22px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-logo-img{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-120%);
+}
+
+.mini-logo-img svg{
+  width: 22px;
+  height: 22px;
+  display: block;
+  color: currentColor;
+}
+
+.sidebar.is-collapsed .logo-wrap{ display:none; }
+.sidebar.is-collapsed .logo-collapsed{
+  display:flex; align-items:flex-start; padding-top:6px;
+}
+
+/* ======================================================================
+   BOOKMARK BUTTON — состояния:
+   disabled = gray, enabled = black, active = orange (TOKEN ONLY)
+====================================================================== */
+    .bookmark-btn{
       position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      justify-content: center;
-      gap: 6px;
+      top: var(--logo-top);
+      left: 8px;
+      width: 28px;
+      height: 28px;
 
-      width: 100%;
-      padding: 8px 10px;
+      border: none;
+      background: transparent;
+      padding: 0;
 
-      border-radius: var(--radius-md);
-      user-select: none;
-
-      white-space: nowrap;
-      overflow: hidden;
-    }
-
-    .logo-main {
-      font-family: var(--font-logo);
-      font-size: var(--logo-font-size-base);
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      line-height: 1.2;
-      color: var(--text);
-
-      width: 100%;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      min-height: 1.2em;
-    }
-
-    .logo-main .ban {
-      color: var(--ban-red);
-      display: inline-block;
-    }
-
-    .logo-pill {
-      font-size: 11px;
-      font-weight: 700;
-
-      color: var(--text);
-      background: var(--surface);
-      border: 1px solid var(--text);
-
-      border-radius: 9px;
-      padding: 3px 9px 2px;
-      line-height: 1;
-      text-transform: lowercase;
-
-      align-self: flex-end;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
 
-      opacity: 0;
-      transform: translateY(-10px);
-      transition: opacity 280ms ease-out, transform 280ms ease-out;
-      pointer-events: none;
+      /* ✅ если можно использовать — черная */
+      color: var(--c-black);
+      opacity: .9;
+      z-index: 40;
+
+      transition:
+        opacity 120ms ease,
+        transform 80ms ease,
+        color 120ms ease,
+        left 160ms ease;
     }
-    .logo-pill.is-revealed{
+
+.bookmark-btn:hover{
+  opacity: 1;
+}
+
+.bookmark-btn:active{
+  transform: translateY(1px);
+}
+
+.bookmark-btn svg{
+  width:18px;
+  height:18px;
+  stroke: currentColor;
+  fill: none;
+}
+
+    /* ✅ активная (страница в избранном) */
+    .bookmark-btn.is-active{
+      color: var(--c-orange);
       opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
-    }
-    .logo-pill span{
-      display:block;
-      transform: translateY(-1px);
     }
 
-    /* Лого при свороте — маска base64, но в той же зоне высоты */
-    .logo-collapsed {
-      position: absolute;
-      inset: 0;
-      display: none;
-      width: 100%;
-      background: transparent;
-      color: var(--text);
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-    }
-    .logo-collapsed::before{
-      content:"";
-      width: 18px;
-      height: 18px;
-      background-color: currentColor;
-
-      -webkit-mask-image: var(--collapsed-logo-data);
-      mask-image: var(--collapsed-logo-data);
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
-      -webkit-mask-position: center;
-      mask-position: center;
-      -webkit-mask-size: contain;
-      mask-size: contain;
-    }
-
-    .sidebar.is-collapsed .logo-wrap { display: none; }
-    .sidebar.is-collapsed .logo-collapsed { display: flex; }
-
-    /* ======================================================
-       Nav
-       ====================================================== */
-    .nav {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-top: 18px;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      margin: 0 5px;
-      padding: 8px 10px;
-
-      border-radius: 12px;
-      color: var(--text);
-      text-decoration: none;
-
-      font-size: 13px;
-      font-weight: 400;
-
-      transition: background 120ms ease, color 120ms ease, transform 40ms ease;
-      white-space: nowrap;
-      outline: none;
-
-      overflow: hidden;
-    }
-
-    .nav-item .ico {
-      width: 19px; min-width: 19px; height: 19px;
-      display: flex; align-items: center; justify-content: center;
-      color: currentColor;
-      flex: 0 0 19px;
-    }
-    .nav-item .ico svg {
-      width: 18px; height: 18px;
-      stroke: currentColor; fill: none;
-    }
-
-    .nav-item .text{
-      display: inline-block;
-      transition: opacity 140ms ease, transform 140ms ease, width 140ms ease;
-      transform: translateX(0);
-      opacity: 1;
-      width: auto;
-      overflow: hidden;
-    }
-
-    .sidebar.is-collapsed .nav-item .text{
-      opacity: 0;
-      transform: translateX(-6px);
-      width: 0;
+    /* ✅ заблокирована */
+    .bookmark-btn.is-disabled{
+      cursor: default;
+      color: var(--c-gray-light) !important;
+      transform: none !important;
       pointer-events: none;
+      opacity: 1;
     }
 
-    .nav-item:hover { background: var(--item-hover); }
-    .nav-item:active { transform: translateY(1px); }
+ /* ======================================================================
+   SECTIONS + NAV
+====================================================================== */
+.nav-section{ 
+  display:flex; 
+  flex-direction:column; 
+  gap:6px; 
+  padding: 0 0 6px; 
+}
 
-    .nav-item.is-active {
-      background: var(--item-active);
-      color: var(--item-active-text);
-      font-weight: 500;
-    }
+.nav-section-title{
+  color: var(--c-white);
+  opacity: .65;
+  padding: 0 14px;
+  margin-top: 6px;
+  user-select:none;
+  text-transform: none;
 
-    .divider {
-      height: 1px; background: var(--border);
-      margin: 10px 4px; border-radius: 1px;
-    }
+  /* чтобы высота была стабильной */
+  height: 16px;
+  display:flex;
+  align-items:center;
+}
 
-    .collapse-row {
-      margin-top: auto;
-      padding: 4px 6px;
-      display: flex; align-items: center; gap: 4px;
-      justify-content: flex-end; text-align: right;
-      width: fit-content; align-self: flex-end;
+/* ✅ при collapsed не убираем из потока, только прячем */
+.sidebar.is-collapsed .nav-section-title{ 
+  visibility: hidden;  /* место остаётся */
+  opacity: 0;
+  pointer-events: none;
+}
 
-      color: var(--text-muted);
-      font-size: 13px;
-      cursor: pointer; user-select: none;
+.nav-section-divider{
+  height: 1px;
+  background: var(--c-gray-dark);
+  margin: 10px 8px;
+  border-radius:1px;
+  opacity: 1;
+}
+
+.nav { 
+  display:flex; 
+  flex-direction:column; 
+  gap:4px; 
+  margin-top:-5px; 
+}
+
+.nav-item {
+  display:flex; align-items:center; gap:8px;
+  margin: 0 5px;
+  padding:8px 10px;
+  border-radius:12px;
+  color: var(--c-white);
+  text-decoration:none;
+  transition: background 120ms ease, color 120ms ease, transform 40ms ease;
+  white-space:nowrap; outline:none; overflow:hidden;
+  cursor:pointer;
+}
+.nav-item .ico{
+  width:19px; min-width:19px; height:19px;
+  display:flex; align-items:center; justify-content:center;
+  color: currentColor; flex:0 0 19px;
+}
+.nav-item .ico svg{ width:18px;height:18px; stroke:currentColor; fill:none; }
+
+.sidebar.is-collapsed .nav-item .ico{ transform: translateX(-1px); }
+
+.nav-item .text{
+  display:inline-block;
+  transition: opacity 140ms ease, transform 140ms ease, width 140ms ease;
+  transform: translateX(0); opacity:1; width:auto; overflow:hidden;
+}
+.sidebar.is-collapsed .nav-item .text{
+  opacity:0; transform:translateX(-6px); width:0; pointer-events:none;
+}
+
+.nav-item:hover{ background: var(--c-gray-dark); }
+.nav-item:active{ transform: translateY(1px); }
+.nav-item.is-active{ background: var(--c-gray); color: var(--c-white); }
+
+.nav-item,
+.nav-item:hover,
+.nav-item:active,
+.nav-item:visited,
+.nav-item.is-active { color: var(--c-white) !important; }
+
+    /* ======================================================================
+       COLLAPSE BUTTON
+    ====================================================================== */
+    .collapse-row{
+      margin-top:auto;
+      width: fit-content;
+      align-self: flex-end;
+      margin-right: 8px;
+
+      display:flex; align-items:center; gap:4px;
+      padding:4px 6px;
+
+      background:transparent; border:none;
+      color: var(--c-white);
+      opacity:.65;
+
+      cursor:pointer;
+      user-select:none;
+      letter-spacing: var(--ls-ui);
       border-radius: 8px;
-      transition: color 120ms ease;
-      background: transparent; border: none;
-      margin-right: 5px;
     }
-    .collapse-row:hover { color: var(--text); }
 
-    .collapse-ico {
-      width: 18px; height: 18px; color: currentColor;
-      display: inline-flex; align-items: center; justify-content: center;
-      flex: 0 0 18px;
+    .collapse-row:hover{
+      background: transparent;
+      opacity: .9;
     }
-    .collapse-ico svg { width:18px;height:18px; }
 
-    .collapse-text { font-size: 13px; white-space: nowrap; }
+    .collapse-row:focus,
+    .collapse-row:focus-visible{
+      outline:none;
+      box-shadow:none;
+    }
+
+    .collapse-ico{
+      width:18px;height:18px; color: currentColor;
+      display:inline-flex; align-items:center; justify-content:center;
+      flex:0 0 18px;
+
+      opacity:0; transform: translateX(2px);
+      transition: opacity 120ms ease, transform 120ms ease;
+    }
+    .collapse-row:hover .collapse-ico{ opacity:1; transform:translateX(0); }
+    .sidebar.is-collapsed .collapse-ico{ opacity:1; transform:translateX(0); }
+
+    .collapse-text{ white-space:nowrap; }
 
     .sidebar.is-collapsed .collapse-row{
-      justify-content:center; align-self:center; width:100%;
-      padding-left:0; padding-right:0; gap:0; text-align:center; margin-right:0;
+      align-self:center;
+      margin-right:0;
+      padding:4px 6px;
+      gap:0;
     }
     .sidebar.is-collapsed .collapse-text{ display:none; }
 
-    @media (prefers-reduced-motion: reduce){
-      .logo-pill{ transition:none; opacity:1; transform:none; }
-      .nav-item .text{ transition:none; }
+    /* ======================================================================
+       LOADER
+    ====================================================================== */
+    .page-loader{
+      position: fixed;
+      top:0; bottom:0;
+      left: var(--sidebar-w);
+      right:0;
+      display:grid;
+      place-items:center;
+      pointer-events:none;
+      z-index:999;
+      transition: left 160ms ease;
     }
+    .sidebar.is-collapsed ~ .main .page-loader{ left: var(--sidebar-w-collapsed); }
+
+    .page-loader .ind-line{
+      width:420px; height:2px;
+      position:relative; overflow:hidden;
+      background: transparent;
+    }
+    .page-loader .bar{
+      position:absolute; inset:0;
+      width:100%;
+      background: var(--c-black);
+      transform: translateX(-100%);
+      animation: slideOnce .55s linear forwards;
+    }
+    .page-loader .bar.b2{ animation-delay:.55s; }
+
+    @keyframes slideOnce{
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* ======================================================================
+       404
+    ====================================================================== */
+    .page-404{
+      position: fixed;
+      top:0; bottom:0;
+      left: var(--sidebar-w);
+      right:0;
+      display:grid;
+      place-items:center;
+      padding:40px;
+      z-index:998;
+      background: transparent;
+      transition: left 160ms ease;
+    }
+    .sidebar.is-collapsed ~ .main .page-404{ left: var(--sidebar-w-collapsed); }
+
+    .page-404-card{
+      width:520px; max-width:90%;
+      border:1px solid var(--c-gray-light);
+      border-radius:16px;
+      padding:28px 26px;
+      background: var(--c-white);
+      box-shadow: 0 10px 30px color-mix(in srgb, var(--c-black) 8%, transparent);
+      text-align:center;
+      color: var(--c-black);
+    }
+
+    .page-404-sub{
+      color: var(--c-gray);
+      margin-top: 8px;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .logo-pill, .nav-item .text, .collapse-ico{ transition:none; }
+      .page-loader, .page-404{ transition:none; }
+    }
+
+
+/* ======================================================================
+   CARS PAGE (styles in parent)
+   Стили только для страницы поиска авто.
+   Скопированы из бывшего cars.html и слегка заскоуплены.
+====================================================================== */
+
+#pageRoot .cars-page{
+  background: var(--c-white);
+  color: var(--c-black);
+  min-height: 100vh;
+  padding: 18px;
+  font-family: var(--font-sans);
+}
+
+/* типографика берётся из .ty-* родителя, но если надо — можно локально подправить */
+#pageRoot .cars-shell{
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#pageRoot .cars-filters{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--c-white);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#pageRoot .cars-tabs{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+#pageRoot .cars-tabs.tier-2{
+  border-top: 1px solid var(--c-gray-light);
+  padding-top: 8px;
+}
+
+#pageRoot .cars-tab{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 10px;
+  padding: 7px 11px;
+  background: var(--c-white);
+  color: var(--c-black);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+#pageRoot .cars-tab[aria-pressed="true"]{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 20%, transparent);
+}
+#pageRoot .cars-tab:hover{ border-color: var(--c-gray); }
+
+#pageRoot .cars-controls{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+#pageRoot .cars-selects{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+#pageRoot .cars-field{
+  position: relative;
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  background: var(--c-white);
+  padding: 8px 10px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  transition: border-color 120ms ease;
+}
+#pageRoot .cars-field::before{
+  content: attr(data-label);
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  color: var(--c-gray);
+  background: var(--c-white);
+  padding: 2px 6px;
+  border: 1px solid var(--c-gray-light);
+  border-radius: 999px;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+#pageRoot .cars-field.has-value::before{
+  opacity: 0;
+  transform: translateY(-2px);
+}
+#pageRoot .cars-field:focus-within{ border-color: var(--c-gray); }
+
+#pageRoot .cars-input{
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--c-black);
+  outline: none;
+  appearance: none;
+  padding-top: 6px;
+  font-size: var(--fs-15);
+}
+
+#pageRoot .cars-actions{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+#pageRoot .cars-actions-btns{
+  display: flex;
+  gap: 8px;
+}
+
+#pageRoot .cars-btn{
+  border: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: var(--c-black);
+  color: var(--c-white);
+  cursor: pointer;
+  text-align: center;
+  min-width: 160px;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+#pageRoot .cars-btn:hover{ background: var(--c-gray-dark); }
+#pageRoot .cars-btn:disabled{
+  background: var(--c-gray-light);
+  color: var(--c-gray);
+  cursor: not-allowed;
+}
+#pageRoot .cars-btn.ghost{
+  background: var(--c-white);
+  color: var(--c-black);
+  border: 1px solid var(--c-gray-light);
+}
+#pageRoot .cars-btn.ghost:hover{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
+}
+
+#pageRoot .cars-status{
+  color: var(--c-gray);
+  text-align: right;
+  min-height: 1em;
+}
+
+#pageRoot .cars-results{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--c-white);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#pageRoot .cars-results-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+#pageRoot .cars-results-note{ color: var(--c-gray); }
+
+#pageRoot .cars-grid{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+#pageRoot .cars-card{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--c-white);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+#pageRoot .cars-card:hover{
+  border-color: var(--c-gray);
+  background: color-mix(in srgb, var(--c-gray-light) 10%, transparent);
+}
+#pageRoot .cars-card-title{
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-15);
+}
+#pageRoot .cars-card-sub{
+  color: var(--c-gray);
+  font-size: var(--fs-12);
+  line-height: var(--lh-normal);
+}
+#pageRoot .cars-empty{ color: var(--c-gray); }
+
+/* MODAL */
+#pageRoot .cars-modal{
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 50;
+}
+#pageRoot .cars-modal.is-open{ display: block; }
+#pageRoot .cars-modal-backdrop{
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--c-black) 35%, transparent);
+}
+#pageRoot .cars-modal-card{
+  position: absolute;
+  inset: 16px;
+  margin: auto;
+  max-width: 980px;
+  max-height: calc(100vh - 32px);
+  background: var(--c-white);
+  border-radius: 16px;
+  border: 1px solid var(--c-gray-light);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#pageRoot .cars-modal-head{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--c-gray-light);
+  gap: 10px;
+}
+#pageRoot .cars-modal-title{
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+}
+#pageRoot .cars-modal-close{
+  background: var(--c-white);
+  border: 1px solid var(--c-gray-light);
+  border-radius: 10px;
+  padding: 7px 10px;
+  cursor: pointer;
+  color: var(--c-black);
+}
+#pageRoot .cars-modal-close:hover{ border-color: var(--c-gray); }
+#pageRoot .cars-modal-body{
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr;
+  gap: 12px;
+  overflow: auto;
+}
+#pageRoot .cars-modal-media{
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--c-white);
+  min-height: 200px;
+}
+#pageRoot .cars-modal-media img{
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+#pageRoot .cars-modal-info{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#pageRoot .cars-modal-price{
+  font-size: var(--fs-24);
+  font-weight: var(--fw-semibold);
+}
+#pageRoot .cars-modal-sub{ color: var(--c-gray); }
+#pageRoot .cars-modal-list{
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 4px 8px;
+  color: var(--c-black);
+}
+#pageRoot .cars-modal-list li{
+  color: var(--c-gray);
+  font-size: var(--fs-13);
+}
+#pageRoot .cars-modal-link{
+  align-self: flex-start;
+  min-width: auto;
+  padding: 9px 12px;
+  text-decoration: none;
+}
+
+@media (max-width: 900px){
+  #pageRoot .cars-controls{ grid-template-columns: 1fr; }
+  #pageRoot .cars-actions{ align-items: stretch; }
+  #pageRoot .cars-actions-btns{ width: 100%; }
+  #pageRoot .cars-btn{ width: 100%; min-width: 0; }
+  #pageRoot .cars-modal-body{ grid-template-columns: 1fr; }
+}
   </style>
 </head>
+
 <body>
   <div id="app" class="layout"></div>
 
   <script type="module">
-    const ICONS = {
-      search: `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-linecap="round" stroke-width="2" aria-hidden="true">
-          <path d="m21 21l-4.486-4.49M19 10.5a8.5 8.5 0 1 1-17 0a8.5 8.5 0 0 1 17 0Z"/>
-        </svg>
-      `,
-      folder: `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
-          <path d="M22 19V9a2 2 0 0 0-2-2h-6.764a2 2 0 0 1-1.789-1.106l-.894-1.788A2 2 0 0 0 8.763 3H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2"/>
-        </svg>
-      `,
-      chevronLeftSmall: `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M14.5 7.5L9.5 12l5 4.5"></path>
-        </svg>
-      `,
-      chevronRightSmall: `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9.5 7.5l5 4.5l-5 4.5"></path>
-        </svg>
-      `
-    };
+    /* ======================================================================
+       BLOCK 1) ICONS
+    ====================================================================== */
+    const Icons = (() => {
+      const ICONS = {
+        search: `
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-linecap="round" stroke-width="2" aria-hidden="true">
+            <path d="m21 21l-4.486-4.49M19 10.5a8.5 8.5 0 1 1-17 0a8.5 8.5 0 0 1 17 0Z"/>
+          </svg>
+        `,
+        folder: `
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+            <path d="M22 19V9a2 2 0 0 0-2-2h-6.764a2 2 0 0 1-1.789-1.106l-.894-1.788A2 2 0 0 0 8.763 3H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2"/>
+          </svg>
+        `,
+        chevronLeftSmall: `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14.5 7.5L9.5 12l5 4.5"></path>
+          </svg>
+        `,
+        chevronRightSmall: `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9.5 7.5l5 4.5l-5 4.5"></path>
+          </svg>
+        `,
+        bookmark: `
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+            <path d="M4 5v14.586c0 .89 1.077 1.337 1.707.707L12 14l6.293 6.293c.63.63 1.707.184 1.707-.707V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2"/>
+          </svg>
+        `,
+      };
+      return { ICONS };
+    })();
 
+    const NON_BOOKMARKABLE_IDS = new Set(["cars", "content", "404"]);
+
+    /* ======================================================================
+       BLOCK 2) PAGES + INCLUDES + LOADER/404
+    ====================================================================== */
+    const Pages = (() => {
+      const PAGE_PATHS = {
+        cars: "./pages/cars.html",
+        content: "./pages/content.html",
+      };
+
+      const pageCache = {};
+      const inflight = new Map();
+      let lastOk = true;
+
+      async function fetchText(url){
+        const r = await fetch(url, { cache: "no-store" });
+        if (!r.ok) throw new Error(`Fetch failed: ${url}`);
+        return r.text();
+      }
+
+      async function resolveIncludes(html, baseUrl){
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        const includeNodes = [...doc.querySelectorAll("[data-include]")];
+        if (includeNodes.length === 0) return doc.body.innerHTML;
+
+        await Promise.all(includeNodes.map(async (node) => {
+          const rel = node.getAttribute("data-include");
+          if (!rel) return;
+
+          const abs = new URL(rel, baseUrl).toString();
+          let partialHtml = await fetchText(abs);
+          partialHtml = await resolveIncludes(partialHtml, abs);
+
+          const wrap = doc.createElement("div");
+          wrap.innerHTML = partialHtml;
+          node.replaceWith(...wrap.childNodes);
+        }));
+
+        return doc.body.innerHTML;
+      }
+
+      async function loadPage(id){
+        if (pageCache[id]) return pageCache[id];
+        if (inflight.has(id)) return inflight.get(id);
+
+        const path = PAGE_PATHS[id];
+        if (!path) return null;
+
+        const promise = (async () => {
+          const abs = new URL(path, location.href).toString();
+          let html = await fetchText(abs);
+          html = await resolveIncludes(html, abs);
+          pageCache[id] = html;
+          inflight.delete(id);
+          return html;
+        })().catch((e)=>{
+          inflight.delete(id);
+          console.error(e);
+          return null;
+        });
+
+        inflight.set(id, promise);
+        return promise;
+      }
+
+      function restartInlineScripts(container){
+        container.querySelectorAll("script").forEach(old => {
+          const s = document.createElement("script");
+          [...old.attributes].forEach(a => s.setAttribute(a.name, a.value));
+          s.textContent = old.textContent;
+          old.replaceWith(s);
+        });
+      }
+
+      async function showPage(id){
+        const root = document.getElementById("pageRoot");
+        if (!root) return;
+
+        if (pageCache[id]) {
+          root.innerHTML = pageCache[id];
+          lastOk = true;
+          window.dispatchEvent(new CustomEvent("page:loaded", { detail: { id, ok: true } }));
+          restartInlineScripts(root);
+          return;
+        }
+
+        root.innerHTML = `
+          <div class="page-loader">
+            <div class="ind-line">
+              <span class="bar b1"></span>
+              <span class="bar b2"></span>
+            </div>
+          </div>
+        `;
+
+        const start = performance.now();
+        const html = await loadPage(id);
+
+        const elapsed = performance.now() - start;
+        const remain = Math.max(0, 2000 - elapsed);
+        if (remain) await new Promise(r => setTimeout(r, remain));
+
+        const ok = Boolean(html);
+
+        root.innerHTML = ok ? html : `
+          <div class="page-404">
+            <div class="page-404-card">
+              <div class="ty-hero">404</div>
+              <div class="ty-title" style="margin-top:4px;">Страница не найдена</div>
+              <div class="ty-body page-404-sub">
+                Файл не смог загрузиться или отсутствует.<br/>
+                Проверь путь: <b>${PAGE_PATHS[id] ?? id}</b>
+              </div>
+            </div>
+          </div>
+        `;
+
+        lastOk = ok;
+        window.dispatchEvent(new CustomEvent("page:loaded", { detail: { id, ok } }));
+
+        restartInlineScripts(root);
+      }
+
+      return { PAGE_PATHS, showPage, getLastOk: () => lastOk };
+    })();
+
+    /* ======================================================================
+       BLOCK 3) SIDEBAR DOMAIN (чистая логика)
+    ====================================================================== */
     const SidebarDomain = (() => {
-      function createState({ items, activeId, collapsed = false } = {}) {
+      function normalizeBookmark(bm){
+        if (!bm || !bm.id || NON_BOOKMARKABLE_IDS.has(bm.id)) return null;
+        return {
+          id: bm.id,
+          label: bm.label || bm.id,
+          iconKey: bm.iconKey || "bookmark",
+          group: "bookmark",
+        };
+      }
+
+      function mergeItems(mainItems = [], bookmarks = []){
+        const baseMain = mainItems.map(i => ({ ...i, group: "main" }));
+        const normalizedBookmarks = bookmarks
+          .map(normalizeBookmark)
+          .filter(Boolean);
+        return [...baseMain, ...normalizedBookmarks];
+      }
+
+      function createState({ items, bookmarks = [], activeId, collapsed = false } = {}) {
         if (!Array.isArray(items) || items.length === 0) {
           throw new Error("SidebarState: items must be a non-empty array");
         }
-        const hasActive = items.some(i => i.id === activeId);
-        const initialActiveId = hasActive ? activeId : items[0].id;
-        return { items, activeId: initialActiveId, collapsed: Boolean(collapsed) };
+
+        const mergedItems = mergeItems(items, bookmarks);
+        const hasActive = mergedItems.some(i => i.id === activeId);
+        const initialActiveId = hasActive ? activeId : mergedItems[0].id;
+
+        return { items: mergedItems, activeId: initialActiveId, collapsed: Boolean(collapsed) };
       }
+
       function setActive(state, id) {
         if (!state.items.some(i => i.id === id)) return state;
         return { ...state, activeId: id };
       }
+
       function toggleCollapsed(state) { return { ...state, collapsed: !state.collapsed }; }
-      return { createState, setActive, toggleCollapsed };
+
+      function toggleBookmark(state, mainItems, bookmark){
+        const normalized = normalizeBookmark(bookmark);
+        if (!normalized) return state;
+
+        const existingBookmarks = state.items.filter(i => i.group === "bookmark");
+        const hasBookmark = existingBookmarks.some(i => i.id === normalized.id);
+        const nextBookmarks = hasBookmark
+          ? existingBookmarks.filter(i => i.id !== normalized.id)
+          : [...existingBookmarks, normalized];
+
+        return { ...state, items: mergeItems(mainItems, nextBookmarks) };
+      }
+
+      function replaceBookmarks(state, mainItems, bookmarks){
+        return { ...state, items: mergeItems(mainItems, bookmarks) };
+      }
+
+      function updateBookmark(state, mainItems, bookmark){
+        const normalized = normalizeBookmark(bookmark);
+        if (!normalized) return state;
+
+        const existingBookmarks = state.items.filter(i => i.group === "bookmark");
+        const hasBookmark = existingBookmarks.some(i => i.id === normalized.id);
+        if (!hasBookmark) return state;
+
+        const nextBookmarks = existingBookmarks.map(i =>
+          i.id === normalized.id ? { ...i, ...normalized } : i
+        );
+
+        return { ...state, items: mergeItems(mainItems, nextBookmarks) };
+      }
+
+      return {
+        createState,
+        setActive,
+        toggleCollapsed,
+        toggleBookmark,
+        replaceBookmarks,
+        updateBookmark,
+      };
     })();
 
+    /* ======================================================================
+       BLOCK 4) SIDEBAR INFRA (storage)
+    ====================================================================== */
     const SidebarInfra = (() => {
       const KEY = "ehala.sidebar.v1";
       function createLocalStorageAdapter() {
@@ -394,175 +1149,122 @@
       return { createLocalStorageAdapter };
     })();
 
+    /* ======================================================================
+       BLOCK 5) SIDEBAR APP (use-cases)
+    ====================================================================== */
     const SidebarApp = (() => {
-      const { createState, setActive, toggleCollapsed } = SidebarDomain;
+      const {
+        createState,
+        setActive,
+        toggleCollapsed,
+        toggleBookmark,
+        replaceBookmarks,
+        updateBookmark,
+      } = SidebarDomain;
+
       function createService({ storageAdapter } = {}) {
         let state = null;
+        let mainItems = [];
         const listeners = new Set();
         const notify = () => listeners.forEach(fn => fn(state));
 
+        function save(){
+          storageAdapter?.save?.({
+            activeId: state?.activeId,
+            collapsed: state?.collapsed,
+            bookmarks: state?.items
+              ?.filter(i => i.group === "bookmark")
+              .map(({ group, ...rest }) => rest),
+          });
+        }
+
         function init({ items, defaultActiveId }) {
           const saved = storageAdapter?.load?.() || null;
+
+          const savedBookmarks = Array.isArray(saved?.bookmarks) ? saved.bookmarks : [];
+          mainItems = items;
+
           state = createState({
             items,
+            bookmarks: savedBookmarks,
             activeId: saved?.activeId ?? defaultActiveId,
-            collapsed: saved?.collapsed ?? false,
+            collapsed: true, // меню всегда свернуто на старте
           });
-          storageAdapter?.save?.({ activeId: state.activeId, collapsed: state.collapsed });
+
+          save();
           notify();
         }
 
         function onChange(listener) { listeners.add(listener); return () => listeners.delete(listener); }
+
         function selectItem(id) {
           state = setActive(state, id);
-          storageAdapter?.save?.({ activeId: state.activeId, collapsed: state.collapsed });
+          save();
           notify();
         }
+
         function toggle() {
           state = toggleCollapsed(state);
-          storageAdapter?.save?.({ activeId: state.activeId, collapsed: state.collapsed });
+          save();
           notify();
         }
+
+        function toggleBookmarkCurrent(bookmark){
+          if (!bookmark?.id || NON_BOOKMARKABLE_IDS.has(bookmark.id)) return;
+
+          state = toggleBookmark(state, mainItems, { ...bookmark, iconKey: "bookmark" });
+
+          save();
+          notify();
+        }
+
+        function syncBookmarkMeta(bookmark){
+          if (!bookmark?.id || NON_BOOKMARKABLE_IDS.has(bookmark.id)) return;
+
+          state = updateBookmark(state, mainItems, { ...bookmark, iconKey: "bookmark" });
+
+          save();
+          notify();
+        }
+
+        function hydrateBookmarks(bookmarks){
+          state = replaceBookmarks(state, mainItems, bookmarks);
+          save();
+          notify();
+        }
+
         function getState() { return state; }
-        return { init, onChange, selectItem, toggle, getState };
+
+        return {
+          init,
+          onChange,
+          selectItem,
+          toggle,
+          toggleBookmarkCurrent,
+          syncBookmarkMeta,
+          hydrateBookmarks,
+          getState,
+        };
       }
+
       return { createService };
     })();
 
-    const SidebarUI = (() => {
-      function createView({ service }) {
-        let rootEl = null;
+    /* ======================================================================
+       BLOCK 6) LOGO TYPING ENGINE (полностью отдельно от View)
+    ====================================================================== */
+    const LogoTyping = (() => {
 
+      function create({ rootEl, getIsCollapsed }) {
         let typingTimer = null;
         let isTyping = false;
-        let lastCollapsed = null;
-
         let lastScenarioIndex = -1;
         let tokens = [];
-
         let startDelayTimer = null;
 
-        function mount(container) {
-          rootEl = document.createElement("div");
-          rootEl.innerHTML = `
-            <aside class="sidebar" id="sidebar">
-
-              <div class="logo-area">
-                <div class="logo-wrap" id="logoWrap">
-                  <div class="logo-main" id="logoMain"></div>
-                  <div class="logo-pill" id="logoPill"><span>кабинет</span></div>
-                </div>
-                <div class="logo-collapsed" aria-hidden="true"></div>
-              </div>
-
-              <nav class="nav" id="nav"></nav>
-
-              <div class="divider"></div>
-              <button class="collapse-row" id="collapseBtn" type="button" aria-expanded="true">
-                <span class="collapse-ico" aria-hidden="true"></span>
-                <span class="collapse-text">Свернуть</span>
-              </button>
-            </aside>
-            <main class="main" id="main"></main>
-          `;
-          container.appendChild(rootEl);
-
-          wireEvents();
-          service.onChange(render);
-          render(service.getState());
-
-          window.addEventListener("resize", () => {
-            const sidebar = rootEl.querySelector("#sidebar");
-            if (sidebar && !sidebar.classList.contains("is-collapsed")) fitLogoToOneLine();
-          });
-        }
-
-        function render(state) {
-          const sidebar = rootEl.querySelector("#sidebar");
-          const nav = rootEl.querySelector("#nav");
-          const collapseBtn = rootEl.querySelector("#collapseBtn");
-          const collapseText = rootEl.querySelector(".collapse-text");
-          const collapseIco = rootEl.querySelector(".collapse-ico");
-
-          sidebar.classList.toggle("is-collapsed", state.collapsed);
-          collapseBtn.setAttribute("aria-expanded", String(!state.collapsed));
-
-          if (collapseIco) {
-            collapseIco.innerHTML = state.collapsed
-              ? ICONS.chevronRightSmall
-              : ICONS.chevronLeftSmall;
-          }
-          if (collapseText) {
-            collapseText.textContent = state.collapsed ? "Развернуть" : "Свернуть";
-          }
-
-          nav.innerHTML = state.items.map(item => {
-            const active = item.id === state.activeId;
-            const svg = ICONS[item.iconKey] || "";
-            return `
-              <a class="nav-item ${active ? "is-active" : ""}" href="#" data-id="${item.id}">
-                <span class="ico" aria-hidden="true">${svg}</span>
-                <span class="text">${item.label}</span>
-              </a>
-            `;
-          }).join("");
-
-          handleLogoCycle(state);
-          lastCollapsed = state.collapsed;
-        }
-
-        function handleLogoCycle(state){
-          const sidebar = rootEl.querySelector("#sidebar");
-          const logoPill = rootEl.querySelector("#logoPill");
-          if (!sidebar || !logoPill) return;
-
-          if (state.collapsed){
-            cancelStartDelay();
-            stopTyping();
-            clearTokens();
-            renderTokens();
-            resetLogoFontSize();
-            logoPill.classList.remove("is-revealed");
-            return;
-          }
-
-          if (lastCollapsed === null){
-            scheduleTypingStart();  // ✅ 0.3s
-            return;
-          }
-
-          if (lastCollapsed === true && state.collapsed === false){
-            cancelStartDelay();
-            stopTyping();
-            clearTokens();
-            renderTokens();
-            resetLogoFontSize();
-            logoPill.classList.remove("is-revealed");
-
-            waitSidebarFullyOpen(sidebar, () => {
-              scheduleTypingStart(); // ✅ 0.3s после полного открытия
-            });
-          }
-        }
-
-        function waitSidebarFullyOpen(sidebarEl, cb){
-          const onEnd = (e) => {
-            if (e.propertyName !== "width") return;
-            sidebarEl.removeEventListener("transitionend", onEnd);
-            cb();
-          };
-          sidebarEl.addEventListener("transitionend", onEnd);
-        }
-
-        function scheduleTypingStart(){
-          cancelStartDelay();
-          startDelayTimer = setTimeout(() => {
-            startDelayTimer = null;
-            if (!service.getState().collapsed) {
-              startScenarioTyping();
-            }
-          }, 300); // ✅ было 1000
-        }
+        let expandCount = 0;
+        let stopTriggered = false;
+        let stopLock = false;
 
         function cancelStartDelay(){
           if (startDelayTimer){
@@ -572,16 +1274,24 @@
         }
 
         function clearTokens(){ tokens = []; }
+
         function pushChar(char, className=null){
           const last = tokens[tokens.length - 1];
           if (last && last.className === className) last.text += char;
           else tokens.push({ text: char, className });
         }
+
         function popChar(){
           const last = tokens[tokens.length - 1];
           if (!last) return;
           last.text = last.text.slice(0, -1);
           if (!last.text) tokens.pop();
+        }
+
+        function escapeHtml(s){
+          return s.replace(/[&<>"']/g, (c) => ({
+            "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+          }[c]));
         }
 
         function renderTokens(){
@@ -594,12 +1304,6 @@
           fitLogoToOneLine();
         }
 
-        function escapeHtml(s){
-          return s.replace(/[&<>"']/g, (c) => ({
-            "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-          }[c]));
-        }
-
         function resetLogoFontSize(){
           const logoMain = rootEl.querySelector("#logoMain");
           if (!logoMain) return;
@@ -609,7 +1313,6 @@
         function fitLogoToOneLine(){
           const logoMain = rootEl.querySelector("#logoMain");
           if (!logoMain) return;
-
           resetLogoFontSize();
           const base = parseFloat(getComputedStyle(logoMain).fontSize);
           let size = base;
@@ -624,9 +1327,14 @@
           });
         }
 
-        // ====== 11 СЦЕНАРИЕВ ЛОГО
+        function stopTyping(){
+          isTyping = false;
+          if (typingTimer){ clearTimeout(typingTimer); typingTimer = null; }
+        }
+
         function getScenario(index){
           const tailFull = [{ kind:"type", text:"ООО «ТМЫВ ДЕНЕГ»" }];
+
           const scenarios = [
             { steps:[
               { kind:"type", text:"ОАО" }, { kind:"wait", ms:220 },
@@ -680,12 +1388,6 @@
               { kind:"type", text:" «ТМЫВ ДЕНЕГ»" }
             ]},
             { steps:[
-              { kind:"type", text:"ООО" }, { kind:"wait", ms:180 },
-              { kind:"type", text:' "' }, { kind:"wait", ms:160 },
-              { kind:"backspace", count:1 }, { kind:"wait", ms:140 },
-              { kind:"type", text:" «ТМЫВ ДЕНЕГ»" }
-            ]},
-            { steps:[
               { kind:"type", text:"Артем красавчик" }, { kind:"wait", ms:320 },
               { kind:"backspace", count:9 }, { kind:"wait", ms:240 },
               { kind:"type", text:" хочу ЗП 200" }, { kind:"wait", ms:260 },
@@ -696,24 +1398,84 @@
               ...tailFull
             ]},
             { steps:[
-              { kind:"type", text:"МИША " },
-              { kind:"wait", ms:200 },
-              { kind:"typeStyled", text:"БАН", className:"ban" },
+              { kind:"typeStyled", text:"МИША БАН", className:"ban-big" },
               { kind:"wait", ms:420 },
               { kind:"backspace", count:8 },
               { kind:"wait", ms:240 },
               ...tailFull
             ]},
           ];
+
           return scenarios[index] || { steps: tailFull };
         }
 
         function pickScenarioIndex(){
-          const total = 11;
+          const total = 10;
           let idx = Math.floor(Math.random() * total);
           if (total > 1 && idx === lastScenarioIndex) idx = (idx + 1) % total;
           lastScenarioIndex = idx;
           return idx;
+        }
+
+        function startStopTyping(){
+          const logoPill = rootEl.querySelector("#logoPill");
+          if (!logoPill) return;
+
+          cancelStartDelay();
+          stopTyping();
+          isTyping = true;
+          stopLock = true;
+
+          clearTokens();
+          renderTokens();
+          resetLogoFontSize();
+          logoPill.classList.remove("is-revealed");
+
+          const steps = [
+            { kind: "type", text: "СТОП." },
+            { kind: "wait", ms: 320 },
+            { kind: "type", text: " Мне не приятно" },
+            { kind: "wait", ms: 220 },
+            { kind: "type", text: " (" },
+          ];
+
+          let idx = 0;
+          const baseCharDelay = 60, jitter = 80;
+          const longPauseChance = 0.1, longPauseExtra = 160;
+
+          const runNext = () => {
+            if (!isTyping) return;
+            const step = steps[idx++];
+
+            if (!step){
+              isTyping = false;
+              return;
+            }
+            if (step.kind === "wait"){
+              typingTimer = setTimeout(runNext, step.ms);
+              return;
+            }
+            if (step.kind === "type"){
+              const chars = Array.from(step.text);
+              let ci = 0;
+
+              const typeChar = () => {
+                if (!isTyping) return;
+                if (ci >= chars.length){
+                  typingTimer = setTimeout(runNext, 50);
+                  return;
+                }
+                pushChar(chars[ci++], null);
+                renderTokens();
+                let d = baseCharDelay + Math.floor(Math.random() * jitter);
+                if (Math.random() < longPauseChance) d += longPauseExtra;
+                typingTimer = setTimeout(typeChar, d);
+              };
+              typeChar();
+            }
+          };
+
+          runNext();
         }
 
         function startScenarioTyping(){
@@ -734,7 +1496,6 @@
 
           const baseCharDelay = 55, jitter = 85;
           const longPauseChance = 0.12, longPauseExtra = 170;
-
           const baseBackDelay = 45, backJitter = 65;
           const longBackChance = 0.08, longBackExtra = 140;
 
@@ -808,33 +1569,571 @@
           runNext();
         }
 
-        function stopTyping(){
-          isTyping = false;
-          if (typingTimer){ clearTimeout(typingTimer); typingTimer = null; }
+        function waitSidebarFullyOpen(sidebarEl, cb){
+          const onEnd = (e) => {
+            if (e.propertyName !== "width") return;
+            sidebarEl.removeEventListener("transitionend", onEnd);
+            cb();
+          };
+          sidebarEl.addEventListener("transitionend", onEnd);
         }
 
-        function wireEvents() {
-          rootEl.addEventListener("click", (e) => {
-            const navItem = e.target.closest(".nav-item");
-            if (navItem) {
-              e.preventDefault();
-              service.selectItem(navItem.dataset.id);
+        function scheduleTypingStart(sidebarEl){
+          cancelStartDelay();
+          startDelayTimer = setTimeout(() => {
+            startDelayTimer = null;
+            if (!getIsCollapsed()) startScenarioTyping();
+          }, 300);
+        }
+
+        function onSidebarStateChange(state, lastCollapsed){
+          const sidebar = rootEl.querySelector("#sidebar");
+          const logoPill = rootEl.querySelector("#logoPill");
+          if (!sidebar || !logoPill) return;
+
+          if (state.collapsed){
+            cancelStartDelay();
+            stopTyping();
+            clearTokens();
+            renderTokens();
+            resetLogoFontSize();
+            logoPill.classList.remove("is-revealed");
+            stopLock = false;
+            return;
+          }
+
+          if (lastCollapsed === true && state.collapsed === false){
+            if (stopTriggered){
+              cancelStartDelay();
+              stopTyping();
+              clearTokens();
+              renderTokens();
+              resetLogoFontSize();
+              logoPill.classList.remove("is-revealed");
+              waitSidebarFullyOpen(sidebar, () => scheduleTypingStart(sidebar));
               return;
             }
-            const collapseBtn = e.target.closest("#collapseBtn");
-            if (collapseBtn) service.toggle();
-          });
+
+            expandCount += 1;
+            if (expandCount >= 15){
+              stopTriggered = true;
+              cancelStartDelay();
+              stopTyping();
+              clearTokens();
+              renderTokens();
+              resetLogoFontSize();
+              logoPill.classList.remove("is-revealed");
+              waitSidebarFullyOpen(sidebar, () => startStopTyping());
+              return;
+            }
+
+            cancelStartDelay();
+            stopTyping();
+            clearTokens();
+            renderTokens();
+            resetLogoFontSize();
+            logoPill.classList.remove("is-revealed");
+            waitSidebarFullyOpen(sidebar, () => scheduleTypingStart(sidebar));
+          }
+
+          if (stopLock) return;
         }
 
-        return { mount };
+        return { onSidebarStateChange };
       }
-      return { createView };
+
+      return { create };
     })();
 
-    function main() {
+/* ======================================================================
+   BLOCK 6.1) COLLAPSED LOGO CAROUSEL (мини-лого)
+====================================================================== */
+const CollapsedLogoCarousel = (() => {
+  const NORMAL_LOGO_SOURCES = [
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik02IDE5cS0xLjI1IDAtMi4xMjUtLjg3NVQzIDE2cS0uODI1IDAtMS40MTItLjU4N1QxIDE0VjdxMC0uODI1LjU4OC0xLjQxMlQzIDVoMTMuMTc1cS40IDAgLjc2My4xNXQuNjM3LjQyNWw0Ljg1IDQuODVxLjI3NS4yNzUuNDI1LjYzOHQuMTUuNzYyVjE0cTAgLjgyNS0uNTg3IDEuNDEzVDIxIDE2cTAgMS4yNS0uODc1IDIuMTI1VDE4IDE5dC0yLjEyNS0uODc1VDE1IDE2SDlxMCAxLjI1LS44NzUgMi4xMjVUNiAxOW05LTloNGwtMy0zaC0xem0tNiAwaDRWN0g5em0tNiAwaDRWN0gzem0zIDcuMjVxLjUyNSAwIC44ODgtLjM2M1Q3LjI1IDE2dC0uMzYzLS44ODhUNiAxNC43NXQtLjg4OC4zNjNUNC43NSAxNnQuMzYzLjg4OHQuODg3LjM2Mm0xMiAwcS41MjUgMCAuODg4LS4zNjNUMTkuMjUgMTZ0LS4zNjMtLjg4OFQxOCAxNC43NXQtLjg4OC4zNjN0LS4zNjIuODg3dC4zNjMuODg4dC44ODcuMzYyTTguMiAxNGg3LjZxLjQyNS0uNDUuOTc1LS43MjVUMTggMTN0MS4yMjUuMjc1dC45NzUuNzI1aC44di0ySDN2MmguOHEuNDI1LS40NS45NzUtLjcyNVQ2IDEzdDEuMjI1LjI3NVQ4LjIgMTRNMjEgMTJIM3oiLz48L3N2Zz4=",
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik00IDlxLS40MjUgMC0uNzEyLS4yODhUMyA4dC4yODgtLjcxMlQ0IDdoM3EuODI1IDAgMS40MTMuNTg4VDkgOXptMiA5cTEuMjUgMCAyLjEyNS0uODc1VDkgMTV0LS44NzUtMi4xMjVUNiAxMnQtMi4xMjUuODc1VDMgMTV0Ljg3NSAyLjEyNVQ2IDE4bTEzLjUgMHEuNjI1IDAgMS4wNjMtLjQzN1QyMSAxNi41dC0uNDM3LTEuMDYyVDE5LjUgMTV0LTEuMDYyLjQzOFQxOCAxNi41dC40MzggMS4wNjNUMTkuNSAxOE02IDE2LjVxLS42MjUgMC0xLjA2Mi0uNDM3VDQuNSAxNXQuNDM4LTEuMDYyVDYgMTMuNXQxLjA2My40MzhUNy41IDE1dC0uNDM3IDEuMDYzVDYgMTYuNW0xNC0zLjQ3NXEuNjUuMTI1IDEuMDc1LjMzOHQuOTI1LjY4N1Y4cTAtLjgyNS0uNTg3LTEuNDEyVDIwIDZoLTYuM2wtMS4wNS0xLjFsMS40LTEuNGwtLjctLjdMOS44IDYuMzVsLjc1LjdsMS40LTEuNEwxMyA2LjdWOXEwIC44MjUtLjU4NyAxLjQxM1QxMSAxMUg4Ljk3NXEuNTc1LjQyNS45MjUuODc1VDEwLjYgMTNoLjRxMS42NSAwIDIuODI1LTEuMTc1VDE1IDlWOGg1ek0xNi4wMjUgMTZxLjE1LS42NzUuMzYzLTEuMDg4VDE3LjA1IDE0SDEwLjlxLjEuNTc1LjEgMXQtLjEgMXptMy40NzUgNHEtMS40NSAwLTIuNDc1LTEuMDI1VDE2IDE2LjV0MS4wMjUtMi40NzVUMTkuNSAxM3QyLjQ3NSAxLjAyNVQyMyAxNi41dC0xLjAyNSAyLjQ3NVQxOS41IDIwTTYgMjBxLTIuMDc1IDAtMy41MzctMS40NjNUMSAxNXQxLjQ2My0zLjUzN1Q2IDEwdDMuNTM4IDEuNDYzVDExIDE1dC0xLjQ2MyAzLjUzOFQ2IDIwbTkuODI1LTkiLz48L3N2Zz4=",
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik03IDIxcS0xLjI1IDAtMi4xMjUtLjg3NVQ0IDE4SDNxLS44MjUgMC0xLjQxMi0uNTg3VDEgMTZ2LTVoMTFWN3EwLS44MjUuNTg4LTEuNDEyVDE0IDVoMlY0cTAtLjQyNS4yODgtLjcxMlQxNyAzaDFxLjQyNSAwIC43MTMuMjg4VDE5IDR2MWguNTVxLjY1IDAgMS4xNzUuMzc1dC43MjUgMWwxLjQ1IDQuM3EuMDUuMTUuMDc1LjMxM3QuMDI1LjMzN1YxOGgtM3EwIDEuMjUtLjg3NSAyLjEyNVQxNyAyMXQtMi4xMjUtLjg3NVQxNCAxOGgtNHEwIDEuMjUtLjg3NSAyLjEyNVQ3IDIxbTAtMnEuNDI1IDAgLjcxMy0uMjg4VDggMTh0LS4yODgtLjcxMlQ3IDE3dC0uNzEyLjI4OFQ2IDE4dC4yODguNzEzVDcgMTltMTAgMHEuNDI1IDAgLjcxMy0uMjg4VTE4IDE4dC0uMjg4LS43MTJUMTcgMTd0LS43MTIuMjg4VDE2IDE4dC4yODguNzEzVTE3IDE5TTMgMTN2M2gxLjc3NXEuNDI1LS40NzUgMS0uNzM3VDcgMTV0MS4yMjUuMjYzdDEgLjczN0gxMnYtM3ptMTEgM2guNzc1cS40MjUtLjQ3NSAxLS43MzdUMTcgMTV0MS4yMjUuMjYzdDEgLjczN0gyMXYtM2gtN3ptMC01aDYuOWwtMS4zNS00SDE0ek0xIDEwVjguNWgxdi0ySDFWNWgxMHYxLjVoLTF2MmgxVjEwem0yLjUtMS41aDEuNzV2LTJIMy41em0zLjI1IDBIOC41di0ySDYuNzV6TTEyIDEzSDN6bTIgMGg3eiIvPjwvc3ZnPg==",
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik00IDIxcS0xLjI1IDAtMi4xMjUtLjg3NVQxIDE4cTAtLjY1LjI1LTEuMjM3VDIgMTUuNzVWMTJxMC0uNDI1LjI4OC0uNzEyVDMgMTFoMVY2cTAtLjQyNS4yODgtLjcxMlQ1IDVoNS42NzVxLjYgMCAxLjEuMzI1dC43NS45bDQuMTc1IDkuODVxLjE1LjM1LjIyNS43VDE3IDE3LjVxMCAxLjQ1LTEuMDI1IDIuNDc1VDEzLjUgMjFxLTEuMDI1IDAtMS44ODgtLjUzN1QxMC4zMjYgMTloLTMuNXEtLjMyNS45LTEuMSAxLjQ1VDQgMjFtMTgtMWgtM3EtLjQyNSAwLS43MTItLjI4OFQxOCAxOVY1cTAtLjQyNS4yODgtLjcxMlQxOSA0dC43MTMuMjg4VDIwIDV2MTNoMnEuNDI1IDAgLjcxMy4yODhUMjMgMTl0LS4yODguNzEzVDIyIDIwTTQgMTlxLjQyNSAwIC43MTMtLjI4OFQ1IDE4dC0uMjg4LS43MTJUNCAxN3QtLjcxMi4yODhUM3AxOHQuMjg4LjcxM1Q0IDE5bTkuNSAwcS42MjUgMCAxLjA2My0uNDM3VDE1IDE3LjV0LS40MzctMS4wNjJUMTMuNSAxNnQtMS4wNjIuNDM4VDEyIDE3LjV0LjQzOCAxLjA2M1QxMy41IDE5bS02LjY3NS0yaDMuMnEuMDUtLjI3NS4xMTItLjUxM3QuMTg4LS40ODdoLTIuMjVMNS4xNSAxM0g0djJxLjk1IDAgMS43MjUuNTV0MS4xIDEuNDVtMi4xLTNoNC43MjVsLTIuOTc1LTdINnY0em0tLjg1IDJsLS40NjItLjQ3NXEtLjQ2My0uNDc1LTEtMS4wMzd0LTEtMS4wMjVMNS4xNSAxM0g0aDEuMTV6aDIuMjV6Ii8+PC9zdmc+",
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik02IDIwcS0xLjI1IDAtMi4xMjUtLjg3NVQzIDE3SDFWNnEwLS44MjUuNTg4LTEuNDEyVDMgNGgxNHY0aDNsMyA0djVoLTJxMCAxLjI1LS44NzUgMi4xMjVUMTggMjB0LTIuMTI1LS44NzVUMTUgMTdIOXEwIDEuMjUtLjg3NSAyLjEyNVQ2IDIwbTAtMnEuNDI1IDAgLjcxMy0uMjg4VDcgMTd0LS4yODgtLjcxMlQ2IDE2dC0uNzEyLjI4OFQ1IDE3dC4yODguNzEzVDYgMThtLTMtM2guOHEuNDI1LS40NS45NzUtLjcyNVQ2IDE0dDEuMjI1LjI3NVQ4LjIgMTVIMTVWNkgzem0xNSAzcSQyLjQyNSAwIC43MTMtLjI4OFQxOSAxN3QtLjI4OC0uNzEyVDM4IDE2dC0uNzEyLjI4OFQxNyAxN3QuMjg4LjcxM1Q1OCAxOG0tMS01aDQLjI1TDE5IDEwaC0yem0tOC0yLjUiLz48L3N2Zz4=",
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik03IDE5cS0xLjI1IDAtMi4xMjUtLjg3NVQ0IDE2SDJ2LTNxMC0xLjY1IDEuMTc1LTIuODI1VDYgOWg0djVoMy41TDE3IDkuNjVWN2gtM1Y1aDNxLjgyNSAwIDEuNDEzLjU4OFQxOSA3djMuMzVMMTQuNSAxNkgxMHEwIDEuMjUtLjg3NSAyLjEyNVQ3IDE5bTAtMnEuNDI1IDAgLjcxMy0uMjg4VDggMTZINnEwIC40MjUuMjg4LjcxM1Q3IDE3TTUgOFY2aDV2MnptMTQgMTFxLTEuMjUgMC0yLjEyNS0uODc1VDE2IDE2dC44NzUtMi4xMjVUMTkgMTN0Mi4xMjUuODc1VDIyIDE2dC0uODc1IDIuMTI1VDE5IDE5bTAtMnEuNDI1IDAgLjcxMy0uMjg4VDIwIDE2dC0uMjg4LS43MTJUMTkgMTV0LS43MTIuMjg4VDE4IDE2dC4yODguNzEzVTE5IDE3TTQgMTRoNHYtM0g2cS0uODI1IDAtMS4xNDEyLjU4OFQ0IDEzN3oiLz48L3N2Zz4=",
+  ];
+
+  const UNIQUE_LOGO_SOURCES = {
+    idle: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyOCIgdmVld0JveD0iMCAwIDI0IDI4Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik0xMiA2cS0uODI1IDAtMS40MTItLjU4N1QxMCA0dC41ODgtMS40MTJUMTIgMnQxLjQxMy41ODhUMTQgNHQtLjU4NyAxLjQxM1QxMiA2bTUgMTZ2LTVoLTVxLS44MjUgMC0xLjQxMi0uNTg3VDEwIDE1VjlxMC0uODI1LjU4OC0xLjQxMlQxMiA3cS42IDAgMS4wMzguMjYzdC45MzcuODM3cTEuMzc1IDEuNjUgMi40ODggMi4yNjNUMTkgMTF2MnEtMS4zMjUgMC0yLjY3NS0uNTc1VDE0IDExLjA1djMuNDVoM3EuODI1IDAgMS40MTMuNTg4VDE5IDE2LjVWMjJ6bS03IDBxLTIuMDc1IDAtMy41MzctMS40NjNUNSAxN3EwLTEuOCAxLjEzOC0zLjE3NVQ5IDEyLjF2Mi4wNXEtLjg3NS4zNS0xLjQzNyAxLjExM1Q3IDE3cTAgMS4yNS44NzUgMi4xMjVUMTAgMjBxLjk3NSAwIDEuNzM4LS41NjJUMTIuODUgMThoMi4wNXEtLjM1IDEuNzI1LTEuNzI1IDIuODYzVDEwIDIyIi8+PC9zdmc+",
+    move: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI4IDI4Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik04IDIycS0yLjA3NSAwLTMuNTM3LTEuNDYzVDMgMTd0MS40NjMtMy41MzdUOCAxMnYycS0xLjI1IDAtMi4xMjUuODc1VDUgMTd0Ljg3NSAyLjEyNVQ4IDIwdDIuMTI1LS44NzVUMTEgMTdoMnEwIDIuMDc1LTEuNDYzIDMuNTM4VDggMjJtOS0xdi01aC02cS0xLjEgMC0xLjctLjkzN1Q5LjE1IDEzLjFMMTEgOUg4LjcyNWwtLjYgMS41NUw2LjIgMTBsLjctMS44cS4yMjUtLjU3NS43MzgtLjg4OFQ4Ljc1IDdoNS4ycTEuMTI1IDAgMS43MTMuOTEzVDE1LjggOS44NWwtMS42NSA0LjY1TDE3LjIyIDE1bDEtMy4zNWgxLjE1bDIgMS4yOHptMyAwLjc1cTAgMS4wNzUtLjggMS44NzV0LTEuODc1Ljg3NXEtMS4wNzUgMC0xLjg3NS0uODc1VDIwIDE5Ljc1dC44NzUtMS44NzVUMjIuNzUgMThxMS4wNzUgMCAxLjg3NS44NzVUMjUuNSAyMHoiLz48L3N2Zz4=",
+  };
+
+  const UNIQUE_PROBABILITY = 0.15;
+
+  function decodeSvgDataUrl(dataUrl) {
+    const commaIndex = dataUrl.indexOf(",");
+    if (commaIndex === -1) return null;
+    try {
+      const decoded = atob(dataUrl.slice(commaIndex + 1)).trim();
+      return decoded.startsWith("<svg") ? decoded : null;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  const NORMAL_LOGOS = NORMAL_LOGO_SOURCES
+    .map(decodeSvgDataUrl)
+    .filter(Boolean);
+
+  const UNIQUE_LOGO = {
+    idle: decodeSvgDataUrl(UNIQUE_LOGO_SOURCES.idle),
+    move: decodeSvgDataUrl(UNIQUE_LOGO_SOURCES.move),
+  };
+
+  function create({ rootEl, getIsCollapsed }) {
+    const container = rootEl.querySelector(".logo-collapsed");
+    if (!container) return { onSidebarStateChange: () => {} };
+
+    let stage = null;
+    let logoEl = null;
+    let running = false;
+    let startTimer = null;
+    let lastNormalIndex = -1;
+
+    const timeouts = new Set();
+    const rafs = new Set();
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    function buildStage() {
+      if (stage) return;
+      stage = document.createElement("div");
+      stage.className = "mini-logo-stage";
+      logoEl = document.createElement("div");
+      logoEl.className = "mini-logo-img";
+      stage.appendChild(logoEl);
+      container.appendChild(stage);
+    }
+
+    function clearStartDelay() {
+      if (startTimer) {
+        clearTimeout(startTimer);
+        startTimer = null;
+      }
+    }
+
+    function clearTimers() {
+      timeouts.forEach((id) => clearTimeout(id));
+      timeouts.clear();
+      rafs.forEach((id) => cancelAnimationFrame(id));
+      rafs.clear();
+    }
+
+    function resetDom() {
+      if (!logoEl) return;
+      logoEl.style.transition = "none";
+      logoEl.style.transform = "translateX(-120%)";
+      logoEl.innerHTML = "";
+    }
+
+    function stop() {
+      running = false;
+      clearTimers();
+      resetDom();
+      if (stage) {
+        stage.remove();
+        stage = null;
+        logoEl = null;
+      }
+    }
+
+    function wait(ms) {
+      return new Promise((resolve) => {
+        const id = window.setTimeout(() => {
+          timeouts.delete(id);
+          resolve();
+        }, ms);
+        timeouts.add(id);
+      });
+    }
+
+    function nextFrame() {
+      return new Promise((resolve) => {
+        const id = requestAnimationFrame(() => {
+          rafs.delete(id);
+          resolve();
+        });
+        rafs.add(id);
+      });
+    }
+
+    function isActive() {
+      return running && getIsCollapsed?.();
+    }
+
+    function setTransition(value) {
+      if (logoEl) logoEl.style.transition = value || "none";
+    }
+
+    function setPosition(pos, transitionValue = null) {
+      if (!logoEl) return;
+      const translate =
+        pos === "center"
+          ? "translateX(0)"
+          : pos === "right"
+          ? "translateX(120%)"
+          : "translateX(-120%)";
+      setTransition(transitionValue);
+      logoEl.style.transform = translate;
+    }
+
+    function setLogo(svgString) {
+      if (logoEl) logoEl.innerHTML = svgString || "";
+    }
+
+    function pickNormalLogo() {
+      if (NORMAL_LOGOS.length === 0) return "";
+      if (NORMAL_LOGOS.length === 1) return NORMAL_LOGOS[0];
+
+      let attempts = 0;
+      let idx = lastNormalIndex;
+
+      while (attempts < NORMAL_LOGOS.length) {
+        idx = Math.floor(Math.random() * NORMAL_LOGOS.length);
+        if (idx !== lastNormalIndex) break;
+        attempts++;
+      }
+
+      lastNormalIndex = idx;
+      return NORMAL_LOGOS[idx] || "";
+    }
+
+    async function playNormalCycle() {
+      setLogo(pickNormalLogo());
+      setPosition("left");
+      await nextFrame();
+      if (!isActive()) return;
+      setPosition("center", "transform 300ms ease-out");
+      await wait(300);
+      if (!isActive()) return;
+      setTransition("none");
+      await wait(7000);
+      if (!isActive()) return;
+      setPosition("right", "transform 450ms ease-in");
+      await wait(450);
+      if (!isActive()) return;
+      setPosition("left");
+      await wait(500);
+    }
+
+    async function playUniqueCycle() {
+      if (!UNIQUE_LOGO.move || !UNIQUE_LOGO.idle) {
+        await playNormalCycle();
+        return;
+      }
+
+      setLogo(UNIQUE_LOGO.move);
+      setPosition("left");
+      await nextFrame();
+      if (!isActive()) return;
+      setPosition("center", "transform 300ms ease-out");
+      await wait(300);
+      if (!isActive()) return;
+      setTransition("none");
+      setLogo(UNIQUE_LOGO.idle);
+      await wait(2000);
+      if (!isActive()) return;
+      setLogo(UNIQUE_LOGO.move);
+      setPosition("right", "transform 700ms ease-in");
+      await wait(700);
+      if (!isActive()) return;
+      setPosition("left");
+      await wait(500);
+    }
+
+    async function runLoop() {
+      if (!logoEl) return;
+      while (isActive()) {
+        const useUnique =
+          !prefersReducedMotion.matches &&
+          Math.random() < UNIQUE_PROBABILITY;
+
+        if (useUnique) await playUniqueCycle();
+        else await playNormalCycle();
+      }
+    }
+
+    function start() {
+      if (!getIsCollapsed?.()) return;
+      buildStage();
+      resetDom();
+      running = true;
+
+      if (prefersReducedMotion.matches) {
+        setLogo(NORMAL_LOGOS[0] || "");
+        setPosition("center");
+        return;
+      }
+
+      runLoop();
+    }
+
+    function handleMotionChange() {
+      clearStartDelay();
+      if (!getIsCollapsed?.()) {
+        stop();
+        return;
+      }
+      stop();
+      start();
+    }
+
+    prefersReducedMotion.addEventListener("change", handleMotionChange);
+
+    function onSidebarStateChange(state) {
+      if (!state) return;
+
+      if (state.collapsed) {
+        clearStartDelay();
+        stop();
+        startTimer = window.setTimeout(() => {
+          startTimer = null;
+          start();
+        }, 240);
+        return;
+      }
+
+      clearStartDelay();
+      stop();
+    }
+
+    return { onSidebarStateChange };
+  }
+
+  return { create };
+})();
+
+    /* ======================================================================
+       BLOCK 7) SIDEBAR VIEW (рендер + события)
+====================================================================== */
+const SidebarView = (() => {
+
+  function create({ service }) {
+    let rootEl = null;
+    let lastCollapsed = null;
+    let logoTyping = null;
+    let collapsedCarousel = null;
+    let lastPageOk = true;
+
+    function mount(container) {
+      rootEl = document.createElement("div");
+      rootEl.innerHTML = `
+        <aside class="sidebar" id="sidebar">
+          <div class="logo-area">
+            <div class="logo-wrap" id="logoWrap">
+              <div class="logo-main ty-logo" id="logoMain"></div>
+              <div class="logo-pill ty-pill" id="logoPill"><span>кабинет</span></div>
+            </div>
+            <div class="logo-collapsed" aria-hidden="true"></div>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title ty-section">Навигация</div>
+            <nav class="nav" id="navMain"></nav>
+          </div>
+
+          <div class="nav-section-divider"></div>
+
+          <div class="nav-section">
+            <div class="nav-section-title ty-section">Закладки</div>
+            <nav class="nav" id="navBookmarks"></nav>
+          </div>
+
+          <button class="collapse-row ty-section" id="collapseBtn" type="button" aria-expanded="true">
+            <span class="collapse-ico" aria-hidden="true"></span>
+            <span class="collapse-text">Свернуть</span>
+          </button>
+        </aside>
+
+        <main class="main" id="main">
+          <button class="bookmark-btn" id="bookmarkBtn" type="button" aria-label="Добавить в закладки"></button>
+          <div id="pageRoot"></div>
+        </main>
+      `;
+      container.appendChild(rootEl);
+
+      logoTyping = LogoTyping.create({
+        rootEl,
+        getIsCollapsed: () => service.getState().collapsed
+      });
+
+      collapsedCarousel = CollapsedLogoCarousel.create({
+        rootEl,
+        getIsCollapsed: () => service.getState().collapsed,
+      });
+
+      const bookmarkBtn = rootEl.querySelector("#bookmarkBtn");
+      bookmarkBtn.innerHTML = Icons.ICONS.bookmark;
+
+      window.addEventListener("page:loaded", (e)=>{
+        lastPageOk = Boolean(e?.detail?.ok);
+
+        const meta = getActivePageMeta(service.getState());
+        if (lastPageOk) {
+          service.syncBookmarkMeta(meta);
+        }
+
+        updateBookmarkState(service.getState());
+      });
+
+      wireDOMEvents();
+      service.onChange(render);
+      render(service.getState());
+    }
+
+    function updateBookmarkState(state){
+      const btn = rootEl.querySelector("#bookmarkBtn");
+      if (!btn) return;
+
+      const isBookmarkable = state.activeId && !NON_BOOKMARKABLE_IDS.has(state.activeId);
+      const isDisabled = !isBookmarkable || !lastPageOk;
+
+      const isBookmarked = state.items.some(
+        i => i.group === "bookmark" && i.id === state.activeId
+      );
+
+      const isActive = !isDisabled && isBookmarked;
+
+      btn.classList.toggle("is-disabled", isDisabled);
+      btn.classList.toggle("is-active", isActive);
+      btn.setAttribute("aria-pressed", String(isActive));
+      btn.setAttribute(
+        "aria-label",
+        isDisabled
+          ? "Добавить в закладки"
+          : isActive
+            ? "Убрать из закладок"
+            : "Добавить в закладки"
+      );
+    }
+
+    function getActivePageMeta(state){
+      const id = state?.activeId;
+      const pageRoot = rootEl.querySelector("#pageRoot");
+      const titleNode = pageRoot?.querySelector("[data-page-title], h1");
+      const titleText = (titleNode?.textContent || "").trim();
+
+      const navItem = state?.items?.find(i => i.id === id);
+
+      return {
+        id,
+        label: titleText || navItem?.label || id || "",
+      };
+    }
+
+    function render(state) {
+      const sidebar = rootEl.querySelector("#sidebar");
+      const navMain = rootEl.querySelector("#navMain");
+      const navBookmarks = rootEl.querySelector("#navBookmarks");
+
+      const collapseBtn = rootEl.querySelector("#collapseBtn");
+      const collapseText = rootEl.querySelector(".collapse-text");
+      const collapseIco = rootEl.querySelector(".collapse-ico");
+
+      sidebar.classList.toggle("is-collapsed", state.collapsed);
+      collapseBtn.setAttribute("aria-expanded", String(!state.collapsed));
+
+      collapseIco.innerHTML = state.collapsed
+        ? Icons.ICONS.chevronRightSmall
+        : Icons.ICONS.chevronLeftSmall;
+
+      collapseText.textContent = state.collapsed ? "Развернуть" : "Свернуть";
+
+      const mainItems = state.items.filter(i => i.group === "main");
+      navMain.innerHTML = mainItems.map(item => navItemHtml(item, item.id === state.activeId)).join("");
+
+      const bookmarkItems = state.items.filter(i => i.group === "bookmark");
+      navBookmarks.innerHTML = bookmarkItems.map(item => navItemHtml(item, item.id === state.activeId)).join("");
+
+      logoTyping.onSidebarStateChange(state, lastCollapsed);
+      collapsedCarousel.onSidebarStateChange(state, lastCollapsed);
+      lastCollapsed = state.collapsed;
+
+      updateBookmarkState(state);
+    }
+
+    function navItemHtml(item, active){
+      const svg = Icons.ICONS[item.iconKey] || "";
+      return `
+        <a class="nav-item ty-nav ${active ? "is-active" : ""}" href="#" data-id="${item.id}">
+          <span class="ico" aria-hidden="true">${svg}</span>
+          <span class="text">${item.label}</span>
+        </a>
+      `;
+    }
+
+    function wireDOMEvents() {
+      rootEl.addEventListener("click", async (e) => {
+        const navItem = e.target.closest(".nav-item");
+        if (navItem) {
+          e.preventDefault();
+          const id = navItem.dataset.id;
+          service.selectItem(id);
+          await Pages.showPage(id);
+          return;
+        }
+
+        const bookmarkBtn = e.target.closest("#bookmarkBtn");
+        if (bookmarkBtn){
+          e.preventDefault();
+          if (bookmarkBtn.classList.contains("is-disabled") || !lastPageOk) return;
+          const meta = getActivePageMeta(service.getState());
+          if (!meta?.id || NON_BOOKMARKABLE_IDS.has(meta.id)) return;
+          service.toggleBookmarkCurrent(meta);
+          return;
+        }
+
+        const collapseBtn = e.target.closest("#collapseBtn");
+        if (collapseBtn) service.toggle();
+      });
+    }
+
+    return { mount };
+  }
+
+  return { create };
+})();
+
+    /* ======================================================================
+       BLOCK 8) HOTKEYS (только Shift+Я)
+    ====================================================================== */
+    const Hotkeys = (() => {
+      function bind(service){
+        window.addEventListener("keydown", (e) => {
+          const t = e.target;
+          const isTypingField =
+            t && (
+              t.tagName === "INPUT" ||
+              t.tagName === "TEXTAREA" ||
+              t.tagName === "SELECT" ||
+              t.isContentEditable
+            );
+          if (isTypingField) return;
+
+          if (e.shiftKey) {
+            const k = (e.key || "").toLowerCase();
+            if (k === "я") {
+              e.preventDefault();
+              service.toggle();
+            }
+          }
+        });
+      }
+      return { bind };
+    })();
+
+    /* ======================================================================
+       BLOCK 9) MAIN
+    ====================================================================== */
+    async function main() {
       const items = [
-        { id: "cars",    label: "Поиск автомобилей", iconKey: "search" },
-        { id: "content", label: "Контент",           iconKey: "folder" },
+        { id: "cars",    label: "Поиск автомобилей", iconKey: "search", group: "main" },
+        { id: "content", label: "Контент",           iconKey: "folder", group: "main" },
       ];
 
       const storageAdapter = SidebarInfra.createLocalStorageAdapter();
@@ -843,8 +2142,12 @@
       service.init({ items, defaultActiveId: "cars" });
 
       const root = document.getElementById("app");
-      const view = SidebarUI.createView({ service });
+      const view = SidebarView.create({ service });
       view.mount(root);
+
+      Hotkeys.bind(service);
+
+      await Pages.showPage(service.getState().activeId);
     }
 
     main();
