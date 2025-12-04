@@ -597,7 +597,7 @@
   padding: 4px;
   border: 1px solid var(--c-gray-light);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--c-gray-light) 28%, transparent);
+  background: color-mix(in srgb, var(--c-gray-light) 40%, transparent);
   justify-content: flex-start;
 }
 
@@ -610,7 +610,7 @@
   border-radius: 999px;
   padding: 6px 12px;
   height: 32px;
-  background: color-mix(in srgb, var(--c-gray-light) 30%, transparent);
+  background: color-mix(in srgb, var(--c-gray-light) 55%, transparent);
   color: var(--c-black);
   cursor: pointer;
   transition: border-color 120ms ease, background 120ms ease;
@@ -619,7 +619,7 @@
 
 #pageRoot .cars-tab[aria-pressed="true"]{
   border-color: var(--c-gray);
-  background: color-mix(in srgb, var(--c-gray-light) 45%, transparent);
+  background: color-mix(in srgb, var(--c-gray-light) 70%, transparent);
 }
 
 #pageRoot .cars-tab:hover{
@@ -639,49 +639,46 @@
 
 /* поле */
 #pageRoot .cars-field{
-  position: relative;
-  border: 1px solid var(--c-gray-light);
-  border-radius: 12px;
-  background: var(--c-white);
-  padding: 12px;
-  min-height: 48px;
   display: flex;
-  align-items: center;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  flex-direction: column;
+  gap: 6px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 4px 2px;
+  min-height: 48px;
 }
 
 #pageRoot .cars-field::before{
   content: attr(data-label);
-  position: absolute;
-  left: 12px;
-  top: 10px;
   font-size: var(--fs-13);
   font-weight: var(--fw-medium);
   color: var(--c-gray);
-  pointer-events: none;
-}
-
-#pageRoot .cars-field:focus-within{
-  border-color: var(--c-gray);
+  line-height: var(--lh-tight);
 }
 
 #pageRoot .cars-input{
   width: 100%;
-  border: none;
-  background: transparent;
+  border: 1px solid var(--c-gray-light);
+  border-radius: 12px;
+  background: var(--c-white);
   color: var(--c-black);
   outline: none;
   appearance: none;
-  padding-top: 22px;
-  padding-right: 4px;
+  padding: 10px 12px;
   font-size: var(--fs-15);
   line-height: 1.1;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+#pageRoot .cars-input:focus{
+  border-color: var(--c-gray);
 }
 
 #pageRoot .cars-select{
+  height: 40px;
   padding-top: 0;
   padding-bottom: 0;
-  height: 40px;
 }
 
 #pageRoot .cars-select::-ms-expand{ display:none; }
