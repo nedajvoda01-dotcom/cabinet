@@ -10,11 +10,45 @@
    BLOCK 1) CARS PAGE MARKUP + STYLES
 ====================================================================== */
 .cars-page{
+  /* локальные типографические токены (не зависят от других страниц) */
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-15: 15px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --lh-normal: 1.35;
+
+  font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+
   background: var(--c-white);
   color: var(--c-black);
   min-height: 100vh;
   padding: 18px 18px;
 }
+
+/* локальная типографика (чтобы не ломаться от других страниц) */
+.cars-page .ty-title{
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+  line-height: 1.25;
+  color: var(--c-black);
+}
+.cars-page .ty-body{
+  font-size: var(--fs-15);
+  font-weight: 400;
+  line-height: var(--lh-normal);
+  color: var(--c-black);
+}
+.cars-page .ty-section{
+  font-size: var(--fs-13);
+  font-weight: 500;
+  line-height: var(--lh-normal);
+  color: var(--c-black);
+}
+
 .cars-shell{
   max-width: 980px;
   margin: 0 auto;
@@ -22,6 +56,7 @@
   flex-direction: column;
   gap: 14px;
 }
+
 .cars-filters{
   border: 1px solid var(--c-gray-light);
   border-radius: 14px;
@@ -31,6 +66,7 @@
   flex-direction: column;
   gap: 10px;
 }
+
 .cars-tabs{
   display: flex;
   gap: 8px;
@@ -40,6 +76,7 @@
   border-top: 1px solid var(--c-gray-light);
   padding-top: 8px;
 }
+
 .cars-tab{
   border: 1px solid var(--c-gray-light);
   border-radius: 10px;
@@ -61,11 +98,13 @@
   gap: 12px;
   align-items: start;
 }
+
 .cars-selects{
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 10px;
 }
+
 .cars-field{
   position: relative;
   border: 1px solid var(--c-gray-light);
@@ -115,10 +154,12 @@
   gap: 8px;
   align-items: flex-end;
 }
+
 .cars-actions-btns{
   display: flex;
   gap: 8px;
 }
+
 .cars-btn{
   border: none;
   border-radius: 10px;
@@ -145,6 +186,7 @@
   border-color: var(--c-gray);
   background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
 }
+
 .cars-status{
   color: var(--c-gray);
   text-align: right;
@@ -173,6 +215,7 @@
   grid-template-columns: 1fr;
   gap: 8px;
 }
+
 .cars-card{
   border: 1px solid var(--c-gray-light);
   border-radius: 12px;
@@ -284,7 +327,10 @@
   gap: 4px 8px;
   color: var(--c-black);
 }
-.cars-modal-list li{ color: var(--c-gray); font-size: var(--fs-13); }
+.cars-modal-list li{
+  color: var(--c-gray);
+  font-size: var(--fs-13);
+}
 .cars-modal-link{
   align-self: flex-start;
   min-width: auto;
@@ -858,7 +904,7 @@ function renderCards(filtered) {
 }
 
 function renderEmptyHint() {
-  elements.grid.innerHTML = '<div class="ty-body cars-empty">Выбор фильтров не применён. Нажмите «Показать».</div>';
+  elements.grid.innerHTML = '<div class="ty-body cars-empty">Выбор фильтров не применён. Нажмите «Показать».<\/div>';
 }
 
 /* ======================================================================
