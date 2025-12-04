@@ -252,16 +252,31 @@
   justify-content:center;
   user-select:none;
 }
-.logo-collapsed::before{
-  content:"";
-  width:20px;
-  height:20px;
-  background-color: currentColor;
-  -webkit-mask-image: var(--collapsed-logo-data);
-  mask-image: var(--collapsed-logo-data);
-  -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
-  -webkit-mask-position:center; mask-position:center;
-  -webkit-mask-size:contain; mask-size:contain;
+
+.mini-logo-stage{
+  position: relative;
+  width: 22px;
+  height: 22px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-logo-img{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-120%);
+}
+
+.mini-logo-img svg{
+  width: 22px;
+  height: 22px;
+  display: block;
+  color: currentColor;
 }
 
 .sidebar.is-collapsed .logo-wrap{ display:none; }
@@ -1319,7 +1334,240 @@
     })();
 
     /* ======================================================================
-   BLOCK 7) SIDEBAR VIEW (рендер + события)
+       BLOCK 6.1) COLLAPSED LOGO CAROUSEL (мини-лого)
+    ====================================================================== */
+    const CollapsedLogoCarousel = (() => {
+      const NORMAL_LOGO_SOURCES = [
+        "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik02IDE5cS0xLjI1IDAtMi4xMjUtLjg3NVQzIDE2cS0uODI1IDAtMS40MTItLjU4N1QxIDE0VjdxMC0uODI1LjU4OC0xLjQxMlQzIDVoMTMuMTc1cS40IDAgLjc2My4xNXQuNjM3LjQyNWw0Ljg1IDQuODVxLjI3NS4yNzUuNDI1LjYzOHQuMTUuNzYyVjE0cTAgLjgyNS0uNTg3IDEuNDEzVDIxIDE2cTAgMS4yNS0uODc1IDIuMTI1VDE4IDE5dC0yLjEyNS0uODc1VDE1IDE2SDlxMCAxLjI1LS44NzUgMi4xMjVUNiAxOW05LTloNGwtMy0zaC0xem0tNiAwaDRWN0g5em0tNiAwaDRWN0gzem0zIDcuMjVxLjUyNSAwIC44ODgtLjM2M1Q3LjI1IDE2dC0uMzYzLS44ODhUNiAxNC43NXQtLjg4OC4zNjNUNC43NSAxNnQuMzYzLjg4OHQuODg3LjM2Mm0xMiAwcS41MjUgMCAuODg4LS4zNjNUMTkuMjUgMTZ0LS4zNjMtLjg4OFQxOCAxNC43NXQtLjg4OC4zNjN0LS4zNjIuODg3dC4zNjMuODg4dC44ODcuMzYyTTguMiAxNGg3LjZxLjQyNS0uNDUuOTc1LS43MjVUMTggMTN0MS4yMjUuMjc1dC45NzUuNzI1aC44di0ySDN2MmguOHEuNDI1LS40NS45NzUtLjcyNVQ2IDEzdDEuMjI1LjI3NVQ4LjIgMTRNMjEgMTJIM3oiLz48L3N2Zz4=",
+        "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik00IDlxLS40MjUgMC0uNzEyLS4yODhUMyA4dC4yODgtLjcxMlQ0IDdoM3EuODI1IDAgMS40MTMuNTg4VDkgOXptMiA5cTEuMjUgMCAyLjEyNS0uODc1VDkgMTV0LS44NzUtMi4xMjVUNiAxMnQtMi4xMjUuODc1VDMgMTV0Ljg3NSAyLjEyNVQ2IDE4bTEzLjUgMHEuNjI1IDAgMS4wNjMtLjQzN1QyMSAxNi41dC0uNDM3LTEuMDYyVDE5LjUgMTV0LTEuMDYyLjQzOFQxOCAxNi41dC40MzggMS4wNjNUMTkuNSAxOE02IDE2LjVxLS42MjUgMC0xLjA2Mi0uNDM3VDQuNSAxNXQuNDM4LTEuMDYyVDYgMTMuNXQxLjA2My40MzhUNy41IDE1dC0uNDM3IDEuMDYzVDYgMTYuNW0xNC0zLjQ3NXEuNjUuMTI1IDEuMDc1LjMzOHQuOTI1LjY4N1Y4cTAtLjgyNS0uNTg3LTEuNDEyVDIwIDZoLTYuM2wtMS4wNS0xLjFsMS40LTEuNGwtLjctLjdMOS44IDYuMzVsLjc1LjdsMS40LTEuNEwxMyA2LjdWOXEwIC44MjUtLjU4NyAxLjQxM1QxMSAxMUg4Ljk3NXEuNTc1LjQyNS45MjUuODc1VDEwLjYgMTNoLjRxMS42NSAwIDIuODI1LTEuMTc1VDE1IDlWOGg1ek0xNi4wMjUgMTZxLjE1LS42NzUuMzYzLTEuMDg4VDE3LjA1IDE0SDEwLjlxLjEuNTc1LjEgMXQtLjEgMXptMy40NzUgNHEtMS40NSAwLTIuNDc1LTEuMDI1VDE2IDE2LjV0MS4wMjUtMi40NzVUMTkuNSAxM3QyLjQ3NSAxLjAyNVQyMyAxNi41dC0xLjAyNSAyLjQ3NVQxOS41IDIwTTYgMjBxLTIuMDc1IDAtMy41MzctMS40NjNUMSAxNXQxLjQ2My0zLjUzN1Q2IDEwdDMuNTM4IDEuNDYzVDExIDE1dC0xLjQ2MyAzLjUzOFQ2IDIwbTkuODI1LTkiLz48L3N2Zz4=",
+        "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik03IDIxcS0xLjI1IDAtMi4xMjUtLjg3NVQ0IDE4SDNxLS44MjUgMC0xLjQxMi0uNTg3VDEgMTZ2LTVoMTFWN3EwLS44MjUuNTg4LTEuNDEyVDE0IDVoMlY0cTAtLjQyNS4yODgtLjcxMlQxNyAzaDFxLjQyNSAwIC43MTMuMjg4VDE5IDR2MWguNTVxLjY1IDAgMS4xNzUuMzc1dC43MjUgMWwxLjQ1IDQuM3EuMDUuMTUuMDc1LjMxM3QuMDI1LjMzN1YxOGgtM3EwIDEuMjUtLjg3NSAyLjEyNVQxNyAyMXQtMi4xMjUtLjg3NVQxNCAxOGgtNHEwIDEuMjUtLjg3NSAyLjEyNVQ3IDIxbTAtMnEuNDI1IDAgLjcxMy0uMjg4VDggMTh0LS4yODgtLjcxMlQ3IDE3dC0uNzEyLjI4OFQ2IDE4dC4yODguNzEzVDcgMTltMTAgMHEuNDI1IDAgLjcxMy0uMjg4VTE4IDE4dC0uMjg4LS43MTJUMTcgMTd0LS43MTIuMjg4VDE2IDE4dC4yODguNzEzVTE3IDE5TTMgMTN2M2gxLjc3NXEuNDI1LS40NzUgMS0uNzM3VDcgMTV0MS4yMjUuMjYzdDEgLjczN0gxMnYtM3ptMTEgM2guNzc1cS40MjUtLjQ3NSAxLS43MzdUMTcgMTV0MS4yMjUuMjYzdDEgLjczN0gyMXYtM2gtN3ptMC01aDYuOWwtMS4zNS00SDE0ek0xIDEwVjguNWgxdi0ySDFWNWgxMHYxLjVoLTF2MmgxVjEwem0yLjUtMS41aDEuNzV2LTJIMy41em0zLjI1IDBIOC41di0ySDYuNzV6TTEyIDEzSDN6bTIgMGg3eiIvPjwvc3ZnPg==",
+        "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik00IDIxcS0xLjI1IDAtMi4xMjUtLjg3NVQxIDE4cTAtLjY1LjI1LTEuMjM3VDIgMTUuNzVWMTJxMC0uNDI1LjI4OC0uNzEyVDMgMTFoMVY2cTAtLjQyNS4yODgtLjcxMlQ1IDVoNS42NzVxLjYgMCAxLjEuMzI1dC43NS45bDQuMTc1IDkuODVxLjE1LjM1LjIyNS43VDE3IDE3LjVxMCAxLjQ1LTEuMDI1IDIuNDc1VDEzLjUgMjFxLTEuMDI1IDAtMS44ODgtLjUzN1QxMC4zMjYgMTloLTMuNXEtLjMyNS45LTEuMSAxLjQ1VDQgMjFtMTgtMWgtM3EtLjQyNSAwLS43MTItLjI4OFQxOCAxOVY1cTAtLjQyNS4yODgtLjcxMlQxOSA0dC43MTMuMjg4VDIwIDV2MTNoMnEuNDI1IDAgLjcxMy4yODhUMjMgMTl0LS4yODguNzEzVDIyIDIwTTQgMTlxLjQyNSAwIC43MTMtLjI4OFQ1IDE4dC0uMjg4LS43MTJUNCAxN3QtLjcxMi4yODhUM3AxOHQuMjg4LjcxM1Q0IDE5bTkuNSAwcS42MjUgMCAxLjA2My0uNDM3VDE1IDE3LjV0LS40MzctMS4wNjJUMTMuNSAxNnQtMS4wNjIuNDM4VDEyIDE3LjV0LjQzOCAxLjA2M1QxMy41IDE5bS02LjY3NS0yaDMuMnEuMDUtLjI3NS4xMTItLjUxM3QuMTg4LS40ODdoLTIuMjVMNS4xNSAxM0g0djJxLjk1IDAgMS43MjUuNTV0MS4xIDEuNDVtMi4xLTNoNC43MjVsLTIuOTc1LTdINnY0em0tLjg1IDJsLS40NjItLjQ3NXEtLjQ2My0uNDc1LTEtMS4wMzd0LTEtMS4wMjVMNS4xNSAxM0g0aDEuMTV6aDIuMjV6Ii8+PC9zdmc+",
+        "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik02IDIwcS0xLjI1IDAtMi4xMjUtLjg3NVQzIDE3SDFWNnEwLS44MjUuNTg4LTEuNDEyVDMgNGgxNHY0aDNsMyA0djVoLTJxMCAxLjI1LS44NzUgMi4xMjVUMTggMjB0LTIuMTI1LS44NzVUMTUgMTdIOXEwIDEuMjUtLjg3NSAyLjEyNVQ2IDIwbTAtMnEuNDI1IDAgLjcxMy0uMjg4VDcgMTd0LS4yODgtLjcxMlQ2IDE2dC0uNzEyLjI4OFQ1IDE3dC4yODguNzEzVDYgMThtLTMtM2guOHEuNDI1LS40NS45NzUtLjcyNVQ2IDE0dDEuMjI1LjI3NVQ4LjIgMTVIMTVWNkgzem0xNSAzcSQyLjQyNSAwIC43MTMtLjI4OFQxOSAxN3QtLjI4OC0uNzEyVDM4IDE2dC0uNzEyLjI4OFQxNyAxN3QuMjg4LjcxM1Q1OCAxOG0tMS01aDQLjI1TDE5IDEwaC0yem0tOC0yLjUiLz48L3N2Zz4=",
+        "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik03IDE5cS0xLjI1IDAtMi4xMjUtLjg3NVQ0IDE2SDJ2LTNxMC0xLjY1IDEuMTc1LTIuODI1VDYgOWg0djVoMy41TDE3IDkuNjVWN2gtM1Y1aDNxLjgyNSAwIDEuNDEzLjU4OFQxOSA3djMuMzVMMTQuNSAxNkgxMHEwIDEuMjUtLjg3NSAyLjEyNVQ3IDE5bTAtMnEuNDI1IDAgLjcxMy0uMjg4VDggMTZINnEwIC40MjUuMjg4LjcxM1Q3IDE3TTUgOFY2aDV2MnptMTQgMTFxLTEuMjUgMC0yLjEyNS0uODc1VDE2IDE2dC44NzUtMi4xMjVUMTkgMTN0Mi4xMjUuODc1VDIyIDE2dC0uODc1IDIuMTI1VDE5IDE5bTAtMnEuNDI1IDAgLjcxMy0uMjg4VDIwIDE2dC0uMjg4LS43MTJUMTkgMTV0LS43MTIuMjg4VDE4IDE2dC4yODguNzEzVTE5IDE3TTQgMTRoNHYtM0g2cS0uODI1IDAtMS4xNDEyLjU4OFQ0IDEzN3oiLz48L3N2Zz4=",
+      ];
+
+      const UNIQUE_LOGO_SOURCES = {
+        idle: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI4Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik0xMiA2cS0uODI1IDAtMS40MTItLjU4N1QxMCA0dC41ODgtMS40MTJUMTIgMnQxLjQxMy41ODhUMTQgNHQtLjU4NyAxLjQxM1QxMiA2bTUgMTZ2LTVoLTVxLS44MjUgMC0xLjQxMi0uNTg3VDEwIDE1VjlxMC0uODI1LjU4OC0xLjQxMlQxMiA3cS42IDAgMS4wMzguMjYzdC45MzcuODM3cTEuMzc1IDEuNjUgMi40ODggMi4yNjNUMTkgMTF2MnEtMS4zMjUgMC0yLjY3NS0uNTc1VDE0IDExLjA1djMuNDVoM3EuODI1IDAgMS40MTMuNTg4VDE5IDE2LjVWMjJ6bS03IDBxLTIuMDc1IDAtMy41MzctMS40NjNUNSAxN3EwLTEuOCAxLjEzOC0zLjE3NVQ5IDEyLjF2Mi4wNXEtLjg3NS4zNS0xLjQzNyAxLjExM1Q3IDE3cTAgMS4yNS44NzUgMi4xMjVUMTAgMjBxLjk3NSAwIDEuNzM4LS41NjJUMTIuODUgMThoMi4wNXEtLjM1IDEuNzI1LTEuNzI1IDIuODYzVDEwIDIyIi8+PC9zdmc+",
+        move: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI4IDI4Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik04IDIycS0yLjA3NSAwLTMuNTM3LTEuNDYzVDMgMTd0MS40NjMtMy41MzdUOCAxMnYycS0xLjI1IDAtMi4xMjUuODc1VDUgMTd0Ljg3NSAyLjEyNVQ4IDIwdDIuMTI1LS44NzVUMTEgMTdoMnEwIDIuMDc1LTEuNDYzIDMuNTM4VDggMjJtOS0xdi01aC02cS0xLjEgMC0xLjctLjkzN1Q5LjE1IDEzLjFMMTEgOUg4LjcyNWwtLjYgMS41NUw2LjIgMTBsLjctMS44cS4yMjUtLjU3NS43MzgtLjg4OFQ4Ljc1IDdoNS4ycTEuMTI1IDAgMS43MTMuOTEzVDE1LjggOS44NWwtMS42NSA0LjY1TDE3LjIyIDE1bDEtMy4zNWgxLjE1bDIgMS4yOHptMyAwLjc1cTAgMS4wNzUtLjggMS44NzV0LTEuODc1Ljg3NXEtMS4wNzUgMC0xLjg3NS0uODc1VDIwIDE5Ljc1dC44NzUtMS44NzVUMjIuNzUgMThxMS4wNzUgMCAxLjg3NS44NzVUMjUuNSAyMHoiLz48L3N2Zz4=",
+      };
+
+      const UNIQUE_PROBABILITY = 0.15;
+
+      function decodeSvgDataUrl(dataUrl) {
+        const commaIndex = dataUrl.indexOf(",");
+        if (commaIndex === -1) return dataUrl;
+        try {
+          return atob(dataUrl.slice(commaIndex + 1));
+        } catch (_e) {
+          return dataUrl;
+        }
+      }
+
+      const NORMAL_LOGOS = NORMAL_LOGO_SOURCES.map(decodeSvgDataUrl);
+      const UNIQUE_LOGO = {
+        idle: decodeSvgDataUrl(UNIQUE_LOGO_SOURCES.idle),
+        move: decodeSvgDataUrl(UNIQUE_LOGO_SOURCES.move),
+      };
+
+      function create({ rootEl, getIsCollapsed }) {
+        const container = rootEl.querySelector(".logo-collapsed");
+        if (!container) return { onSidebarStateChange: () => {} };
+
+        let stage = null;
+        let logoEl = null;
+        let running = false;
+        let startTimer = null;
+        let lastNormalIndex = -1;
+
+        const timeouts = new Set();
+        const rafs = new Set();
+
+        const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+        function buildStage() {
+          if (stage) return;
+          stage = document.createElement("div");
+          stage.className = "mini-logo-stage";
+          logoEl = document.createElement("div");
+          logoEl.className = "mini-logo-img";
+          stage.appendChild(logoEl);
+          container.appendChild(stage);
+        }
+
+        function clearStartDelay() {
+          if (startTimer) {
+            clearTimeout(startTimer);
+            startTimer = null;
+          }
+        }
+
+        function clearTimers() {
+          timeouts.forEach((id) => clearTimeout(id));
+          timeouts.clear();
+          rafs.forEach((id) => cancelAnimationFrame(id));
+          rafs.clear();
+        }
+
+        function resetDom() {
+          if (!logoEl) return;
+          logoEl.style.transition = "none";
+          logoEl.style.transform = "translateX(-120%)";
+          logoEl.innerHTML = "";
+        }
+
+        function stop() {
+          running = false;
+          clearTimers();
+          resetDom();
+        }
+
+        function wait(ms) {
+          return new Promise((resolve) => {
+            const id = window.setTimeout(() => {
+              timeouts.delete(id);
+              resolve();
+            }, ms);
+            timeouts.add(id);
+          });
+        }
+
+        function nextFrame() {
+          return new Promise((resolve) => {
+            const id = requestAnimationFrame(() => {
+              rafs.delete(id);
+              resolve();
+            });
+            rafs.add(id);
+          });
+        }
+
+        function isActive() {
+          return running && getIsCollapsed?.();
+        }
+
+        function setTransition(value) {
+          if (logoEl) logoEl.style.transition = value || "none";
+        }
+
+        function setPosition(pos, transitionValue = null) {
+          if (!logoEl) return;
+          const translate = pos === "center" ? "translateX(0)" : pos === "right" ? "translateX(120%)" : "translateX(-120%)";
+          setTransition(transitionValue);
+          logoEl.style.transform = translate;
+        }
+
+        function setLogo(svgString) {
+          if (logoEl) logoEl.innerHTML = svgString;
+        }
+
+        function pickNormalLogo() {
+          if (NORMAL_LOGOS.length === 0) return "";
+          if (NORMAL_LOGOS.length === 1) return NORMAL_LOGOS[0];
+          let idx = Math.floor(Math.random() * NORMAL_LOGOS.length);
+          if (idx === lastNormalIndex) idx = (idx + 1) % NORMAL_LOGOS.length;
+          lastNormalIndex = idx;
+          return NORMAL_LOGOS[idx];
+        }
+
+        async function playNormalCycle() {
+          setLogo(pickNormalLogo());
+          setPosition("left");
+          await nextFrame();
+          if (!isActive()) return;
+          setPosition("center", "transform 300ms ease-out");
+          await wait(300);
+          if (!isActive()) return;
+          setTransition("none");
+          await wait(7000);
+          if (!isActive()) return;
+          setPosition("right", "transform 450ms ease-in");
+          await wait(450);
+          if (!isActive()) return;
+          setPosition("left");
+          await wait(500);
+        }
+
+        async function playUniqueCycle() {
+          setLogo(UNIQUE_LOGO.move);
+          setPosition("left");
+          await nextFrame();
+          if (!isActive()) return;
+          setPosition("center", "transform 300ms ease-out");
+          await wait(300);
+          if (!isActive()) return;
+          setTransition("none");
+          setLogo(UNIQUE_LOGO.idle);
+          await wait(2000);
+          if (!isActive()) return;
+          setLogo(UNIQUE_LOGO.move);
+          setPosition("right", "transform 700ms ease-in");
+          await wait(700);
+          if (!isActive()) return;
+          setPosition("left");
+          await wait(500);
+        }
+
+        async function runLoop() {
+          if (!logoEl) return;
+          while (isActive()) {
+            const useUnique = !prefersReducedMotion.matches && Math.random() < UNIQUE_PROBABILITY;
+            if (useUnique) await playUniqueCycle();
+            else await playNormalCycle();
+          }
+        }
+
+        function start() {
+          if (!getIsCollapsed?.()) return;
+          buildStage();
+          resetDom();
+          running = true;
+
+          if (prefersReducedMotion.matches) {
+            setLogo(NORMAL_LOGOS[0] || "");
+            setPosition("center");
+            return;
+          }
+
+          runLoop();
+        }
+
+        function handleMotionChange() {
+          clearStartDelay();
+          if (!getIsCollapsed?.()) {
+            stop();
+            return;
+          }
+          stop();
+          start();
+        }
+
+        prefersReducedMotion.addEventListener("change", handleMotionChange);
+
+        function onSidebarStateChange(state) {
+          if (!state) return;
+
+          if (state.collapsed) {
+            clearStartDelay();
+            stop();
+            startTimer = window.setTimeout(() => {
+              startTimer = null;
+              start();
+            }, 240);
+            return;
+          }
+
+          clearStartDelay();
+          stop();
+        }
+
+        return { onSidebarStateChange };
+      }
+
+      return { create };
+    })();
+
+    /* ======================================================================
+       BLOCK 7) SIDEBAR VIEW (рендер + события)
 ====================================================================== */
 const SidebarView = (() => {
 
@@ -1327,6 +1575,7 @@ const SidebarView = (() => {
     let rootEl = null;
     let lastCollapsed = null;
     let logoTyping = null;
+    let collapsedCarousel = null;
     let lastPageOk = true;
 
     function mount(container) {
@@ -1369,6 +1618,11 @@ const SidebarView = (() => {
       logoTyping = LogoTyping.create({
         rootEl,
         getIsCollapsed: () => service.getState().collapsed
+      });
+
+      collapsedCarousel = CollapsedLogoCarousel.create({
+        rootEl,
+        getIsCollapsed: () => service.getState().collapsed,
       });
 
       const bookmarkBtn = rootEl.querySelector("#bookmarkBtn");
@@ -1455,6 +1709,7 @@ const SidebarView = (() => {
       navBookmarks.innerHTML = bookmarkItems.map(item => navItemHtml(item, item.id === state.activeId)).join("");
 
       logoTyping.onSidebarStateChange(state, lastCollapsed);
+      collapsedCarousel.onSidebarStateChange(state, lastCollapsed);
       lastCollapsed = state.collapsed;
 
       updateBookmarkState(state);
