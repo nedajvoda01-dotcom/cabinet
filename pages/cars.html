@@ -4,7 +4,10 @@
   <style>
     /* ======================================================================
        CARS PAGE — LOCAL UI (самодостаточный дизайн)
-       Работает, потому что style лежит в body и не выкидывается лоадером.
+       ✔ только design tokens, без ручных цветов
+       ✔ две первостепенные капсулы
+       ✔ поля без “капсула в капсуле”
+       ✔ floating/capsule label внутри поля
     ====================================================================== */
 
     .cars-page{
@@ -12,6 +15,7 @@
       display:flex;
       justify-content:center;
       padding: 22px 24px 28px;
+      background: var(--c-white);
     }
     .cars-shell{
       width:100%;
@@ -21,41 +25,56 @@
       gap:14px;
     }
 
-    /* ------ Filters card ------ */
+    /* ------ Filters area (без тяжёлой карточки) ------ */
     .cars-filters{
       background: var(--c-white);
-      border: 1px solid var(--c-gray-light);
-      border-radius: 16px;
-      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--c-gray-light);
+      padding: 8px 2px 12px;
       display:flex;
       flex-direction:column;
       gap:10px;
     }
 
-    /* Tabs row */
+    /* One top row with two equal segmented controls */
+    .cars-tabs-row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
     .cars-tabs{
       display:flex;
-      gap:6px;
-      flex-wrap:wrap;
+      gap:0;
+      border:1px solid var(--c-gray-light);
+      border-radius: 10px;
+      background: var(--c-white);
+      overflow:hidden;
     }
     .cars-tab{
-      border:1px solid var(--c-gray-light);
-      background: var(--c-white);
-      color: var(--c-black);
-      border-radius: 999px;
-      padding: 6px 10px 5px;
+      border:none;
+      background: transparent;
+      color: var(--c-gray);
+      padding: 8px 12px 7px;
       cursor:pointer;
-      transition: background 120ms ease, border 120ms ease, color 120ms ease;
+      transition: background 120ms ease, color 120ms ease;
       font: inherit;
       line-height: var(--lh-ui);
       letter-spacing: var(--ls-ui);
       font-size: var(--fs-12);
       font-weight: var(--fw-menu);
+      white-space:nowrap;
+    }
+    .cars-tab + .cars-tab{
+      border-left:1px solid var(--c-gray-light);
     }
     .cars-tab[aria-pressed="true"]{
-      background: var(--c-black);
-      color: var(--c-white);
-      border-color: var(--c-black);
+      background: var(--c-gray-light);
+      color: var(--c-black);
+    }
+    .cars-tab:hover{
+      background: var(--c-gray-light);
+      color: var(--c-black);
     }
 
     /* Select grid */
@@ -68,7 +87,7 @@
     .cars-selects{
       display:grid;
       grid-template-columns: repeat(5, minmax(0,1fr));
-      gap:8px;
+      gap:12px;
     }
     @media (max-width: 980px){
       .cars-selects{ grid-template-columns: repeat(3, minmax(0,1fr)); }
@@ -87,10 +106,18 @@
       align-items:center;
       background: var(--c-white);
       border:1px solid var(--c-gray-light);
-      border-radius: 12px;
+      border-radius: 8px;
       padding: 8px 8px 6px;
-      min-height: 46px; /* контейнер на 2px меньше */
+      min-height: 40px;
+      transition: border 120ms ease;
     }
+    .cars-field:hover{
+      border-color: var(--c-gray);
+    }
+    .cars-field:focus-within{
+      border-color: var(--c-gray-dark);
+    }
+
     .cars-field::before{
       content: attr(data-label);
       position:absolute;
@@ -105,13 +132,10 @@
       border:1px solid var(--c-gray-light);
       border-radius: 999px;
       pointer-events:none;
-      transform: translateY(0);
-      transition: transform 140ms ease, opacity 140ms ease;
+      transition: opacity 140ms ease;
       opacity:.9;
     }
-    .cars-field.has-value::before{
-      opacity:1;
-    }
+    .cars-field.has-value::before{ opacity:1; }
 
     .cars-input{
       width:100%;
@@ -126,46 +150,52 @@
       appearance:none;
       cursor:pointer;
     }
+    .cars-input:disabled{
+      color: var(--c-gray-light);
+      cursor:not-allowed;
+    }
 
-    /* Actions row */
+    /* Actions row – right aligned */
     .cars-actions{
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      gap:10px;
+      justify-content:flex-end;
+      gap:8px;
       flex-wrap:wrap;
       margin-top:2px;
     }
-    .cars-actions-btns{
-      display:flex;
-      gap:6px;
-    }
+
     .cars-btn{
       border-radius: 10px;
-      padding: 7px 10px 6px;
+      padding: 8px 12px 7px;
       border:1px solid var(--c-gray-light);
       background: var(--c-white);
       cursor:pointer;
       font-size: var(--fs-12);
       font-weight: var(--fw-menu);
       letter-spacing: var(--ls-ui);
-      transition: background 120ms ease, border 120ms ease, opacity 120ms ease;
+      transition: background 120ms ease, border 120ms ease, color 120ms ease, opacity 120ms ease;
+      color: var(--c-gray);
+    }
+    .cars-btn:hover{
+      background: var(--c-gray-light);
+      border-color: var(--c-gray);
       color: var(--c-black);
     }
-    .cars-btn:hover{ background:#f2f2f2; }
-    .cars-btn:disabled{ opacity:.5; cursor:not-allowed; }
+    .cars-btn:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
 
     .cars-btn--show{
       background: var(--c-black);
       color: var(--c-white);
       border-color: var(--c-black);
     }
-    .cars-btn--show:hover{ background:#111; }
-
-    .cars-status{
-      color: var(--c-gray);
-      font-size: var(--fs-12);
-      font-weight: var(--fw-menu);
+    .cars-btn--show:hover{
+      background: var(--c-gray-dark);
+      border-color: var(--c-gray-dark);
+      color: var(--c-white);
     }
 
     /* ------ Results card ------ */
@@ -196,14 +226,14 @@
     .cars-card{
       border:1px solid var(--c-gray-light);
       border-radius:12px;
-      background:#fff;
+      background: var(--c-white);
       padding: 10px 12px;
       cursor:pointer;
       transition: background 120ms ease, border 120ms ease, transform 120ms ease;
     }
     .cars-card:hover{
-      background:#fafafa;
-      border-color:#d7d7d7;
+      background: color-mix(in srgb, var(--c-white) 80%, var(--c-gray-light) 20%);
+      border-color: var(--c-gray);
       transform: translateY(-1px);
     }
     .cars-card-title{
@@ -235,13 +265,13 @@
 
     .cars-modal-backdrop{
       position:absolute; inset:0;
-      background: rgba(0,0,0,.55);
+      background: color-mix(in srgb, var(--c-black) 55%, transparent);
     }
     .cars-modal-card{
       position:relative;
       margin: 5vh auto 0;
       width: min(900px, 95vw);
-      background:#fff;
+      background: var(--c-white);
       border-radius: 16px;
       padding: 14px;
       border:1px solid var(--c-gray-light);
@@ -249,12 +279,13 @@
     .cars-modal-head{
       display:flex; align-items:center; justify-content:space-between;
       gap:10px; padding: 4px 4px 8px;
-      border-bottom:1px solid #eee;
+      border-bottom:1px solid var(--c-gray-light);
     }
     .cars-modal-title{
       font-size: var(--fs-24);
       font-weight: var(--fw-semibold);
       line-height: var(--lh-snug);
+      color: var(--c-black);
     }
     .cars-modal-close{
       border:none; background:transparent; cursor:pointer;
@@ -263,8 +294,12 @@
       color: var(--c-gray);
       padding:6px 8px;
       border-radius:8px;
+      transition: background 120ms ease, color 120ms ease;
     }
-    .cars-modal-close:hover{ background:#f2f2f2; }
+    .cars-modal-close:hover{
+      background: var(--c-gray-light);
+      color: var(--c-black);
+    }
 
     .cars-modal-body{
       display:grid;
@@ -278,10 +313,11 @@
 
     .cars-modal-media{
       border-radius: 12px;
-      border:1px solid #eee;
+      border:1px solid var(--c-gray-light);
       min-height: 220px;
       display:grid; place-items:center;
       overflow:hidden;
+      background: var(--c-white);
     }
     .cars-modal-media img{
       width:100%; height:100%; object-fit:cover;
@@ -292,6 +328,7 @@
       font-size: var(--fs-24);
       font-weight: var(--fw-semibold);
       margin-bottom:4px;
+      color: var(--c-black);
     }
     .cars-modal-sub{
       color: var(--c-gray);
@@ -312,27 +349,33 @@
       background: var(--c-black);
       color: var(--c-white);
       border-radius:10px;
-      padding: 7px 10px 6px;
+      padding: 8px 12px 7px;
       font-size: var(--fs-12);
       font-weight: var(--fw-menu);
       letter-spacing: var(--ls-ui);
       width: fit-content;
+      transition: background 120ms ease;
     }
+    .cars-modal-link:hover{ background: var(--c-gray-dark); }
   </style>
 
   <div class="cars-shell">
 
     <!-- FILTERS -->
     <div class="cars-filters" role="region" aria-label="Фильтры поиска">
-      <div class="cars-tabs cars-tabs--condition" role="tablist" aria-label="Тип авто">
-        <button class="cars-tab cars-tab--condition" data-condition="all" aria-pressed="true" type="button">Все</button>
-        <button class="cars-tab cars-tab--condition" data-condition="used" aria-pressed="false" type="button">С пробегом</button>
-        <button class="cars-tab cars-tab--condition" data-condition="new" aria-pressed="false" type="button">Новые</button>
-      </div>
 
-      <div class="cars-tabs cars-tabs--status" role="tablist" aria-label="Статус объявления">
-        <button class="cars-tab cars-tab--status" data-status="active" aria-pressed="true" type="button">Активные</button>
-        <button class="cars-tab cars-tab--status" data-status="removed" aria-pressed="false" type="button">Снятые</button>
+      <!-- two primary segmented controls in one row -->
+      <div class="cars-tabs-row">
+        <div class="cars-tabs cars-tabs--status" role="tablist" aria-label="Статус объявления">
+          <button class="cars-tab cars-tab--status" data-status="active" aria-pressed="true" type="button">Активные</button>
+          <button class="cars-tab cars-tab--status" data-status="removed" aria-pressed="false" type="button">Снятые</button>
+        </div>
+
+        <div class="cars-tabs cars-tabs--condition" role="tablist" aria-label="Тип авто">
+          <button class="cars-tab cars-tab--condition" data-condition="all" aria-pressed="true" type="button">Все</button>
+          <button class="cars-tab cars-tab--condition" data-condition="used" aria-pressed="false" type="button">С пробегом</button>
+          <button class="cars-tab cars-tab--condition" data-condition="new" aria-pressed="false" type="button">Новые</button>
+        </div>
       </div>
 
       <div class="cars-controls">
@@ -342,7 +385,7 @@
           </div>
 
           <div class="cars-field cars-field--model" data-label="Модель" data-field="model">
-            <select class="cars-input ty-body" id="filterModel" aria-label="Модель"></select>
+            <select class="cars-input ty-body" id="filterModel" aria-label="Модель" disabled></select>
           </div>
 
           <div class="cars-field cars-field--year" data-label="Год" data-field="year">
@@ -359,11 +402,8 @@
         </div>
 
         <div class="cars-actions">
-          <div class="cars-actions-btns">
-            <button class="cars-btn cars-btn--reset ty-section" type="button" id="carsReset">Сбросить</button>
-            <button class="cars-btn cars-btn--show ty-section" type="button" id="carsShow" disabled>Показать 0 объявлений</button>
-          </div>
-          <div class="cars-status ty-section" id="carsStatus" aria-live="polite">Загружаем данные…</div>
+          <button class="cars-btn cars-btn--reset ty-section" type="button" id="carsReset">Сбросить</button>
+          <button class="cars-btn cars-btn--show ty-section" type="button" id="carsShow" disabled>Показать 0 объявлений</button>
         </div>
       </div>
     </div>
@@ -420,6 +460,85 @@
   const EXCLUDED_DETAILS = new Set(["image_urls"]);
 
   /* ======================================================================
+     DOMAIN: REGIONS + VALIDATION
+     ✔ полный список субъектов РФ (актуальный)
+  ====================================================================== */
+  const REGIONS = [
+    "Алтайский край","Амурская область","Архангельская область","Астраханская область",
+    "Белгородская область","Брянская область","Владимирская область","Волгоградская область",
+    "Вологодская область","Воронежская область","Донецкая Народная Республика",
+    "Еврейская автономная область","Забайкальский край","Запорожская область",
+    "Ивановская область","Иркутская область","Кабардино-Балкарская Республика",
+    "Калининградская область","Калужская область","Камчатский край",
+    "Карачаево-Черкесская Республика","Кемеровская область — Кузбасс","Кировская область",
+    "Костромская область","Краснодарский край","Красноярский край","Курганская область",
+    "Курская область","Ленинградская область","Липецкая область","Луганская Народная Республика",
+    "Магаданская область","Москва","Московская область","Мурманская область",
+    "Ненецкий автономный округ","Нижегородская область","Новгородская область",
+    "Новосибирская область","Омская область","Оренбургская область","Орловская область",
+    "Пензенская область","Пермский край","Приморский край","Псковская область",
+    "Республика Адыгея","Республика Алтай","Республика Башкортостан","Республика Бурятия",
+    "Республика Дагестан","Республика Ингушетия","Республика Калмыкия","Республика Карелия",
+    "Республика Коми","Республика Крым","Республика Марий Эл","Республика Мордовия",
+    "Республика Саха (Якутия)","Республика Северная Осетия — Алания","Республика Татарстан",
+    "Республика Тыва","Республика Хакасия","Ростовская область","Рязанская область",
+    "Самарская область","Санкт-Петербург","Саратовская область","Сахалинская область",
+    "Свердловская область","Севастополь","Смоленская область","Ставропольский край",
+    "Тамбовская область","Тверская область","Томская область","Тульская область",
+    "Тюменская область","Удмуртская Республика","Ульяновская область",
+    "Хабаровский край","Ханты-Мансийский автономный округ — Югра","Херсонская область",
+    "Челябинская область","Чеченская Республика","Чувашская Республика",
+    "Чукотский автономный округ","Ямало-Ненецкий автономный округ","Ярославская область"
+  ];
+
+  const REGION_ALIASES = {
+    "спб":"санкт-петербург",
+    "питер":"санкт-петербург",
+    "москва":"москва",
+    "московская":"московская область",
+    "ленинградская":"ленинградская область",
+    "краснодар":"краснодарский край",
+    "краснодарский":"краснодарский край",
+    "ростов":"ростовская область",
+    "свердловск":"свердловская область",
+    "кемерово":"кемеровская область — кузбасс",
+    "югра":"ханты-мансийский автономный округ — югра",
+    "якутия":"республика саха (якутия)"
+  };
+
+  function normalizeRegion(s){
+    return String(s||"")
+      .toLowerCase()
+      .replace(/ё/g,"е")
+      .replace(/[.\-,]/g," ")
+      .replace(/\s+/g," ")
+      .trim();
+  }
+
+  function matchRegion(raw){
+    const n = normalizeRegion(raw);
+    if(!n) return null;
+
+    if(REGION_ALIASES[n]){
+      const aliasNorm = REGION_ALIASES[n];
+      const alias = REGIONS.find(r => normalizeRegion(r) === aliasNorm);
+      return alias || null;
+    }
+
+    const found = REGIONS.find(r => normalizeRegion(r) === n);
+    return found || null;
+  }
+
+  function isValidYear(value){
+    if(value===null||value===undefined) return false;
+    const s = String(value).trim();
+    if(!/^\d{4}$/.test(s)) return false;
+    const y = Number(s);
+    const max = new Date().getFullYear() + 1;
+    return y >= 1900 && y <= max;
+  }
+
+  /* ======================================================================
      STATE + ELEMENTS
   ====================================================================== */
   const state = {
@@ -436,7 +555,6 @@
 
   const elements = {
     root: document.querySelector("[data-cars-root]"),
-    status: document.getElementById("carsStatus"),
     tabsCondition: [...document.querySelectorAll("[data-condition]")],
     tabsStatus: [...document.querySelectorAll("[data-status]")],
     selectMark: document.getElementById("filterMark"),
@@ -507,10 +625,18 @@
   function buildCar(row, kind, fileIndex){
     const mark=cleanValue(row.mark);
     const model=cleanValue(row.model);
-    const year=parseNumber(row.year);
+
+    const rawYear = parseNumber(row.year);
+    const year = (rawYear && isValidYear(rawYear)) ? rawYear : null;
+
     const color=cleanValue(row.color);
-    const region=cleanValue(row.region);
+
+    // region gate: только из канона
+    const regionMatched = matchRegion(row.region || row.city || "");
+    const region = regionMatched || null;
+
     const city=cleanValue(row.city);
+
     const kmAge=parseNumber(row.km_age);
     const priceValue=parseNumber(row.price_rub);
     const priceText=priceValue
@@ -603,22 +729,14 @@
     }
 
     const signature=signatureFromText(texts.map(x=>x.text));
-    const rows=texts.flatMap(x=>parseCSV(x.text));
     const cars=texts.flatMap(({text,fileIndex}) =>
       parseCSV(text).map(row=>buildCar(row,kind,fileIndex))
     );
     const deduped=dedupeCars(cars);
-
-    console.log("CSV kind:", kind, "urls:", urls);
-    console.log("raw lines:", texts.reduce((s,x)=>s+x.text.split(/\r?\n/).length,0));
-    console.log("parsed rows:", rows.length);
-    console.log("deduped rows:", deduped.length);
-
     return { cars: deduped, signature };
   }
 
   async function initialLoadAll(){
-    elements.status.textContent="Загружаем CSV…";
     const active=await loadCarsKind("active");
     const removed=await loadCarsKind("removed");
 
@@ -627,7 +745,6 @@
     state.lastSignatures.active=active.signature;
     state.lastSignatures.removed=removed.signature;
 
-    elements.status.textContent="Данные загружены";
     state.isBooted=true;
     updateAll();
   }
@@ -653,6 +770,8 @@
 
   /* ======================================================================
      FILTERING / OPTIONS / COUNTS
+     ✔ опции только валидные
+     ✔ без “нет выбора”
   ====================================================================== */
   function uniqOptions(cars,key,displayKey=key){
     const map=new Map();
@@ -665,10 +784,15 @@
     });
     return [...map.entries()].map(([value,label])=>({value,label}));
   }
+
   function uniqYears(cars){
     const set=new Set();
-    cars.forEach(c=>{ if(c.year) set.add(c.year); });
-    return [...set].sort((a,b)=>b-a).map(y=>({value:String(y),label:String(y)}));
+    cars.forEach(c=>{
+      if(c.year && isValidYear(c.year)) set.add(c.year);
+    });
+    return [...set]
+      .sort((a,b)=>b-a)
+      .map(y=>({value:String(y),label:String(y)}));
   }
 
   function applyFilters(cars,current){
@@ -694,27 +818,49 @@
     return applyFilters(baseCars,copy);
   }
 
-  function renderOptions(select, options, placeholder){
+  // placeholder option exists but is hidden/disabled -> dropdown не показывает “нет выбора”
+  function renderOptions(select, options){
     select.innerHTML="";
     const empty=document.createElement("option");
     empty.value="";
-    empty.textContent=placeholder;
+    empty.textContent="";         // без текста
+    empty.disabled=true;
+    empty.hidden=true;
     select.appendChild(empty);
+
     options.forEach(opt=>{
       const o=document.createElement("option");
       o.value=opt.value; o.textContent=opt.label;
       select.appendChild(o);
     });
+
     const current=state.filters[select.dataset.key];
     select.value=current||"";
   }
 
   function updateOptions(baseCars){
-    const marks=uniqOptions(filteredExcept(baseCars,"mark"),"mark");
-    const models=uniqOptions(filteredExcept(baseCars,"model"),"model");
+    const marks=uniqOptions(filteredExcept(baseCars,"mark"),"mark")
+      .sort((a,b)=>a.label.localeCompare(b.label,"ru"));
+    const models=uniqOptions(filteredExcept(baseCars,"model"),"model")
+      .sort((a,b)=>a.label.localeCompare(b.label,"ru"));
     const years=uniqYears(filteredExcept(baseCars,"year"));
-    const colors=uniqOptions(filteredExcept(baseCars,"color"),"color");
-    const regions=uniqOptions(filteredExcept(baseCars,"region"),"region");
+    const colors=uniqOptions(filteredExcept(baseCars,"color"),"color")
+      .sort((a,b)=>a.label.localeCompare(b.label,"ru"));
+
+    // регионы — строго из канона, поэтому:
+    const regionsFromData = uniqOptions(filteredExcept(baseCars,"region"),"region")
+      .filter(o => matchRegion(o.label)) // если внезапно попало — проверяем
+      .map(o => {
+        const canon = matchRegion(o.label);
+        return canon ? { value: normalizeLower(canon), label: canon } : null;
+      })
+      .filter(Boolean);
+
+    // + включаем регионы, даже если данных мало (можно убрать если не надо):
+    const regionsCanon = REGIONS.map(r => ({ value: normalizeLower(r), label:r }));
+    const regionsMap = new Map();
+    [...regionsFromData, ...regionsCanon].forEach(o => regionsMap.set(o.value, o));
+    const regions = [...regionsMap.values()].sort((a,b)=>a.label.localeCompare(b.label,"ru"));
 
     const selects=new Map([
       ["mark",marks],["model",models],["year",years],["color",colors],["region",regions],
@@ -735,11 +881,14 @@
     elements.selectColor.dataset.key="color";
     elements.selectRegion.dataset.key="region";
 
-    renderOptions(elements.selectMark, marks.sort((a,b)=>a.label.localeCompare(b.label)),"Не выбрана");
-    renderOptions(elements.selectModel, models.sort((a,b)=>a.label.localeCompare(b.label)),"Не выбрана");
-    renderOptions(elements.selectYear, years,"Не выбран");
-    renderOptions(elements.selectColor, colors.sort((a,b)=>a.label.localeCompare(b.label)),"Не выбран");
-    renderOptions(elements.selectRegion, regions.sort((a,b)=>a.label.localeCompare(b.label)),"Не выбран");
+    renderOptions(elements.selectMark, marks);
+    renderOptions(elements.selectModel, models);
+    renderOptions(elements.selectYear, years);
+    renderOptions(elements.selectColor, colors);
+    renderOptions(elements.selectRegion, regions);
+
+    // disable model until mark chosen
+    elements.selectModel.disabled = !state.filters.mark;
 
     return false;
   }
@@ -934,6 +1083,12 @@
         select.addEventListener("change",()=>{
           const key=select.dataset.key;
           state.filters[key]=select.value || null;
+
+          // если поменяли марку — сбрасываем модель
+          if(key==="mark"){
+            state.filters.model=null;
+          }
+
           updateAll();
           syncFieldCapsules();
         });
