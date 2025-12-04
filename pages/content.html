@@ -1,20 +1,7 @@
 <section class="content-page">
   <div class="content-wrap">
-    <header class="content-head">
-      <div class="content-title ty-title">Контент</div>
-      <div class="content-status ty-body">Раздел в разработке</div>
-    </header>
-
-    <div class="content-card">
-      <div class="content-card-title ty-section">Скоро здесь появятся материалы</div>
-      <div class="content-card-sub ty-body">
-        Мы готовим этот раздел: структура, фильтры и выдача будут добавлены в следующих обновлениях.
-      </div>
-
-      <div class="content-actions">
-        <button class="content-btn ghost ty-section" type="button" disabled>Скоро</button>
-      </div>
-    </div>
+    <div class="ty-title">Контент</div>
+    <div class="ty-body content-note">Раздел в разработке</div>
   </div>
 </section>
 
@@ -25,86 +12,15 @@
     min-height: 100vh;
     padding: 22px 24px;
   }
-
-  /* центрируем в контентной области как в кабинете */
   .content-wrap{
     max-width: 980px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 6px;
   }
-
-  .content-head{
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--c-gray-light);
-  }
-
-  .content-title{
-    color: var(--c-black);
-  }
-
-  .content-status{
+  .content-note{
     color: var(--c-gray);
     font-size: var(--fs-13);
-  }
-
-  .content-card{
-    border: 1px solid var(--c-gray-light);
-    border-radius: 14px;
-    padding: 16px;
-    background: var(--c-white);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .content-card-title{
-    color: var(--c-black);
-    font-weight: var(--fw-semibold);
-  }
-
-  .content-card-sub{
-    color: var(--c-gray);
-    line-height: var(--lh-normal);
-  }
-
-  .content-actions{
-    margin-top: 6px;
-    display: flex;
-    gap: 8px;
-  }
-
-  .content-btn{
-    border: none;
-    border-radius: 10px;
-    padding: 10px 12px;
-    background: var(--c-black);
-    color: var(--c-white);
-    min-width: 120px;
-    text-align: center;
-  }
-
-  .content-btn.ghost{
-    background: var(--c-white);
-    color: var(--c-black);
-    border: 1px solid var(--c-gray-light);
-  }
-
-  .content-btn:disabled{
-    background: var(--c-gray-light);
-    color: var(--c-gray);
-    cursor: not-allowed;
-  }
-
-  @media (max-width: 720px){
-    .content-head{
-      flex-direction: column;
-      align-items: flex-start;
-    }
   }
 </style>
