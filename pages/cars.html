@@ -26,7 +26,7 @@
       gap:14px;
     }
 
-    /* ------ Filters capsule (единственная большая капсула сверху) ------ */
+    /* ------ Filters capsule ------ */
     .cars-filters{
       background: var(--c-white);
       border: 1px solid var(--c-gray-light);
@@ -37,7 +37,6 @@
       gap:10px;
     }
 
-    /* Top row with 3 equal segmented controls */
     .cars-tabs-row{
       display:flex;
       gap:12px;
@@ -78,7 +77,6 @@
       color: var(--c-black);
     }
 
-    /* Select grid */
     .cars-controls{
       display:flex;
       flex-direction:column;
@@ -100,7 +98,6 @@
       .cars-selects{ grid-template-columns: 1fr; }
     }
 
-    /* Field with plain text label inside (no mini-capsule) */
     .cars-field{
       position:relative;
       display:flex;
@@ -124,10 +121,6 @@
       font-weight: var(--fw-bold);
       letter-spacing: var(--ls-ui);
       color: var(--c-gray);
-      background: transparent;
-      padding: 0;
-      border: none;
-      border-radius: 0;
       pointer-events:none;
       opacity:.9;
       transition: opacity 140ms ease;
@@ -139,7 +132,7 @@
       border:none;
       outline:none;
       background:transparent;
-      padding: 16px 4px 2px; /* место под лейбл */
+      padding: 16px 4px 2px;
       font-size: var(--fs-13);
       font-weight: var(--fw-regular);
       line-height: var(--lh-ui);
@@ -152,7 +145,6 @@
       cursor:not-allowed;
     }
 
-    /* Actions row – right aligned */
     .cars-actions{
       display:flex;
       align-items:center;
@@ -161,7 +153,6 @@
       flex-wrap:wrap;
       margin-top:2px;
     }
-
     .cars-btn{
       border-radius: 10px;
       padding: 8px 12px 7px;
@@ -194,7 +185,7 @@
       color: var(--c-white);
     }
 
-    /* ------ Results (NO common capsule, NO header) ------ */
+    /* results list */
     .cars-grid{
       display:flex;
       flex-direction:column;
@@ -203,7 +194,6 @@
       margin-top:8px;
     }
 
-    /* Each car is a capsule */
     .cars-card{
       border:1px solid var(--c-gray-light);
       border-radius:12px;
@@ -235,13 +225,8 @@
       padding: 8px 2px;
     }
 
-    /* ------ Modal ------ */
-    .cars-modal{
-      position:fixed;
-      inset:0;
-      display:none;
-      z-index:999;
-    }
+    /* modal */
+    .cars-modal{ position:fixed; inset:0; display:none; z-index:999; }
     .cars-modal.is-open{ display:block; }
     .cars-modal-backdrop{
       position:absolute; inset:0;
@@ -280,7 +265,6 @@
       background: var(--c-gray-light);
       color: var(--c-black);
     }
-
     .cars-modal-body{
       display:grid;
       grid-template-columns: 320px 1fr;
@@ -290,7 +274,6 @@
     @media (max-width: 700px){
       .cars-modal-body{ grid-template-columns: 1fr; }
     }
-
     .cars-modal-media{
       border-radius: 12px;
       border:1px solid var(--c-gray-light);
@@ -299,10 +282,7 @@
       overflow:hidden;
       background: var(--c-white);
     }
-    .cars-modal-media img{
-      width:100%; height:100%; object-fit:cover;
-      display:block;
-    }
+    .cars-modal-media img{ width:100%; height:100%; object-fit:cover; display:block; }
     .cars-modal-price{
       font-size: var(--fs-24);
       font-weight: var(--fw-semibold);
@@ -342,48 +322,46 @@
 
     <!-- FILTERS -->
     <div class="cars-filters" role="region" aria-label="Фильтры поиска">
-
       <div class="cars-tabs-row">
-        <!-- Status -->
+
         <div class="cars-tabs cars-tabs--status" role="tablist" aria-label="Статус объявления">
-          <button class="cars-tab cars-tab--status" data-status="active" aria-pressed="true" type="button">Активные</button>
-          <button class="cars-tab cars-tab--status" data-status="removed" aria-pressed="false" type="button">Снятые</button>
+          <button class="cars-tab" data-status="active" aria-pressed="true"  type="button">Активные</button>
+          <button class="cars-tab" data-status="removed" aria-pressed="false" type="button">Снятые</button>
         </div>
 
-        <!-- Condition -->
         <div class="cars-tabs cars-tabs--condition" role="tablist" aria-label="Тип авто">
-          <button class="cars-tab cars-tab--condition" data-condition="all" aria-pressed="true" type="button">Все</button>
-          <button class="cars-tab cars-tab--condition" data-condition="used" aria-pressed="false" type="button">С пробегом</button>
-          <button class="cars-tab cars-tab--condition" data-condition="new" aria-pressed="false" type="button">Новые</button>
+          <button class="cars-tab" data-condition="all"  aria-pressed="true"  type="button">Все</button>
+          <button class="cars-tab" data-condition="used" aria-pressed="false" type="button">С пробегом</button>
+          <button class="cars-tab" data-condition="new"  aria-pressed="false" type="button">Новые</button>
         </div>
 
-        <!-- Seller type (fix: default "all") -->
         <div class="cars-tabs cars-tabs--seller" role="tablist" aria-label="Продавец">
-          <button class="cars-tab cars-tab--seller" data-seller="all" aria-pressed="true" type="button">Все</button>
-          <button class="cars-tab cars-tab--seller" data-seller="owner" aria-pressed="false" type="button">Собственник</button>
-          <button class="cars-tab cars-tab--seller" data-seller="dealer" aria-pressed="false" type="button">Дилер</button>
+          <button class="cars-tab" data-seller="all"   aria-pressed="true"  type="button">Все</button>
+          <button class="cars-tab" data-seller="owner" aria-pressed="false" type="button">Собственник</button>
+          <button class="cars-tab" data-seller="dealer"aria-pressed="false" type="button">Дилер</button>
         </div>
+
       </div>
 
       <div class="cars-controls">
         <div class="cars-selects">
-          <div class="cars-field cars-field--mark" data-label="Марка" data-field="mark">
+          <div class="cars-field" data-label="Марка" data-field="mark">
             <select class="cars-input ty-body" id="filterMark" aria-label="Марка"></select>
           </div>
 
-          <div class="cars-field cars-field--model" data-label="Модель" data-field="model">
+          <div class="cars-field" data-label="Модель" data-field="model">
             <select class="cars-input ty-body" id="filterModel" aria-label="Модель" disabled></select>
           </div>
 
-          <div class="cars-field cars-field--year" data-label="Год" data-field="year">
+          <div class="cars-field" data-label="Год" data-field="year">
             <select class="cars-input ty-body" id="filterYear" aria-label="Год"></select>
           </div>
 
-          <div class="cars-field cars-field--color" data-label="Цвет" data-field="color">
+          <div class="cars-field" data-label="Цвет" data-field="color">
             <select class="cars-input ty-body" id="filterColor" aria-label="Цвет"></select>
           </div>
 
-          <div class="cars-field cars-field--region" data-label="Регион" data-field="region">
+          <div class="cars-field" data-label="Регион" data-field="region">
             <select class="cars-input ty-body" id="filterRegion" aria-label="Регион"></select>
           </div>
         </div>
@@ -395,17 +373,17 @@
       </div>
     </div>
 
-    <!-- RESULTS (empty by default, no hint text) -->
+    <!-- RESULTS (пусто до "Показать") -->
     <div class="cars-grid" id="carsGrid" aria-live="polite"></div>
   </div>
 
   <!-- MODAL -->
-  <div class="cars-modal" id="carsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Детали объявления">
+  <div class="cars-modal" id="carsModal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="cars-modal-backdrop" data-modal-close></div>
     <div class="cars-modal-card" role="document">
       <div class="cars-modal-head">
         <div class="cars-modal-title ty-title" id="carsModalTitle"></div>
-        <button class="cars-modal-close ty-section" type="button" data-modal-close aria-label="Закрыть">Закрыть</button>
+        <button class="cars-modal-close ty-section" type="button" data-modal-close>Закрыть</button>
       </div>
       <div class="cars-modal-body">
         <div class="cars-modal-media" id="carsModalMedia"></div>
@@ -439,7 +417,70 @@
   const EXCLUDED_DETAILS = new Set(["image_urls"]);
 
   /* ======================================================================
-     DOMAIN: REGIONS + GROUPS + VALIDATION
+     DOMAIN: RU labels + value translations
+  ====================================================================== */
+  const FIELD_LABELS_RU = {
+    id: "ID объявления",
+    inner_id: "Внутренний ID",
+    seller_id: "ID аккаунта",
+    mark: "Марка",
+    model: "Модель",
+    generation: "Поколение",
+    configuration: "Кузов/конфиг",
+    complectation: "Комплектация",
+    url: "Ссылка",
+    price_rub: "Цена ₽",
+    price_usd: "Цена $",
+    price_eur: "Цена €",
+    year: "Год",
+    km_age: "Пробег, км",
+    color: "Цвет",
+    wheel: "Руль",
+    vin: "VIN",
+    pts: "ПТС",
+    owners_count: "Владельцев",
+    section: "Раздел",
+    condition: "Состояние",
+    in_stock: "Наличие",
+    custom: "Таможня/кастом",
+    seller: "Продавец",
+    address: "Адрес",
+    region: "Регион",
+    city: "Город",
+    offer_updated_at: "Обновлено",
+    options: "Опции",
+    engine_type: "Двигатель",
+    displacement: "Объём, л",
+    horse_power: "Л.с.",
+    body_type: "Кузов",
+    transmission: "Коробка",
+    drive_type: "Привод",
+    no_accidents: "Без ДТП",
+    seller_url: "Ссылка продавца",
+  };
+
+  const VALUE_MAP = {
+    section: { NEW: "Новая", USED: "С пробегом" },
+    in_stock: { IN_STOCK: "В наличии", OUT_OF_STOCK: "Нет в наличии" },
+    no_accidents: { TRUE: "Да", FALSE: "Нет", true:"Да", false:"Нет" },
+    wheel: { left:"Левый", right:"Правый" },
+  };
+
+  function translateValue(key, val){
+    if(val===undefined || val===null) return null;
+    const s = String(val).trim();
+    if(!s) return null;
+
+    const map = VALUE_MAP[key];
+    if(map){
+      const hit = map[s] ?? map[s.toUpperCase()] ?? map[s.toLowerCase()];
+      if(hit) return hit;
+    }
+    return s; // остальное как есть (марка, модель, цвет и т.п.)
+  }
+
+  /* ======================================================================
+     DOMAIN: REGIONS + VALIDATION (как раньше)
   ====================================================================== */
   const REGIONS = [
     "Алтайский край","Амурская область","Архангельская область","Астраханская область",
@@ -508,13 +549,42 @@
     const max = new Date().getFullYear() + 1;
     return y >= 1900 && y <= max;
   }
-  function normalizeSeller(raw){
-    const v = cleanValue(raw);
-    if(!v) return null;
-    const n = v.toLowerCase();
-    if(n.includes("дилер") || n.includes("dealer") || n.includes("салон")) return "dealer";
-    if(n.includes("собствен") || n.includes("owner") || n.includes("частн")) return "owner";
-    return null;
+
+  /* ======================================================================
+     DOMAIN: seller detect from "seller"
+     ✔ имя человека => owner
+     ✔ дилерские слова => dealer
+  ====================================================================== */
+  const DEALER_KEYWORDS = [
+    "рольф","major","авилон","avilon","fresh","inchcape","ттс","expocar",
+    "автосалон","автосервис","дилер","dealer","trade-in","трейд-ин",
+    "group","групп","мотors","motors","auto","авто","центр","центр",
+    "carprice","car price","select","selection","prime","premium"
+  ];
+
+  function looksLikePersonName(s){
+    if(!s) return false;
+    const t = s.trim();
+
+    // отсекаем юр.формы
+    if(/\b(ооо|оао|зао|пао|ип|ao|llc|inc|групп|group|авто|motors|dealer|дилер)\b/i.test(t)) return false;
+
+    // 2-3 слова кириллицей с заглавных
+    const words = t.split(/\s+/).filter(Boolean);
+    if(words.length < 2 || words.length > 3) return false;
+
+    return words.every(w => /^[А-ЯЁ][а-яё\-]+$/.test(w));
+  }
+
+  function normalizeSellerType(sellerRaw){
+    const s = (sellerRaw||"").toString().toLowerCase().replace(/ё/g,"е");
+
+    if(!s.trim()) return null;
+
+    if(DEALER_KEYWORDS.some(k => s.includes(k))) return "dealer";
+    if(looksLikePersonName(sellerRaw)) return "owner";
+
+    return null; // неизвестно => попадёт только при "Все"
   }
 
   /* ======================================================================
@@ -526,7 +596,7 @@
     filtered: [],
     condition: "all",
     status: "active",
-    filters: { mark:null, model:null, year:null, color:null, region:null, seller:"all" }, // FIX
+    filters: { mark:null, model:null, year:null, color:null, region:null, seller:"all" },
     lastSignatures: { active:null, removed:null },
     lastRenderKind: "active",
     isBooted: false,
@@ -535,24 +605,24 @@
   const elements = {
     root: document.querySelector("[data-cars-root]"),
     tabsCondition: [...document.querySelectorAll("[data-condition]")],
-    tabsStatus: [...document.querySelectorAll("[data-status]")],
-    tabsSeller: [...document.querySelectorAll("[data-seller]")],
-    selectMark: document.getElementById("filterMark"),
-    selectModel: document.getElementById("filterModel"),
-    selectYear: document.getElementById("filterYear"),
-    selectColor: document.getElementById("filterColor"),
+    tabsStatus:    [...document.querySelectorAll("[data-status]")],
+    tabsSeller:    [...document.querySelectorAll("[data-seller]")],
+    selectMark:   document.getElementById("filterMark"),
+    selectModel:  document.getElementById("filterModel"),
+    selectYear:   document.getElementById("filterYear"),
+    selectColor:  document.getElementById("filterColor"),
     selectRegion: document.getElementById("filterRegion"),
-    resetBtn: document.getElementById("carsReset"),
-    showBtn: document.getElementById("carsShow"),
-    grid: document.getElementById("carsGrid"),
-    fields: [...document.querySelectorAll(".cars-field")],
-    modal: document.getElementById("carsModal"),
-    modalTitle: document.getElementById("carsModalTitle"),
-    modalMedia: document.getElementById("carsModalMedia"),
-    modalPrice: document.getElementById("carsModalPrice"),
-    modalSub: document.getElementById("carsModalSub"),
-    modalList: document.getElementById("carsModalList"),
-    modalLink: document.getElementById("carsModalLink"),
+    resetBtn:     document.getElementById("carsReset"),
+    showBtn:      document.getElementById("carsShow"),
+    grid:         document.getElementById("carsGrid"),
+    fields:       [...document.querySelectorAll(".cars-field")],
+    modal:        document.getElementById("carsModal"),
+    modalTitle:   document.getElementById("carsModalTitle"),
+    modalMedia:   document.getElementById("carsModalMedia"),
+    modalPrice:   document.getElementById("carsModalPrice"),
+    modalSub:     document.getElementById("carsModalSub"),
+    modalList:    document.getElementById("carsModalList"),
+    modalLink:    document.getElementById("carsModalLink"),
   };
 
   /* ======================================================================
@@ -605,8 +675,8 @@
     const mark=cleanValue(row.mark);
     const model=cleanValue(row.model);
 
-    const rawYear = parseNumber(row.year);
-    const year = (rawYear && isValidYear(rawYear)) ? rawYear : null;
+    const rawYear=parseNumber(row.year);
+    const year=(rawYear && isValidYear(rawYear)) ? rawYear : null;
 
     const color=cleanValue(row.color);
 
@@ -614,15 +684,18 @@
     const region = regionMatched || null;
 
     const city=cleanValue(row.city);
-    const seller = normalizeSeller(row.seller_type || row.owner_type || row.is_dealer);
-
     const kmAge=parseNumber(row.km_age);
+
+    const sellerName = cleanValue(row.seller);
+    const sellerType = normalizeSellerType(sellerName);
+    const sellerId   = cleanValue(row.seller_id); // важный id аккаунта
+
     const priceValue=parseNumber(row.price_rub);
     const priceText=priceValue
       ? new Intl.NumberFormat("ru-RU").format(priceValue)+" ₽"
       : cleanValue(row.price_rub);
 
-    const updatedAt=parseDate(row.updated_at);
+    const updatedAt=parseDate(row.offer_updated_at || row.updated_at);
     const url=cleanValue(row.url);
     const image=getFirstImage(row.image_urls);
     const condition=kmAge>0 ? "used" : "new";
@@ -639,22 +712,36 @@
 
     return {
       raw: row, kind, fileIndex, dedupeKey, updatedAt,
+      id: cleanValue(row.id),
+      innerId: cleanValue(row.inner_id),
+      sellerId,
+      sellerName,
+      sellerType,
       mark, markNorm: normalizeLower(mark),
       model, modelNorm: normalizeLower(model),
       year,
       color, colorNorm: normalizeLower(color),
       region, regionNorm: normalizeLower(region),
       city, kmAge, condition,
-      seller,
       priceValue, priceText,
       bodyType: cleanValue(row.body_type),
       generation: cleanValue(row.generation),
+      configuration: cleanValue(row.configuration),
       complectation: cleanValue(row.complectation),
       engineType: cleanValue(row.engine_type),
       displacement: cleanValue(row.displacement),
       horsePower: cleanValue(row.horse_power),
       transmission: cleanValue(row.transmission),
       driveType: cleanValue(row.drive_type),
+      noAccidents: cleanValue(row.no_accidents),
+      wheel: cleanValue(row.wheel),
+      vin: cleanValue(row.vin),
+      ownersCount: cleanValue(row.owners_count),
+      section: cleanValue(row.section),
+      inStock: cleanValue(row.in_stock),
+      custom: cleanValue(row.custom),
+      address: cleanValue(row.address),
+      sellerUrl: cleanValue(row.seller_url),
       image, url,
     };
   }
@@ -707,13 +794,11 @@
       const text=await fetchCsvSafe(url);
       if(text) texts.push({url,text,fileIndex:i});
     }
-
     const signature=signatureFromText(texts.map(x=>x.text));
     const cars=texts.flatMap(({text,fileIndex}) =>
       parseCSV(text).map(row=>buildCar(row,kind,fileIndex))
     );
-    const deduped=dedupeCars(cars);
-    return { cars: deduped, signature };
+    return { cars: dedupeCars(cars), signature };
   }
 
   async function initialLoadAll(){
@@ -726,7 +811,7 @@
     state.lastSignatures.removed=removed.signature;
 
     state.isBooted=true;
-    updateAll(); // просто обновим счет и опции; список пустой до "Показать"
+    updateAll(); // список пустой пока не нажмут "Показать"
   }
 
   async function syncIfChanged(kind){
@@ -749,7 +834,7 @@
   }
 
   /* ======================================================================
-     FILTERING / OPTIONS / COUNTS
+     FILTERS / OPTIONS
   ====================================================================== */
   function uniqOptions(cars,key,displayKey=key){
     const map=new Map();
@@ -768,9 +853,7 @@
     cars.forEach(c=>{
       if(c.year && isValidYear(c.year)) set.add(c.year);
     });
-    return [...set]
-      .sort((a,b)=>b-a)
-      .map(y=>({value:String(y),label:String(y)}));
+    return [...set].sort((a,b)=>b-a).map(y=>({value:String(y),label:String(y)}));
   }
 
   function applyFilters(cars,current){
@@ -778,9 +861,8 @@
       if(!car.url) return false;
       if(current.condition!=="all" && car.condition!==current.condition) return false;
 
-      // FIX: seller="all" не фильтрует
       if(current.filters.seller && current.filters.seller!=="all"){
-        if(car.seller !== current.filters.seller) return false;
+        if(car.sellerType !== current.filters.seller) return false;
       }
 
       if(current.filters.mark && car.markNorm!==current.filters.mark) return false;
@@ -920,7 +1002,6 @@
     renderGroupedRegionSelect(elements.selectRegion, groupedRegions);
 
     elements.selectModel.disabled = !state.filters.mark;
-
     return false;
   }
 
@@ -1009,8 +1090,18 @@
       if(EXCLUDED_DETAILS.has(k)) return;
       const c=cleanValue(v);
       if(!c) return;
-      items.push([k,c]);
+
+      const label = FIELD_LABELS_RU[k] || k;
+      const valRu = translateValue(k, c);
+
+      items.push([label, valRu]);
     });
+
+    // добавим seller_id даже если его нет в raw-map
+    if(car.sellerId){
+      items.push(["ID аккаунта", car.sellerId]);
+    }
+
     return items;
   }
 
@@ -1028,9 +1119,9 @@
     }
 
     elements.modalList.innerHTML="";
-    buildDetailsList(car).forEach(([k,v])=>{
+    buildDetailsList(car).forEach(([label,val])=>{
       const li=document.createElement("li");
-      li.textContent=`${k}: ${v}`;
+      li.textContent=`${label}: ${val}`;
       elements.modalList.appendChild(li);
     });
 
@@ -1074,9 +1165,7 @@
 
     updateCounts(filtered);
     syncFieldCapsules();
-
-    // FIX: больше не рисуем пустых текстов — просто чистим список
-    if(clearCards) elements.grid.innerHTML="";
+    if(clearCards) elements.grid.innerHTML=""; // нет пустого текста
   }
 
   /* ======================================================================
@@ -1108,7 +1197,7 @@
         if(btn.getAttribute("aria-pressed")==="true") return;
         elements.tabsSeller.forEach(b=>b.setAttribute("aria-pressed","false"));
         btn.setAttribute("aria-pressed","true");
-        state.filters.seller = btn.dataset.seller; // all/owner/dealer
+        state.filters.seller = btn.dataset.seller;
         updateAll();
       });
     });
@@ -1120,11 +1209,7 @@
         select.addEventListener("change",()=>{
           const key=select.dataset.key;
           state.filters[key]=select.value || null;
-
-          if(key==="mark"){
-            state.filters.model=null;
-          }
-
+          if(key==="mark") state.filters.model=null;
           updateAll();
           syncFieldCapsules();
         });
@@ -1157,7 +1242,7 @@
   }
 
   /* ======================================================================
-     BOOT ONCE
+     BOOT
   ====================================================================== */
   if(!state.isBooted){
     initialLoadAll();
