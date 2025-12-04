@@ -14,48 +14,67 @@
 <section class="cars-page" aria-label="Поиск автомобилей" data-cars-root>
   <div class="cars-shell">
 
-    <div class="cars-filters" role="region" aria-label="Фильтры поиска">
-      <div class="cars-tabs cars-tabs--condition" role="tablist" aria-label="Тип авто">
-        <button class="cars-tab cars-tab--condition" data-condition="all" aria-pressed="true" type="button">Все</button>
-        <button class="cars-tab cars-tab--condition" data-condition="used" aria-pressed="false" type="button">С пробегом</button>
-        <button class="cars-tab cars-tab--condition" data-condition="new" aria-pressed="false" type="button">Новые</button>
-      </div>
+    <div class="cars-panel">
+      <div class="cars-hint ty-body">Найдите автомобили по параметрам и добавьте их в регионы.</div>
 
-      <div class="cars-tabs cars-tabs--status tier-2" role="tablist" aria-label="Статус объявления">
-        <button class="cars-tab cars-tab--status" data-status="active" aria-pressed="true" type="button">Активные объявления</button>
-        <button class="cars-tab cars-tab--status" data-status="removed" aria-pressed="false" type="button">Снятые объявления</button>
-      </div>
-
-      <div class="cars-controls">
-        <div class="cars-selects">
-          <div class="cars-field cars-field--mark" data-label="Марка" data-field="mark">
-            <select class="cars-input ty-body" id="filterMark" aria-label="Марка"></select>
-          </div>
-
-          <div class="cars-field cars-field--model" data-label="Модель" data-field="model">
-            <select class="cars-input ty-body" id="filterModel" aria-label="Модель"></select>
-          </div>
-
-          <div class="cars-field cars-field--year" data-label="Год" data-field="year">
-            <select class="cars-input ty-body" id="filterYear" aria-label="Год"></select>
-          </div>
-
-          <div class="cars-field cars-field--color" data-label="Цвет" data-field="color">
-            <select class="cars-input ty-body" id="filterColor" aria-label="Цвет"></select>
-          </div>
-
-          <div class="cars-field cars-field--region" data-label="Регион" data-field="region">
-            <select class="cars-input ty-body" id="filterRegion" aria-label="Регион"></select>
-          </div>
+      <div class="cars-tabs-row">
+        <div class="cars-tabs left-tabs" role="tablist" aria-label="Тип авто">
+          <button class="cars-tab cars-tab--condition ty-body" data-condition="all" aria-pressed="true" type="button">Все</button>
+          <button class="cars-tab cars-tab--condition ty-body" data-condition="used" aria-pressed="false" type="button">С пробегом</button>
+          <button class="cars-tab cars-tab--condition ty-body" data-condition="new" aria-pressed="false" type="button">Новые</button>
         </div>
 
-        <div class="cars-actions">
-          <div class="cars-actions-btns">
-            <button class="cars-btn cars-btn--reset ghost ty-section" type="button" id="carsReset">Сбросить</button>
-            <button class="cars-btn cars-btn--show ty-section" type="button" id="carsShow" disabled>Показать 0 объявлений</button>
-          </div>
-          <div class="cars-status ty-section" id="carsStatus" aria-live="polite">Загружаем данные…</div>
+        <div class="cars-tabs right-tabs" role="tablist" aria-label="Статус объявления">
+          <button class="cars-tab cars-tab--status ty-body" data-status="active" aria-pressed="true" type="button">Активные объявления</button>
+          <button class="cars-tab cars-tab--status ty-body" data-status="removed" aria-pressed="false" type="button">Снятые объявления</button>
         </div>
+      </div>
+
+      <div class="cars-filters">
+        <label class="cars-field cars-field--mark" data-label="Марка">
+          <select class="cars-input ty-body" id="filterMark" aria-label="Марка"></select>
+        </label>
+
+        <label class="cars-field cars-field--model" data-label="Модель">
+          <select class="cars-input ty-body" id="filterModel" aria-label="Модель"></select>
+        </label>
+      </div>
+
+      <div class="cars-filters row-2">
+        <label class="cars-field cars-field--year" data-label="Год">
+          <select class="cars-input ty-body" id="filterYear" aria-label="Год"></select>
+        </label>
+
+        <label class="cars-field cars-field--color" data-label="Цвет">
+          <input class="cars-input ty-body" type="text" id="filterColor" aria-label="Цвет" list="colorOptions" autocomplete="off" />
+          <datalist id="colorOptions"></datalist>
+        </label>
+
+        <label class="cars-field cars-field--region" data-label="Регион">
+          <select class="cars-input ty-body" id="filterRegion" aria-label="Регион"></select>
+        </label>
+      </div>
+
+      <div class="cars-checkboxes">
+        <label class="cars-check ty-body">
+          <input class="cars-check-input" type="checkbox" name="available" checked />
+          Доступные автомобили
+        </label>
+        <label class="cars-check ty-body">
+          <input class="cars-check-input" type="checkbox" name="draft" />
+          Черновики автомобилей
+        </label>
+        <label class="cars-check ty-body">
+          <input class="cars-check-input" type="checkbox" name="ready" />
+          Готовые автомобили
+        </label>
+      </div>
+
+      <div class="cars-status ty-body" id="carsStatus" aria-live="polite">Загружаем данные…</div>
+
+      <div class="cars-actions">
+        <button class="cars-btn ghost ty-section" type="button" id="carsReset">Сбросить</button>
+        <button class="cars-btn ty-section" type="button" id="carsShow" disabled>Показать 0 объявлений</button>
       </div>
     </div>
 
@@ -146,6 +165,7 @@ const elements = {
   selectModel: document.getElementById("filterModel"),
   selectYear: document.getElementById("filterYear"),
   selectColor: document.getElementById("filterColor"),
+  colorList: document.getElementById("colorOptions"),
   selectRegion: document.getElementById("filterRegion"),
   resetBtn: document.getElementById("carsReset"),
   showBtn: document.getElementById("carsShow"),
@@ -459,6 +479,16 @@ function renderOptions(select, options, placeholder) {
   select.value = current || "";
 }
 
+function renderColorOptions(listEl, options) {
+  if (!listEl) return;
+  listEl.innerHTML = "";
+  options.forEach(opt => {
+    const option = document.createElement("option");
+    option.value = opt.label;
+    listEl.appendChild(option);
+  });
+}
+
 function updateOptions(baseCars) {
   const marks = uniqOptions(filteredExcept(baseCars, "mark"), "mark");
   const models = uniqOptions(filteredExcept(baseCars, "model"), "model");
@@ -470,7 +500,6 @@ function updateOptions(baseCars) {
     ["mark", marks],
     ["model", models],
     ["year", years],
-    ["color", colors],
     ["region", regions],
   ]);
 
@@ -487,14 +516,20 @@ function updateOptions(baseCars) {
   elements.selectMark.dataset.key = "mark";
   elements.selectModel.dataset.key = "model";
   elements.selectYear.dataset.key = "year";
-  elements.selectColor.dataset.key = "color";
   elements.selectRegion.dataset.key = "region";
 
   renderOptions(elements.selectMark, marks.sort((a,b)=>a.label.localeCompare(b.label)), "Не выбрана");
   renderOptions(elements.selectModel, models.sort((a,b)=>a.label.localeCompare(b.label)), "Не выбрана");
   renderOptions(elements.selectYear, years, "Не выбран");
-  renderOptions(elements.selectColor, colors.sort((a,b)=>a.label.localeCompare(b.label)), "Не выбран");
   renderOptions(elements.selectRegion, regions.sort((a,b)=>a.label.localeCompare(b.label)), "Не выбран");
+
+  renderColorOptions(elements.colorList, colors.sort((a,b)=>a.label.localeCompare(b.label)));
+  elements.selectColor.placeholder = "Не выбран";
+  if (state.filters.color) {
+    elements.selectColor.value = state.filters.color;
+  } else {
+    elements.selectColor.value = "";
+  }
 
   return false;
 }
@@ -513,9 +548,9 @@ function updateCounts(filtered, baseTitle) {
 
 function syncFieldCapsules() {
   elements.fields.forEach(field => {
-    const select = field.querySelector("select");
-    if (!select) return;
-    field.classList.toggle("has-value", Boolean(select.value));
+    const control = field.querySelector("select, input");
+    if (!control) return;
+    field.classList.toggle("has-value", Boolean((control.value || "").trim()));
   });
 }
 
@@ -694,11 +729,12 @@ function bindTabs() {
 }
 
 function bindSelects() {
+  elements.selectColor.dataset.key = "color";
+
   [
     elements.selectMark,
     elements.selectModel,
     elements.selectYear,
-    elements.selectColor,
     elements.selectRegion,
   ].forEach(select => {
     select.addEventListener("change", () => {
@@ -708,6 +744,13 @@ function bindSelects() {
       updateAll();
       syncFieldCapsules();
     });
+  });
+
+  elements.selectColor.addEventListener("input", () => {
+    const val = elements.selectColor.value.trim();
+    state.filters.color = val ? val : null;
+    updateAll();
+    syncFieldCapsules();
   });
 }
 
