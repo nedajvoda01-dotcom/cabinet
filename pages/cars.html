@@ -6,7 +6,8 @@
        ✔ капсула только у поисковика
        ✔ капсула у каждого авто
        ✔ нет общей капсулы/заголовка результатов
-       ✔ лейблы в полях — просто текст, без мини-капсул
+       ✔ нет пустого состояния
+       ✔ лейблы в полях — просто текст
        ✔ только design tokens
     ====================================================================== */
 
@@ -356,9 +357,10 @@
           <button class="cars-tab cars-tab--condition" data-condition="new" aria-pressed="false" type="button">Новые</button>
         </div>
 
-        <!-- Seller type -->
+        <!-- Seller type (fix: default "all") -->
         <div class="cars-tabs cars-tabs--seller" role="tablist" aria-label="Продавец">
-          <button class="cars-tab cars-tab--seller" data-seller="owner" aria-pressed="true" type="button">Собственник</button>
+          <button class="cars-tab cars-tab--seller" data-seller="all" aria-pressed="true" type="button">Все</button>
+          <button class="cars-tab cars-tab--seller" data-seller="owner" aria-pressed="false" type="button">Собственник</button>
           <button class="cars-tab cars-tab--seller" data-seller="dealer" aria-pressed="false" type="button">Дилер</button>
         </div>
       </div>
@@ -393,10 +395,8 @@
       </div>
     </div>
 
-    <!-- RESULTS (no common capsule, only cards) -->
-    <div class="cars-grid" id="carsGrid" aria-live="polite">
-      <div class="ty-body cars-empty">Выбор фильтров не применён. Нажмите «Показать».</div>
-    </div>
+    <!-- RESULTS (empty by default, no hint text) -->
+    <div class="cars-grid" id="carsGrid" aria-live="polite"></div>
   </div>
 
   <!-- MODAL -->
@@ -421,7 +421,7 @@
 
   <script>
   /* ======================================================================
-     CONFIG: multiple CSV per kind + hourly sync + dedupe
+     CONFIG
   ====================================================================== */
   const CSV_SOURCES = {
     active: [
@@ -440,8 +440,6 @@
 
   /* ======================================================================
      DOMAIN: REGIONS + GROUPS + VALIDATION
-     ✔ строгий канон регионов РФ
-     ✔ группировка (optgroup) показывается ТОЛЬКО если в группе есть регионы из данных
   ====================================================================== */
   const REGIONS = [
     "Алтайский край","Амурская область","Архангельская область","Астраханская область",
@@ -470,31 +468,17 @@
     "Челябинская область","Чеченская Республика","Чувашская Республика",
     "Чукотский автономный округ","Ямало-Ненецкий автономный округ","Ярославская область"
   ];
-
   const REGION_ALIASES = {
-    "спб":"санкт-петербург",
-    "питер":"санкт-петербург",
-    "москва":"москва",
-    "московская":"московская область",
-    "ленинградская":"ленинградская область",
-    "краснодар":"краснодарский край",
-    "краснодарский":"краснодарский край",
-    "ростов":"ростовская область",
-    "свердловск":"свердловская область",
-    "кемерово":"кемеровская область — кузбасс",
-    "югра":"ханты-мансийский автономный округ — югра",
+    "спб":"санкт-петербург","питер":"санкт-петербург",
+    "краснодар":"краснодарский край","краснодарский":"краснодарский край",
+    "москва":"москва","московская":"московская область",
+    "ленинградская":"ленинградская область","югра":"ханты-мансийский автономный округ — югра",
     "якутия":"республика саха (якутия)"
   };
-
-  // Группы для селекта региона.
-  // ВАЖНО: группы выводятся только если внутри есть регионы из данных.
   const REGION_GROUPS = [
     { group: "Москва", items: ["Москва"] },
     { group: "Московская область", items: ["Московская область"] },
     { group: "Санкт-Петербург и ЛО", items: ["Санкт-Петербург","Ленинградская область"] },
-    // сюда можно дописать округа/районы, если у вас реально такие значения в данных:
-    // { group: "ЮВАО", items: ["Выхино-Жулебино","Кузьминки", ...] },
-    // { group: "ЦАО", items: ["Арбат","Тверской", ...] },
     { group: "Регионы РФ", items: REGIONS }
   ];
 
@@ -506,21 +490,17 @@
       .replace(/\s+/g," ")
       .trim();
   }
-
   function matchRegion(raw){
     const n = normalizeRegion(raw);
     if(!n) return null;
-
     if(REGION_ALIASES[n]){
       const aliasNorm = REGION_ALIASES[n];
       const alias = REGIONS.find(r => normalizeRegion(r) === aliasNorm);
       return alias || null;
     }
-
     const found = REGIONS.find(r => normalizeRegion(r) === n);
     return found || null;
   }
-
   function isValidYear(value){
     const s = String(value ?? "").trim();
     if(!/^\d{4}$/.test(s)) return false;
@@ -528,7 +508,6 @@
     const max = new Date().getFullYear() + 1;
     return y >= 1900 && y <= max;
   }
-
   function normalizeSeller(raw){
     const v = cleanValue(raw);
     if(!v) return null;
@@ -547,7 +526,7 @@
     filtered: [],
     condition: "all",
     status: "active",
-    filters: { mark:null, model:null, year:null, color:null, region:null, seller:"owner" },
+    filters: { mark:null, model:null, year:null, color:null, region:null, seller:"all" }, // FIX
     lastSignatures: { active:null, removed:null },
     lastRenderKind: "active",
     isBooted: false,
@@ -631,7 +610,6 @@
 
     const color=cleanValue(row.color);
 
-    // region gate: только канон
     const regionMatched = matchRegion(row.region || row.city || "");
     const region = regionMatched || null;
 
@@ -711,7 +689,7 @@
   }
 
   /* ======================================================================
-     DATA LOADING + hourly sync
+     DATA LOADING
   ====================================================================== */
   async function fetchCsvSafe(url){
     try{
@@ -748,7 +726,7 @@
     state.lastSignatures.removed=removed.signature;
 
     state.isBooted=true;
-    updateAll();
+    updateAll(); // просто обновим счет и опции; список пустой до "Показать"
   }
 
   async function syncIfChanged(kind){
@@ -799,7 +777,12 @@
     return cars.filter(car=>{
       if(!car.url) return false;
       if(current.condition!=="all" && car.condition!==current.condition) return false;
-      if(current.filters.seller && car.seller !== current.filters.seller) return false;
+
+      // FIX: seller="all" не фильтрует
+      if(current.filters.seller && current.filters.seller!=="all"){
+        if(car.seller !== current.filters.seller) return false;
+      }
+
       if(current.filters.mark && car.markNorm!==current.filters.mark) return false;
       if(current.filters.model && car.modelNorm!==current.filters.model) return false;
       if(current.filters.year && String(car.year)!==current.filters.year) return false;
@@ -819,14 +802,10 @@
     return applyFilters(baseCars,copy);
   }
 
-  // placeholder option hidden/disabled → в дропдауне нет “Не выбран”
   function renderOptions(select, options){
     select.innerHTML="";
     const empty=document.createElement("option");
-    empty.value="";
-    empty.textContent="";
-    empty.disabled=true;
-    empty.hidden=true;
+    empty.value=""; empty.textContent=""; empty.disabled=true; empty.hidden=true;
     select.appendChild(empty);
 
     options.forEach(opt=>{
@@ -861,7 +840,6 @@
       }
     });
 
-    // Прочие доступные регионы, не попавшие в группы
     const otherItems = [...available]
       .filter(v => !used.has(v))
       .map(v => {
@@ -881,10 +859,7 @@
   function renderGroupedRegionSelect(select, grouped){
     select.innerHTML="";
     const empty=document.createElement("option");
-    empty.value="";
-    empty.textContent="";
-    empty.disabled=true;
-    empty.hidden=true;
+    empty.value=""; empty.textContent=""; empty.disabled=true; empty.hidden=true;
     select.appendChild(empty);
 
     grouped.forEach(g=>{
@@ -924,7 +899,6 @@
         state.filters[key]=null; invalid=true;
       }
     }
-    // region отдельно, т.к. тут grouped
     if(state.filters.region){
       const flat = groupedRegions.flatMap(g=>g.items||[]);
       if(!flat.some(o=>o.value===state.filters.region)){
@@ -945,7 +919,6 @@
     renderOptions(elements.selectColor, colors);
     renderGroupedRegionSelect(elements.selectRegion, groupedRegions);
 
-    // disable model until mark chosen
     elements.selectModel.disabled = !state.filters.mark;
 
     return false;
@@ -1012,11 +985,6 @@
       card.addEventListener("click",()=>openModal(car));
       elements.grid.appendChild(card);
     });
-  }
-
-  function renderEmptyHint(){
-    elements.grid.innerHTML =
-      '<div class="ty-body cars-empty">Выбор фильтров не применён. Нажмите «Показать».</div>';
   }
 
   /* ======================================================================
@@ -1106,7 +1074,9 @@
 
     updateCounts(filtered);
     syncFieldCapsules();
-    if(clearCards) renderEmptyHint();
+
+    // FIX: больше не рисуем пустых текстов — просто чистим список
+    if(clearCards) elements.grid.innerHTML="";
   }
 
   /* ======================================================================
@@ -1138,7 +1108,7 @@
         if(btn.getAttribute("aria-pressed")==="true") return;
         elements.tabsSeller.forEach(b=>b.setAttribute("aria-pressed","false"));
         btn.setAttribute("aria-pressed","true");
-        state.filters.seller = btn.dataset.seller;
+        state.filters.seller = btn.dataset.seller; // all/owner/dealer
         updateAll();
       });
     });
@@ -1151,7 +1121,6 @@
           const key=select.dataset.key;
           state.filters[key]=select.value || null;
 
-          // если поменяли марку — сбрасываем модель
           if(key==="mark"){
             state.filters.model=null;
           }
@@ -1166,7 +1135,7 @@
     elements.resetBtn.addEventListener("click",()=>{
       state.condition="all";
       state.status="active";
-      state.filters={mark:null,model:null,year:null,color:null,region:null,seller:"owner"};
+      state.filters={mark:null,model:null,year:null,color:null,region:null,seller:"all"};
 
       elements.tabsCondition.forEach(btn=>
         btn.setAttribute("aria-pressed", btn.dataset.condition==="all" ? "true":"false")
@@ -1175,7 +1144,7 @@
         btn.setAttribute("aria-pressed", btn.dataset.status==="active" ? "true":"false")
       );
       elements.tabsSeller.forEach(btn=>
-        btn.setAttribute("aria-pressed", btn.dataset.seller==="owner" ? "true":"false")
+        btn.setAttribute("aria-pressed", btn.dataset.seller==="all" ? "true":"false")
       );
 
       updateAll();
