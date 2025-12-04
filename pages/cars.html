@@ -118,8 +118,6 @@ const CSV_SOURCES = {
   ],
 };
 
-const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
-
 const EXCLUDED_DETAILS = new Set([
   "image_urls",
 ]);
@@ -144,7 +142,6 @@ const state = {
     active: null,
     removed: null,
   },
-  lastRenderKind: "active",
 };
 
 const elements = {
