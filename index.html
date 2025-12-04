@@ -549,66 +549,88 @@
   background: var(--c-white);
   color: var(--c-black);
   min-height: 100vh;
-  padding: 18px;
+  padding: 20px 18px;
   font-family: var(--font-sans);
+  display: flex;
+  justify-content: center;
 }
 
 #pageRoot .cars-shell{
-  max-width: 980px;
-  margin: 0 auto;                 /* ✅ центрирование всего верхнего блока */
+  width: min(1040px, 100%);
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 #pageRoot .cars-panel{
   border: 1px solid var(--c-gray-light);
-  border-radius: 14px;
-  padding: 12px;
+  border-radius: 16px;
+  padding: 14px;
   background: var(--c-white);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--c-black) 6%, transparent);
 }
 
-/* вкладки: слева и справа */
-#pageRoot .cars-tabs-row{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+#pageRoot .cars-hint{
+  color: var(--c-gray);
+  margin: 2px 0 8px;
 }
+
+/* вкладки: один ряд, две группы */
+#pageRoot .cars-tabs-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
 #pageRoot .cars-tabs{
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--c-gray-light);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-gray-light) 12%, transparent);
+  justify-content: flex-start;
+}
+
+#pageRoot .cars-tabs.right-tabs{
+  justify-content: flex-end;
 }
 
 #pageRoot .cars-tab{
-  border: 1px solid var(--c-gray-light);
-  border-radius: 10px;
-  padding: 7px 11px;
-  background: var(--c-white);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 6px 12px;
+  height: 32px;
+  background: transparent;
   color: var(--c-black);
   cursor: pointer;
   transition: border-color 120ms ease, background 120ms ease;
   white-space: nowrap;
 }
+
 #pageRoot .cars-tab[aria-pressed="true"]{
-  border-color: var(--c-gray);
-  background: color-mix(in srgb, var(--c-gray-light) 20%, transparent);
+  border-color: var(--c-gray-light);
+  background: var(--c-white);
 }
-#pageRoot .cars-tab:hover{ border-color: var(--c-gray); }
+
+#pageRoot .cars-tab:hover{
+  border-color: var(--c-gray);
+}
 
 /* фильтры */
 #pageRoot .cars-filters{
   display: grid;
-  grid-template-columns: repeat(2, minmax(0,1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
+
 #pageRoot .cars-filters.row-2{
-  grid-template-columns: repeat(3, minmax(0,1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 /* поле */
@@ -617,32 +639,37 @@
   border: 1px solid var(--c-gray-light);
   border-radius: 12px;
   background: var(--c-white);
-  padding: 8px 10px;
+  padding: 10px 12px;
   min-height: 44px;
   display: flex;
   align-items: center;
-  transition: border-color 120ms ease;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
 }
+
 #pageRoot .cars-field::before{
   content: attr(data-label);
   position: absolute;
-  left: 10px;
+  left: 12px;
   top: 8px;
   font-size: var(--fs-11);
   font-weight: var(--fw-semibold);
   color: var(--c-gray);
   background: var(--c-white);
-  padding: 2px 6px;
+  padding: 2px 8px;
   border: 1px solid var(--c-gray-light);
   border-radius: 999px;
   pointer-events: none;
   transition: opacity 120ms ease, transform 120ms ease;
 }
+
 #pageRoot .cars-field.has-value::before{
   opacity: 0;
   transform: translateY(-2px);
 }
-#pageRoot .cars-field:focus-within{ border-color: var(--c-gray); }
+
+#pageRoot .cars-field:focus-within{
+  border-color: var(--c-gray);
+}
 
 #pageRoot .cars-input{
   width: 100%;
@@ -651,42 +678,88 @@
   color: var(--c-black);
   outline: none;
   appearance: none;
-  padding-top: 6px;
+  padding-top: 10px;
+  padding-right: 4px;
   font-size: var(--fs-15);
+  line-height: 1.1;
+}
+
+#pageRoot .cars-select{
+  padding-top: 0;
+  padding-bottom: 0;
+  height: 40px;
+}
+
+#pageRoot .cars-select::-ms-expand{ display:none; }
+
+/* чекбоксы */
+#pageRoot .cars-checkboxes{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+#pageRoot .cars-check{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--c-gray-light);
+  border-radius: 999px;
+  background: var(--c-white);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+#pageRoot .cars-check:hover{
+  border-color: var(--c-gray);
+}
+
+#pageRoot .cars-check-input{
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  accent-color: var(--c-black);
 }
 
 /* кнопки справа под фильтрами */
 #pageRoot .cars-actions{
-  display:flex;
-  justify-content:flex-end;
-  gap:8px;
-  margin-top: 2px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
   flex-wrap: wrap;
 }
 
 #pageRoot .cars-btn{
-  border: none;
-  border-radius: 10px;
-  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 8px 14px;
+  height: 36px;
   background: var(--c-black);
   color: var(--c-white);
   cursor: pointer;
   text-align: center;
-  min-width: 180px;
+  min-width: 210px;
   transition: background 120ms ease, border-color 120ms ease;
 }
+
 #pageRoot .cars-btn:hover{ background: var(--c-gray-dark); }
+
 #pageRoot .cars-btn:disabled{
   background: var(--c-gray-light);
   color: var(--c-gray);
   cursor: not-allowed;
 }
+
 #pageRoot .cars-btn.ghost{
   background: var(--c-white);
   color: var(--c-black);
   border: 1px solid var(--c-gray-light);
-  min-width: auto;
+  min-width: 0;
 }
+
 #pageRoot .cars-btn.ghost:hover{
   border-color: var(--c-gray);
   background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
@@ -702,11 +775,13 @@
   flex-direction: column;
   gap: 10px;
 }
+
 #pageRoot .cars-grid{
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
 }
+
 #pageRoot .cars-card{
   border: 1px solid var(--c-gray-light);
   border-radius: 12px;
@@ -718,26 +793,51 @@
   cursor: pointer;
   transition: border-color 120ms ease, background 120ms ease;
 }
+
 #pageRoot .cars-card:hover{
   border-color: var(--c-gray);
   background: color-mix(in srgb, var(--c-gray-light) 10%, transparent);
 }
+
 #pageRoot .cars-card-title{
   font-weight: var(--fw-bold);
   font-size: var(--fs-15);
 }
+
 #pageRoot .cars-card-sub{
   color: var(--c-gray);
   font-size: var(--fs-12);
   line-height: var(--lh-normal);
 }
+
 #pageRoot .cars-empty{ color: var(--c-gray); }
 
 @media (max-width: 900px){
-  #pageRoot .cars-filters{ grid-template-columns: 1fr; }
-  #pageRoot .cars-filters.row-2{ grid-template-columns: 1fr; }
-  #pageRoot .cars-actions{ justify-content: stretch; }
-  #pageRoot .cars-btn{ width: 100%; min-width: 0; }
+  #pageRoot .cars-tabs-row{
+    grid-template-columns: 1fr;
+  }
+
+  #pageRoot .cars-tabs{
+    justify-content: center;
+  }
+
+  #pageRoot .cars-filters{
+    grid-template-columns: 1fr;
+  }
+
+  #pageRoot .cars-filters.row-2{
+    grid-template-columns: 1fr;
+  }
+
+  #pageRoot .cars-actions{
+    justify-content: stretch;
+    flex-direction: column;
+  }
+
+  #pageRoot .cars-btn{
+    width: 100%;
+    min-width: 0;
+  }
 }
   </style>
 </head>
@@ -803,32 +903,49 @@
 
               <div class="cars-panel">
 
-                <div class="cars-tabs-row">
-                  <div class="cars-tabs left-tabs" role="tablist" aria-label="Статус объявлений">
-                    <button class="cars-tab ty-body" type="button" aria-pressed="true" data-scope="active">Активные объявления</button>
-                    <button class="cars-tab ty-body" type="button" aria-pressed="false" data-scope="removed">Снятые объявления</button>
-                  </div>
+                <div class="cars-hint ty-body">Найдите автомобили по параметрам и добавьте их в регионы.</div>
 
-                  <div class="cars-tabs right-tabs" role="tablist" aria-label="Тип авто">
+                <div class="cars-tabs-row">
+                  <div class="cars-tabs left-tabs" role="tablist" aria-label="Тип авто">
                     <button class="cars-tab ty-body" type="button" aria-pressed="true" data-kind="all">Все</button>
                     <button class="cars-tab ty-body" type="button" aria-pressed="false" data-kind="used">С пробегом</button>
                     <button class="cars-tab ty-body" type="button" aria-pressed="false" data-kind="new">Новые</button>
+                  </div>
+
+                  <div class="cars-tabs right-tabs" role="tablist" aria-label="Статус объявлений">
+                    <button class="cars-tab ty-body" type="button" aria-pressed="true" data-scope="active">Активные объявления</button>
+                    <button class="cars-tab ty-body" type="button" aria-pressed="false" data-scope="removed">Снятые объявления</button>
                   </div>
                 </div>
 
                 <div class="cars-filters">
                   <label class="cars-field" data-label="Марка">
-                    <input class="cars-input" type="text" name="brand" autocomplete="off" />
+                    <select class="cars-input cars-select" name="brand">
+                      <option value="">Не выбрано</option>
+                      <option value="bmw">BMW</option>
+                      <option value="audi">Audi</option>
+                      <option value="mercedes">Mercedes-Benz</option>
+                    </select>
                   </label>
 
                   <label class="cars-field" data-label="Модель">
-                    <input class="cars-input" type="text" name="model" autocomplete="off" />
+                    <select class="cars-input cars-select" name="model">
+                      <option value="">Не выбрано</option>
+                      <option value="3">Серия 3</option>
+                      <option value="5">Серия 5</option>
+                      <option value="q5">Q5</option>
+                    </select>
                   </label>
                 </div>
 
                 <div class="cars-filters row-2">
                   <label class="cars-field" data-label="Год">
-                    <input class="cars-input" type="text" name="year" inputmode="numeric" autocomplete="off" />
+                    <select class="cars-input cars-select" name="year">
+                      <option value="">Не выбрано</option>
+                      <option value="2024">2024</option>
+                      <option value="2023">2023</option>
+                      <option value="2022">2022</option>
+                    </select>
                   </label>
 
                   <label class="cars-field" data-label="Цвет">
@@ -836,13 +953,33 @@
                   </label>
 
                   <label class="cars-field" data-label="Регион">
-                    <input class="cars-input" type="text" name="region" autocomplete="off" />
+                    <select class="cars-input cars-select" name="region">
+                      <option value="">Не выбрано</option>
+                      <option value="moscow">Москва</option>
+                      <option value="spb">Санкт-Петербург</option>
+                      <option value="kazan">Казань</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="cars-checkboxes">
+                  <label class="cars-check ty-body">
+                    <input class="cars-check-input" type="checkbox" name="available" checked />
+                    Доступные автомобили
+                  </label>
+                  <label class="cars-check ty-body">
+                    <input class="cars-check-input" type="checkbox" name="draft" />
+                    Черновики автомобилей
+                  </label>
+                  <label class="cars-check ty-body">
+                    <input class="cars-check-input" type="checkbox" name="ready" />
+                    Готовые автомобили
                   </label>
                 </div>
 
                 <div class="cars-actions">
-                  <button class="cars-btn" id="carsShowBtn" type="button">Показать 0 объявлений</button>
                   <button class="cars-btn ghost" id="carsResetBtn" type="button">Сбросить</button>
+                  <button class="cars-btn" id="carsShowBtn" type="button">Показать 0 объявлений</button>
                 </div>
 
               </div>
@@ -870,7 +1007,7 @@
 
       async function fetchText(url){
         const r = await fetch(url, { cache: "no-store" });
-        if (!r.ok) throw new Error(\`Fetch failed: \${url}\`);
+        if (!r.ok) throw new Error(`Fetch failed: ${url}`);
         return r.text();
       }
 
@@ -2093,6 +2230,7 @@ const SidebarView = (() => {
           };
 
           inp.addEventListener("input", sync);
+          inp.addEventListener("change", sync);
           inp.addEventListener("blur", sync);
           sync();
         });
