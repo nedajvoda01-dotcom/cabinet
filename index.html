@@ -190,101 +190,122 @@
       padding: 0;
     }
 
- /* ======================================================================
-   LOGO AREA
-====================================================================== */
-.logo-area{
-  height: var(--logo-area-h);
-  position: relative;
-  display: flex;
-  align-items: flex-start;   /* было center — теперь к верху */
-  justify-content: center;
-  margin: 0 0 10px;
-}
+    /* ======================================================================
+       LOGO AREA
+    ====================================================================== */
+    .logo-area{
+      height: var(--logo-area-h);
+      position: relative;
+      display: flex;
+      align-items: flex-start;   /* лого к верху */
+      justify-content: center;
+      margin: 0 0 10px;
+    }
 
-.logo-wrap {
-  position:absolute; inset:0;
-  display:flex; flex-direction:column;
-  justify-content:flex-start; /* было center — теперь лого сверху */
-  gap:6px;
-  width:100%;
-  padding:6px 10px 8px;       /* top = 6px как у collapsed */
-  border-radius: var(--radius-md);
-  user-select:none; white-space:nowrap; overflow:hidden;
-}
+    /* раскрытое лого */
+    .logo-wrap{
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start; /* сверху */
+      gap: 6px;
+      width: 100%;
+      padding: 6px 10px 8px;       /* top = 6px как в collapsed */
+      border-radius: var(--radius-md);
+      user-select: none;
+      white-space: nowrap;
+      overflow: hidden;
+    }
 
-.logo-main {
-  color: var(--c-white);
-  width:100%;
-  text-align:center;
-  white-space:nowrap;
-  overflow:hidden;
-  min-height: 1.2em;
-}
+    .logo-main{
+      color: var(--c-white);
+      width: 100%;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      min-height: 1.2em;
+    }
 
-.logo-pill {
-  color: var(--c-white);
-  background: var(--c-black);
-  border:1px solid var(--c-white);
-  border-radius:9px;
-  padding:3px 9px 2px;
-  text-transform:lowercase;
-  align-self:flex-end;
-  display:inline-flex; align-items:center; justify-content:center;
+    .logo-pill{
+      color: var(--c-white);
+      background: var(--c-black);
+      border: 1px solid var(--c-white);
+      border-radius: 9px;
+      padding: 3px 9px 2px;
+      text-transform: lowercase;
+      align-self: flex-end;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
 
-  opacity:0; transform: translateY(-10px);
-  transition: opacity 280ms ease-out, transform 280ms ease-out;
-  pointer-events:none;
-}
-.logo-pill.is-revealed{ opacity:1; transform:translateY(0); pointer-events:auto; }
-.logo-pill span{ display:block; transform: translateY(-1px); }
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 280ms ease-out, transform 280ms ease-out;
+      pointer-events: none;
+    }
+    .logo-pill.is-revealed{
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .logo-pill span{
+      display: block;
+      transform: translateY(-1px);
+    }
 
-.logo-collapsed {
-  position:absolute; inset:0;
-  display:none;
-  width:100%;
-  background:transparent;
-  color: var(--c-white);
-  align-items:center;
-  justify-content:center;
-  user-select:none;
-}
+    /* collapsed контейнер */
+    .logo-collapsed{
+      position: absolute;
+      inset: 0;
+      display: none;            /* показываем только при collapsed */
+      width: 100%;
+      background: transparent;
+      color: var(--c-white);
+      user-select: none;
 
-.mini-logo-stage{
-  position: relative;
-  width: 22px;
-  height: 22px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+      align-items: flex-start; /* сцена сверху */
+      justify-content: center;
+      padding-top: 6px;
+    }
 
-.mini-logo-img{
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: translateX(-120%);
-}
+    /* мини-лого сцена = хитбокс 100% ширины и 24px высоты */
+    .mini-logo-stage{
+      position: relative;
+      width: 100%;     /* ✅ хитбокс во всю ширину меню */
+      height: 24px;    /* ✅ высота хитбокса 24px */
+      overflow: hidden;
 
-.mini-logo-img svg{
-  width: 22px;
-  height: 22px;
-  display: block;
-  color: currentColor;
-}
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-.sidebar.is-collapsed .logo-wrap{ display:none; }
-.sidebar.is-collapsed .logo-collapsed{
-  display:flex; align-items:flex-start; padding-top:6px;
-}
+    .mini-logo-img{
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-/* ======================================================================
-   BOOKMARK BUTTON — состояния:
-   disabled = gray, enabled = black, active = orange (TOKEN ONLY)
-====================================================================== */
+      transform: translateX(-100%); /* старт слева */
+    }
+
+    .mini-logo-img svg{
+      width: 24px;     /* ✅ размер иконки */
+      height: 24px;
+      display: block;
+      color: currentColor;
+    }
+
+    /* переключение режимов */
+    .sidebar.is-collapsed .logo-wrap{ display: none; }
+    .sidebar.is-collapsed .logo-collapsed{ display: flex; }
+
+    /* ======================================================================
+       BOOKMARK BUTTON — состояния:
+       disabled = gray, enabled = black, active = orange (TOKEN ONLY)
+    ====================================================================== */
     .bookmark-btn{
       position: absolute;
       top: var(--logo-top);
@@ -313,20 +334,16 @@
         left 160ms ease;
     }
 
-.bookmark-btn:hover{
-  opacity: 1;
-}
+    .bookmark-btn:hover{ opacity: 1; }
+    .bookmark-btn:active{ transform: translateY(1px); }
 
-.bookmark-btn:active{
-  transform: translateY(1px);
-}
-
-.bookmark-btn svg{
-  width:18px;
-  height:18px;
-  stroke: currentColor;
-  fill: none;
-}
+    .bookmark-btn svg{
+      width:20px;          /* ✅ +2px */
+      height:20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width:3px;   /* ✅ толще на 1px */
+    }
 
     /* ✅ активная (страница в избранном) */
     .bookmark-btn.is-active{
@@ -343,90 +360,131 @@
       opacity: 1;
     }
 
- /* ======================================================================
-   SECTIONS + NAV
-====================================================================== */
-.nav-section{ 
-  display:flex; 
-  flex-direction:column; 
-  gap:6px; 
-  padding: 0 0 6px; 
-}
+    /* ======================================================================
+       SECTIONS + NAV
+    ====================================================================== */
+    .nav-section{ 
+      display:flex; 
+      flex-direction:column; 
+      gap:6px; 
+      padding: 0 0 6px; 
+    }
 
-.nav-section-title{
-  color: var(--c-white);
-  opacity: .65;
-  padding: 0 14px;
-  margin-top: 6px;
-  user-select:none;
-  text-transform: none;
+    .nav-section-title{
+      color: var(--c-white);
+      opacity: .65;
+      padding: 0 14px;
+      margin-top: 6px;
+      user-select:none;
+      text-transform: none;
 
-  /* чтобы высота была стабильной */
-  height: 16px;
-  display:flex;
-  align-items:center;
-}
+      height: 16px;
+      display:flex;
+      align-items:center;
+    }
 
-/* ✅ при collapsed не убираем из потока, только прячем */
-.sidebar.is-collapsed .nav-section-title{ 
-  visibility: hidden;  /* место остаётся */
-  opacity: 0;
-  pointer-events: none;
-}
+    /* ✅ при collapsed не убираем из потока, только прячем */
+    .sidebar.is-collapsed .nav-section-title{ 
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
 
-.nav-section-divider{
-  height: 1px;
-  background: var(--c-gray-dark);
-  margin: 10px 8px;
-  border-radius:1px;
-  opacity: 1;
-}
+    .nav-section-divider{
+      height: 1px;
+      background: var(--c-gray-dark);
+      margin: 10px 8px;
+      border-radius:1px;
+      opacity: 1;
+    }
 
-.nav { 
-  display:flex; 
-  flex-direction:column; 
-  gap:4px; 
-  margin-top:-5px; 
-}
+    .nav { 
+      display:flex; 
+      flex-direction:column; 
+      gap:4px; 
+      margin-top:-5px; 
+    }
 
-.nav-item {
-  display:flex; align-items:center; gap:8px;
-  margin: 0 5px;
-  padding:8px 10px;
-  border-radius:12px;
-  color: var(--c-white);
-  text-decoration:none;
-  transition: background 120ms ease, color 120ms ease, transform 40ms ease;
-  white-space:nowrap; outline:none; overflow:hidden;
-  cursor:pointer;
-}
-.nav-item .ico{
-  width:19px; min-width:19px; height:19px;
-  display:flex; align-items:center; justify-content:center;
-  color: currentColor; flex:0 0 19px;
-}
-.nav-item .ico svg{ width:18px;height:18px; stroke:currentColor; fill:none; }
+    /* сам айтем */
+    .nav-item{
+      display:flex;
+      align-items:center;
+      gap:8px;
 
-.sidebar.is-collapsed .nav-item .ico{ transform: translateX(-1px); }
+      margin: 0 5px;
+      padding:8px 10px;
 
-.nav-item .text{
-  display:inline-block;
-  transition: opacity 140ms ease, transform 140ms ease, width 140ms ease;
-  transform: translateX(0); opacity:1; width:auto; overflow:hidden;
-}
-.sidebar.is-collapsed .nav-item .text{
-  opacity:0; transform:translateX(-6px); width:0; pointer-events:none;
-}
+      border-radius:12px;
+      color: var(--c-white);
+      text-decoration:none;
 
-.nav-item:hover{ background: var(--c-gray-dark); }
-.nav-item:active{ transform: translateY(1px); }
-.nav-item.is-active{ background: var(--c-gray); color: var(--c-white); }
+      transition:
+        background 120ms ease,
+        color 120ms ease,
+        transform 40ms ease;
 
-.nav-item,
-.nav-item:hover,
-.nav-item:active,
-.nav-item:visited,
-.nav-item.is-active { color: var(--c-white) !important; }
+      white-space:nowrap;
+      outline:none;
+      overflow:hidden;
+      cursor:pointer;
+    }
+
+    /* контейнер под иконку (+2px) */
+    .nav-item .ico{
+      width:21px;
+      min-width:21px;
+      height:21px;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      color: currentColor;
+      flex:0 0 21px;
+    }
+
+    /* сама svg (+2px) и stroke +1px */
+    .nav-item .ico svg{
+      width:20px;
+      height:20px;
+
+      stroke: currentColor;
+      fill:none;
+      stroke-width:3px; /* ✅ было 2 — стало 3 */
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .sidebar.is-collapsed .nav-item .ico{ transform: translateX(-1px); }
+
+    .nav-item .text{
+      display:inline-block;
+      transition:
+        opacity 140ms ease,
+        transform 140ms ease,
+        width 140ms ease;
+
+      transform: translateX(0);
+      opacity:1;
+      width:auto;
+      overflow:hidden;
+    }
+    .sidebar.is-collapsed .nav-item .text{
+      opacity:0;
+      transform:translateX(-6px);
+      width:0;
+      pointer-events:none;
+    }
+
+    .nav-item:hover{ background: var(--c-gray-dark); }
+    .nav-item:active{ transform: translateY(1px); }
+    .nav-item.is-active{ background: var(--c-gray); color: var(--c-white); }
+
+    .nav-item,
+    .nav-item:hover,
+    .nav-item:active,
+    .nav-item:visited,
+    .nav-item.is-active { color: var(--c-white) !important; }
 
     /* ======================================================================
        COLLAPSE BUTTON
@@ -555,317 +613,315 @@
       .page-loader, .page-404{ transition:none; }
     }
 
+    /* ======================================================================
+       CARS PAGE (styles in parent)
+       Стили только для страницы поиска авто.
+       Скопированы из бывшего cars.html и слегка заскоуплены.
+    ====================================================================== */
 
-/* ======================================================================
-   CARS PAGE (styles in parent)
-   Стили только для страницы поиска авто.
-   Скопированы из бывшего cars.html и слегка заскоуплены.
-====================================================================== */
+    #pageRoot .cars-page{
+      background: var(--c-white);
+      color: var(--c-black);
+      min-height: 100vh;
+      padding: 18px;
+      font-family: var(--font-sans);
+    }
 
-#pageRoot .cars-page{
-  background: var(--c-white);
-  color: var(--c-black);
-  min-height: 100vh;
-  padding: 18px;
-  font-family: var(--font-sans);
-}
+    #pageRoot .cars-shell{
+      max-width: 980px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
 
-/* типографика берётся из .ty-* родителя, но если надо — можно локально подправить */
-#pageRoot .cars-shell{
-  max-width: 980px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+    #pageRoot .cars-filters{
+      border: 1px solid var(--c-gray-light);
+      border-radius: 14px;
+      padding: 12px;
+      background: var(--c-white);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-#pageRoot .cars-filters{
-  border: 1px solid var(--c-gray-light);
-  border-radius: 14px;
-  padding: 12px;
-  background: var(--c-white);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+    #pageRoot .cars-tabs{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    #pageRoot .cars-tabs.tier-2{
+      border-top: 1px solid var(--c-gray-light);
+      padding-top: 8px;
+    }
 
-#pageRoot .cars-tabs{
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-#pageRoot .cars-tabs.tier-2{
-  border-top: 1px solid var(--c-gray-light);
-  padding-top: 8px;
-}
+    #pageRoot .cars-tab{
+      border: 1px solid var(--c-gray-light);
+      border-radius: 10px;
+      padding: 7px 11px;
+      background: var(--c-white);
+      color: var(--c-black);
+      cursor: pointer;
+      transition: border-color 120ms ease, background 120ms ease;
+    }
+    #pageRoot .cars-tab[aria-pressed="true"]{
+      border-color: var(--c-gray);
+      background: color-mix(in srgb, var(--c-gray-light) 20%, transparent);
+    }
+    #pageRoot .cars-tab:hover{ border-color: var(--c-gray); }
 
-#pageRoot .cars-tab{
-  border: 1px solid var(--c-gray-light);
-  border-radius: 10px;
-  padding: 7px 11px;
-  background: var(--c-white);
-  color: var(--c-black);
-  cursor: pointer;
-  transition: border-color 120ms ease, background 120ms ease;
-}
-#pageRoot .cars-tab[aria-pressed="true"]{
-  border-color: var(--c-gray);
-  background: color-mix(in srgb, var(--c-gray-light) 20%, transparent);
-}
-#pageRoot .cars-tab:hover{ border-color: var(--c-gray); }
+    #pageRoot .cars-controls{
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+    }
 
-#pageRoot .cars-controls{
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  align-items: start;
-}
+    #pageRoot .cars-selects{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+    }
 
-#pageRoot .cars-selects{
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 10px;
-}
+    #pageRoot .cars-field{
+      position: relative;
+      border: 1px solid var(--c-gray-light);
+      border-radius: 12px;
+      background: var(--c-white);
+      padding: 8px 10px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      transition: border-color 120ms ease;
+    }
+    #pageRoot .cars-field::before{
+      content: attr(data-label);
+      position: absolute;
+      left: 10px;
+      top: 8px;
+      font-size: var(--fs-11);
+      font-weight: var(--fw-semibold);
+      color: var(--c-gray);
+      background: var(--c-white);
+      padding: 2px 6px;
+      border: 1px solid var(--c-gray-light);
+      border-radius: 999px;
+      pointer-events: none;
+      transition: opacity 120ms ease, transform 120ms ease;
+    }
+    #pageRoot .cars-field.has-value::before{
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+    #pageRoot .cars-field:focus-within{ border-color: var(--c-gray); }
 
-#pageRoot .cars-field{
-  position: relative;
-  border: 1px solid var(--c-gray-light);
-  border-radius: 12px;
-  background: var(--c-white);
-  padding: 8px 10px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  transition: border-color 120ms ease;
-}
-#pageRoot .cars-field::before{
-  content: attr(data-label);
-  position: absolute;
-  left: 10px;
-  top: 8px;
-  font-size: var(--fs-11);
-  font-weight: var(--fw-semibold);
-  color: var(--c-gray);
-  background: var(--c-white);
-  padding: 2px 6px;
-  border: 1px solid var(--c-gray-light);
-  border-radius: 999px;
-  pointer-events: none;
-  transition: opacity 120ms ease, transform 120ms ease;
-}
-#pageRoot .cars-field.has-value::before{
-  opacity: 0;
-  transform: translateY(-2px);
-}
-#pageRoot .cars-field:focus-within{ border-color: var(--c-gray); }
+    #pageRoot .cars-input{
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--c-black);
+      outline: none;
+      appearance: none;
+      padding-top: 6px;
+      font-size: var(--fs-15);
+    }
 
-#pageRoot .cars-input{
-  width: 100%;
-  border: none;
-  background: transparent;
-  color: var(--c-black);
-  outline: none;
-  appearance: none;
-  padding-top: 6px;
-  font-size: var(--fs-15);
-}
+    #pageRoot .cars-actions{
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    #pageRoot .cars-actions-btns{
+      display: flex;
+      gap: 8px;
+    }
 
-#pageRoot .cars-actions{
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
-}
-#pageRoot .cars-actions-btns{
-  display: flex;
-  gap: 8px;
-}
+    #pageRoot .cars-btn{
+      border: none;
+      border-radius: 10px;
+      padding: 9px 12px;
+      background: var(--c-black);
+      color: var(--c-white);
+      cursor: pointer;
+      text-align: center;
+      min-width: 160px;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+    #pageRoot .cars-btn:hover{ background: var(--c-gray-dark); }
+    #pageRoot .cars-btn:disabled{
+      background: var(--c-gray-light);
+      color: var(--c-gray);
+      cursor: not-allowed;
+    }
+    #pageRoot .cars-btn.ghost{
+      background: var(--c-white);
+      color: var(--c-black);
+      border: 1px solid var(--c-gray-light);
+    }
+    #pageRoot .cars-btn.ghost:hover{
+      border-color: var(--c-gray);
+      background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
+    }
 
-#pageRoot .cars-btn{
-  border: none;
-  border-radius: 10px;
-  padding: 9px 12px;
-  background: var(--c-black);
-  color: var(--c-white);
-  cursor: pointer;
-  text-align: center;
-  min-width: 160px;
-  transition: background 120ms ease, border-color 120ms ease;
-}
-#pageRoot .cars-btn:hover{ background: var(--c-gray-dark); }
-#pageRoot .cars-btn:disabled{
-  background: var(--c-gray-light);
-  color: var(--c-gray);
-  cursor: not-allowed;
-}
-#pageRoot .cars-btn.ghost{
-  background: var(--c-white);
-  color: var(--c-black);
-  border: 1px solid var(--c-gray-light);
-}
-#pageRoot .cars-btn.ghost:hover{
-  border-color: var(--c-gray);
-  background: color-mix(in srgb, var(--c-gray-light) 15%, transparent);
-}
+    #pageRoot .cars-status{
+      color: var(--c-gray);
+      text-align: right;
+      min-height: 1em;
+    }
 
-#pageRoot .cars-status{
-  color: var(--c-gray);
-  text-align: right;
-  min-height: 1em;
-}
+    #pageRoot .cars-results{
+      border: 1px solid var(--c-gray-light);
+      border-radius: 14px;
+      padding: 12px;
+      background: var(--c-white);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #pageRoot .cars-results-head{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    #pageRoot .cars-results-note{ color: var(--c-gray); }
 
-#pageRoot .cars-results{
-  border: 1px solid var(--c-gray-light);
-  border-radius: 14px;
-  padding: 12px;
-  background: var(--c-white);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-#pageRoot .cars-results-head{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-#pageRoot .cars-results-note{ color: var(--c-gray); }
+    #pageRoot .cars-grid{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
 
-#pageRoot .cars-grid{
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-}
+    #pageRoot .cars-card{
+      border: 1px solid var(--c-gray-light);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: var(--c-white);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      transition: border-color 120ms ease, background 120ms ease;
+    }
+    #pageRoot .cars-card:hover{
+      border-color: var(--c-gray);
+      background: color-mix(in srgb, var(--c-gray-light) 10%, transparent);
+    }
+    #pageRoot .cars-card-title{
+      font-weight: var(--fw-bold);
+      font-size: var(--fs-15);
+    }
+    #pageRoot .cars-card-sub{
+      color: var(--c-gray);
+      font-size: var(--fs-12);
+      line-height: var(--lh-normal);
+    }
+    #pageRoot .cars-empty{ color: var(--c-gray); }
 
-#pageRoot .cars-card{
-  border: 1px solid var(--c-gray-light);
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: var(--c-white);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  cursor: pointer;
-  transition: border-color 120ms ease, background 120ms ease;
-}
-#pageRoot .cars-card:hover{
-  border-color: var(--c-gray);
-  background: color-mix(in srgb, var(--c-gray-light) 10%, transparent);
-}
-#pageRoot .cars-card-title{
-  font-weight: var(--fw-bold);
-  font-size: var(--fs-15);
-}
-#pageRoot .cars-card-sub{
-  color: var(--c-gray);
-  font-size: var(--fs-12);
-  line-height: var(--lh-normal);
-}
-#pageRoot .cars-empty{ color: var(--c-gray); }
+    /* MODAL */
+    #pageRoot .cars-modal{
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 50;
+    }
+    #pageRoot .cars-modal.is-open{ display: block; }
+    #pageRoot .cars-modal-backdrop{
+      position: absolute;
+      inset: 0;
+      background: color-mix(in srgb, var(--c-black) 35%, transparent);
+    }
+    #pageRoot .cars-modal-card{
+      position: absolute;
+      inset: 16px;
+      margin: auto;
+      max-width: 980px;
+      max-height: calc(100vh - 32px);
+      background: var(--c-white);
+      border-radius: 16px;
+      border: 1px solid var(--c-gray-light);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #pageRoot .cars-modal-head{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--c-gray-light);
+      gap: 10px;
+    }
+    #pageRoot .cars-modal-title{
+      font-size: var(--fs-20);
+      font-weight: var(--fw-semibold);
+    }
+    #pageRoot .cars-modal-close{
+      background: var(--c-white);
+      border: 1px solid var(--c-gray-light);
+      border-radius: 10px;
+      padding: 7px 10px;
+      cursor: pointer;
+      color: var(--c-black);
+    }
+    #pageRoot .cars-modal-close:hover{ border-color: var(--c-gray); }
+    #pageRoot .cars-modal-body{
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 1.1fr 1.4fr;
+      gap: 12px;
+      overflow: auto;
+    }
+    #pageRoot .cars-modal-media{
+      border: 1px solid var(--c-gray-light);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--c-white);
+      min-height: 200px;
+    }
+    #pageRoot .cars-modal-media img{
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+    }
+    #pageRoot .cars-modal-info{
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #pageRoot .cars-modal-price{
+      font-size: var(--fs-24);
+      font-weight: var(--fw-semibold);
+    }
+    #pageRoot .cars-modal-sub{ color: var(--c-gray); }
+    #pageRoot .cars-modal-list{
+      list-style: none;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 4px 8px;
+      color: var(--c-black);
+    }
+    #pageRoot .cars-modal-list li{
+      color: var(--c-gray);
+      font-size: var(--fs-13);
+    }
+    #pageRoot .cars-modal-link{
+      align-self: flex-start;
+      min-width: auto;
+      padding: 9px 12px;
+      text-decoration: none;
+    }
 
-/* MODAL */
-#pageRoot .cars-modal{
-  position: fixed;
-  inset: 0;
-  display: none;
-  z-index: 50;
-}
-#pageRoot .cars-modal.is-open{ display: block; }
-#pageRoot .cars-modal-backdrop{
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--c-black) 35%, transparent);
-}
-#pageRoot .cars-modal-card{
-  position: absolute;
-  inset: 16px;
-  margin: auto;
-  max-width: 980px;
-  max-height: calc(100vh - 32px);
-  background: var(--c-white);
-  border-radius: 16px;
-  border: 1px solid var(--c-gray-light);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-#pageRoot .cars-modal-head{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--c-gray-light);
-  gap: 10px;
-}
-#pageRoot .cars-modal-title{
-  font-size: var(--fs-20);
-  font-weight: var(--fw-semibold);
-}
-#pageRoot .cars-modal-close{
-  background: var(--c-white);
-  border: 1px solid var(--c-gray-light);
-  border-radius: 10px;
-  padding: 7px 10px;
-  cursor: pointer;
-  color: var(--c-black);
-}
-#pageRoot .cars-modal-close:hover{ border-color: var(--c-gray); }
-#pageRoot .cars-modal-body{
-  padding: 12px 14px;
-  display: grid;
-  grid-template-columns: 1.1fr 1.4fr;
-  gap: 12px;
-  overflow: auto;
-}
-#pageRoot .cars-modal-media{
-  border: 1px solid var(--c-gray-light);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--c-white);
-  min-height: 200px;
-}
-#pageRoot .cars-modal-media img{
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
-}
-#pageRoot .cars-modal-info{
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-#pageRoot .cars-modal-price{
-  font-size: var(--fs-24);
-  font-weight: var(--fw-semibold);
-}
-#pageRoot .cars-modal-sub{ color: var(--c-gray); }
-#pageRoot .cars-modal-list{
-  list-style: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 4px 8px;
-  color: var(--c-black);
-}
-#pageRoot .cars-modal-list li{
-  color: var(--c-gray);
-  font-size: var(--fs-13);
-}
-#pageRoot .cars-modal-link{
-  align-self: flex-start;
-  min-width: auto;
-  padding: 9px 12px;
-  text-decoration: none;
-}
-
-@media (max-width: 900px){
-  #pageRoot .cars-controls{ grid-template-columns: 1fr; }
-  #pageRoot .cars-actions{ align-items: stretch; }
-  #pageRoot .cars-actions-btns{ width: 100%; }
-  #pageRoot .cars-btn{ width: 100%; min-width: 0; }
-  #pageRoot .cars-modal-body{ grid-template-columns: 1fr; }
-}
+    @media (max-width: 900px){
+      #pageRoot .cars-controls{ grid-template-columns: 1fr; }
+      #pageRoot .cars-actions{ align-items: stretch; }
+      #pageRoot .cars-actions-btns{ width: 100%; }
+      #pageRoot .cars-btn{ width: 100%; min-width: 0; }
+      #pageRoot .cars-modal-body{ grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 
@@ -1642,472 +1698,473 @@
       return { create };
     })();
 
-/* ======================================================================
-   BLOCK 6.1) COLLAPSED LOGO CAROUSEL (мини-лого)
-====================================================================== */
-const CollapsedLogoCarousel = (() => {
+    /* ======================================================================
+       BLOCK 6.1) COLLAPSED LOGO CAROUSEL (мини-лого)
+       ✅ исправлено: движение по 100% ширины (без 120%)
+    ====================================================================== */
+    const CollapsedLogoCarousel = (() => {
 
-  // ✅ обычные лого (рандомный цикл)
-  const NORMAL_LOGOS = [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-       <path fill="currentColor" d="M5.73 19.23q-1.755 0-2.992-1.237T1.5 15t1.238-2.993t2.993-1.238t2.993 1.238T9.962 15t-1.238 2.993t-2.993 1.238m-.005-3.116q-.466 0-.788-.326t-.322-.793t.326-.79q.327-.321.793-.321q.467 0 .789.326q.322.327.322.793q0 .467-.326.79q-.327.322-.794.322M19.5 19.23q-1.258 0-2.129-.872q-.871-.87-.871-2.128t.871-2.129t2.129-.871t2.129.871t.871 2.129t-.871 2.128q-.871.872-2.129.872M3.692 9.269q-.212 0-.356-.144t-.144-.357t.144-.356t.356-.143h3.116q.479 0 .855.28t.53.72zm2.039 8.962q1.346 0 2.288-.943T8.961 15t-.942-2.289t-2.288-.942t-2.289.942T2.5 15t.942 2.289t2.289.942m13.769 0q.817 0 1.409-.592q.591-.591.591-1.408t-.591-1.409t-1.409-.591t-1.409.591t-.591 1.409t.591 1.408t1.409.592M10.689 15.5H15.8q.327-1.377 1.397-2.183t2.417-.806q.339 0 .671.06t.677.198V8.385q0-.667-.475-1.141t-1.14-.475H14.2l-1.05-1.1l1.4-1.4l-.7-.7l-3.55 3.55l.75.7l1.4-1.4l1.05 1.05V9q0 1.142-.813 1.956t-1.956.813H9.546q.577.69.888 1.523q.31.833.291 1.727q0 .122-.012.244t-.024.237"/>
-     </svg>`,
+      const NORMAL_LOGOS = [
+        /* --- твои SVG как были --- */
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+           <path fill="currentColor" d="M5.73 19.23q-1.755 0-2.992-1.237T1.5 15t1.238-2.993t2.993-1.238t2.993 1.238T9.962 15t-1.238 2.993t-2.993 1.238m-.005-3.116q-.466 0-.788-.326t-.322-.793t.326-.79q.327-.321.793-.321q.467 0 .789.326q.322.327.322.793q0 .467-.326.79q-.327.322-.794.322M19.5 19.23q-1.258 0-2.129-.872q-.871-.87-.871-2.128t.871-2.129t2.129-.871t2.129.871t.871 2.129t-.871 2.128q-.871.872-2.129.872M3.692 9.269q-.212 0-.356-.144t-.144-.357t.144-.356t.356-.143h3.116q.479 0 .855.28t.53.72zm2.039 8.962q1.346 0 2.288-.943T8.961 15t-.942-2.289t-2.288-.942t-2.289.942T2.5 15t.942 2.289t2.289.942m13.769 0q.817 0 1.409-.592q.591-.591.591-1.408t-.591-1.409t-1.409-.591t-1.409.591t-.591 1.409t.591 1.408t1.409.592M10.689 15.5H15.8q.327-1.377 1.397-2.183t2.417-.806q.339 0 .671.06t.677.198V8.385q0-.667-.475-1.141t-1.14-.475H14.2l-1.05-1.1l1.4-1.4l-.7-.7l-3.55 3.55l.75.7l1.4-1.4l1.05 1.05V9q0 1.142-.813 1.956t-1.956.813H9.546q.577.69.888 1.523q.31.833.291 1.727q0 .122-.012.244t-.024.237"/>
+         </svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+           <path fill="currentColor" d="M4 18.5q-1.458 0-2.479-1.021T.5 15q0-1.406.96-2.41q.961-1.003 2.367-1.067h.73l-1.584-1.33H.5v-.885h3.539l2.923 1.73L11.077 9.5h4.112l-2.358-3H10.5v-1h2.82l1.869 2.392l2.965-1.084v1.73H15.7l2.635 3.378q.375-.227.8-.322T20 11.5q1.458 0 2.479 1.021T23.5 15t-1.021 2.479T20 18.5t-2.479-1.021T16.5 15q0-.713.276-1.341t.778-1.12l-1.192-1.524l-3.593 5.485h-2.577L7.5 14.173v.885q-.029 1.44-1.044 2.441T4 18.5m0-1q1.056 0 1.778-.722T6.5 15t-.722-1.778T4 12.5t-1.778.722T1.5 15t.722 1.778T4 17.5m16 0q1.056 0 1.778-.722T22.5 15t-.722-1.778T20 12.5t-1.778.722T17.5 15t.722 1.778T20 17.5"/>
+         </svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+           <path fill="currentColor" d="M7.195 18q-1.041 0-1.772-.73q-.73-.728-.73-1.77h-2V13q0-1.458 1.02-2.479T6.194 9.5h3.5v5h4.23l3.77-4.658V7.308q0-.27-.174-.442q-.173-.174-.442-.174h-2.385v-1h2.385q.666 0 1.14.475t.475 1.14v2.85l-4.23 5.343h-4.77q0 1.039-.728 1.77t-1.77.73m-.002-1q.617 0 1.059-.441q.441-.442.441-1.059h-3q0 .617.442 1.059q.441.441 1.058.441m-1.5-9.308v-1h4v1zM18.81 18q-1.04 0-1.771-.728t-.731-1.77t.728-1.771t1.77-.731t1.771.729t.73 1.769t-.728 1.771T18.81 18m-.002-1q.617 0 1.058-.441q.442-.442.442-1.059t-.442-1.059T18.808 14t-1.059.441q-.441.442-.441 1.059t.441 1.059q.442.441 1.059.441"/>
+         </svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+           <path fill="currentColor" d="M5.688 19.116q-1.092 0-1.851-.763q-.76-.763-.76-1.853H1.692V6.616q0-.691.463-1.153T3.308 5h13.23v3.616h2.308l3.462 4.653V16.5h-1.616q0 1.09-.764 1.853t-1.856.762t-1.85-.762t-.76-1.853H8.307q0 1.096-.764 1.856t-1.856.76m.004-1q.675 0 1.145-.47t.47-1.146t-.47-1.145t-1.145-.47t-1.145.47t-.47 1.145t.47 1.145t1.145.47m12.385 0q.675 0 1.145-.47t.47-1.145t-.47-1.145t-1.145-.47t-1.145.47t-.47 1.145t.47 1.145t1.145.47M16.538 13.5h4.712l-2.942-3.884h-1.77z"/>
+         </svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+           <path fill="currentColor" d="M4.475 19.256q-1.038 0-1.766-.731q-.728-.73-.728-1.77v-5.384q0-.671.472-1.143t1.143-.472h5.212V5.583q0-.348.23-.578t.577-.23h3.25q1.039 0 1.77.73q.73.732.73 1.77v4.173h1.302V10.1q0-.304.115-.583q.114-.278.332-.496l.648-.642q.292-.292.693-.237t.593.43l2.652 4.997q.217.404-.022.795q-.24.392-.7.392h-2.81q-.614 0-1.048-.434q-.433-.433-.453-1.066v-.808H15.36v2.23q.538.349.839.888q.301.54.301 1.19q0 1.038-.73 1.769t-1.77.73q-.892 0-1.58-.55t-.866-1.43H6.92q-.177.88-.865 1.43t-1.581.55m0-1q.617 0 1.062-.44q.444-.442.444-1.06t-.441-1.058t-1.06-.441t-1.058.441q-.441.442-.441 1.059t.438 1.059q.439.44 1.056.44m9.525 0q.617 0 1.059-.44q.441-.442.441-1.06t-.441-1.058T14 15.256t-1.059.441t-.441 1.059t.441 1.059q.442.44 1.059.44m6.675-4.5l-2.386-4.501l-.462.48q-.077.078-.116.174q-.038.096-.038.192v3.156q.02.211.154.356q.134.144.346.144zM9.808 11.449h4.558V7.275q0-.617-.442-1.059q-.441-.441-1.058-.441H9.808z"/>
+         </svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+           <path fill="currentColor" d="M4.962 20.5q-1.039 0-1.77-.73T2.462 18q0-.592.26-1.112q.259-.52.74-.888v-4.5H5.75V6h6.096L16.2 16.19q.13.312.216.633q.084.321.084.677q0 1.258-.871 2.129T13.5 20.5q-.967 0-1.743-.547T10.67 18.5H7.402q-.171.88-.86 1.44q-.688.56-1.58.56m12.538-1v-15h1v14h3.039v1zm-12.538 0q.617 0 1.058-.441q.441-.442.441-1.059t-.44-1.059q-.442-.441-1.06-.441t-1.058.441T3.462 18t.441 1.059t1.059.441m8.538 0q.817 0 1.409-.591q.591-.592.591-1.409t-.591-1.409T13.5 15.5t-1.409.591q-.591.592-.591 1.409t.591 1.409t1.409.591m-3.825-5h3.86q.25 0 .49.058t.471.173L11.194 7H6.75v4.5z"/>
+         </svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+           <path fill="currentColor" d="M6.996 20.23q-1.092 0-1.852-.762q-.76-.763-.76-1.852h-.769q-.666 0-1.14-.475Q2 16.666 2 16v-5h11V7.616q0-.667.475-1.141T14.615 6H16.5v-.5q0-.343.232-.575t.576-.233h.384q.344 0 .576.233t.232.575V6h.608q.525 0 .949.302q.424.301.585.804l1.283 3.798q.044.133.06.258q.015.125.015.26v6.194h-2.384q0 1.09-.765 1.852t-1.855.763t-1.852-.763t-.76-1.852H9.616q0 1.096-.765 1.855q-.764.76-1.856.76m.005-1q.675 0 1.145-.47t.47-1.136t-.47-1.145T7 16t-1.145.48t-.47 1.145t.47 1.136T7 19.23m10 0q.675 0 1.145-.47t.47-1.136t-.47-1.145T17 16t-1.145.48t-.47 1.145t.47 1.136t1.145.47M14 11h6.9l-1.196-3.577q-.058-.192-.221-.308Q19.319 7 19.108 7h-4.492q-.27 0-.443.173T14 7.615zM2 10v-.885h1v-2.23H2V6h9.385v.885h-1v2.23h1V10zm1.885-.885H6.25v-2.23H3.884zm3.25 0H9.5v-2.23H7.134z"/>
+         </svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+           <path fill="currentColor" d="M1.616 16.385v-2H11.7L2.885 7.446v3.439h-1v-5h.384l12.116 6.704V5.385h3.538l4.462 5.346v5.654h-2.231q.327 1.096-.375 2.048t-1.894.952t-1.894-.952t-.375-2.048H8.654q.327 1.096-.375 2.048q-.702.951-1.894.951q-1.193 0-1.894-.951q-.702-.952-.375-2.049zM6.385 18.5q.65 0 1.075-.444T7.885 17t-.425-1.056t-1.075-.444t-1.075.444T4.885 17t.425 1.056t1.075.444m11.5 0q.65 0 1.074-.444T19.385 17t-.425-1.056t-1.075-.444t-1.075.444T16.385 17t.425 1.056t1.075.444m-2.5-7.77h5.708l-3.657-4.345h-2.05z"/>
+         </svg>`,
+      ];
 
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-       <path fill="currentColor" d="M4 18.5q-1.458 0-2.479-1.021T.5 15q0-1.406.96-2.41q.961-1.003 2.367-1.067h.73l-1.584-1.33H.5v-.885h3.539l2.923 1.73L11.077 9.5h4.112l-2.358-3H10.5v-1h2.82l1.869 2.392l2.965-1.084v1.73H15.7l2.635 3.378q.375-.227.8-.322T20 11.5q1.458 0 2.479 1.021T23.5 15t-1.021 2.479T20 18.5t-2.479-1.021T16.5 15q0-.713.276-1.341t.778-1.12l-1.192-1.524l-3.593 5.485h-2.577L7.5 14.173v.885q-.029 1.44-1.044 2.441T4 18.5m0-1q1.056 0 1.778-.722T6.5 15t-.722-1.778T4 12.5t-1.778.722T1.5 15t.722 1.778T4 17.5m16 0q1.056 0 1.778-.722T22.5 15t-.722-1.778T20 12.5t-1.778.722T17.5 15t.722 1.778T20 17.5"/>
-     </svg>`,
+      const UNIQUE_LOGO = {
+        idle: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                 <path fill="currentColor" d="M12.096 6.27q-.69 0-1.191-.502t-.501-1.191t.5-1.191t1.192-.502q.69 0 1.192.502t.5 1.191t-.5 1.191t-1.192.501m5.231 15.27V17q0-.23-.135-.365q-.134-.135-.365-.135h-4.692q-.633 0-1.086-.453t-.453-1.086V9q0-.633.434-1.066t1.066-.434q.35 0 .701.195t.832.751q1.394 1.631 2.42 2.234t2.393.781v1q-1.46-.153-2.626-.796q-1.168-.642-2.374-1.923v5.412h3.347q.632 0 1.085.453q.453.452.453 1.085v4.846zm-7.23 0q-1.864 0-3.202-1.338T5.558 17q0-1.742 1.137-3.002t2.901-1.494v1.012q-1.298.195-2.168 1.16T6.558 17q0 1.48 1.029 2.51q1.029 1.028 2.51 1.028q1.359 0 2.323-.87q.965-.87 1.16-2.168h1.012q-.196 1.725-1.475 2.882q-1.278 1.156-3.02 1.156"/>
+               </svg>`,
+        move: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                 <path fill="currentColor" d="M8.192 21q-1.748 0-2.97-1.251T4 16.75t1.241-2.99q1.242-1.24 2.97-1.24v1.019q-1.326 0-2.269.942T5 16.75t.942 2.27t2.289.942t2.288-.943t.943-2.269h1q0 1.748-1.261 2.999T8.192 21m8.347-1v-3.75q0-.192-.106-.308t-.318-.115H11q-1.004 0-1.575-.87t-.14-1.8l2.042-4.484H8.802l-.696 1.839l-.944-.32l.661-1.8q.168-.44.488-.656t.785-.217h3.873q.875 0 1.328.644q.453.643.06 1.514l-2.207 4.785h3.927q.614 0 1.038.433q.424.434.424 1.047V20zm-1.77-13.192q-.671 0-1.134-.463t-.462-1.134q0-.67.463-1.133t1.133-.463t1.124.463t.453 1.133t-.453 1.134q-.452.463-1.124.463"/>
+               </svg>`,
+      };
 
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-       <path fill="currentColor" d="M7.195 18q-1.041 0-1.772-.73q-.73-.728-.73-1.77h-2V13q0-1.458 1.02-2.479T6.194 9.5h3.5v5h4.23l3.77-4.658V7.308q0-.27-.174-.442q-.173-.174-.442-.174h-2.385v-1h2.385q.666 0 1.14.475t.475 1.14v2.85l-4.23 5.343h-4.77q0 1.039-.728 1.77t-1.77.73m-.002-1q.617 0 1.059-.441q.441-.442.441-1.059h-3q0 .617.442 1.059q.441.441 1.058.441m-1.5-9.308v-1h4v1zM18.81 18q-1.04 0-1.771-.728t-.731-1.77t.728-1.771t1.77-.731t1.771.729t.73 1.769t-.728 1.771T18.81 18m-.002-1q.617 0 1.058-.441q.442-.442.442-1.059t-.442-1.059T18.808 14t-1.059.441q-.441.442-.441 1.059t.441 1.059q.442.441 1.059.441"/>
-     </svg>`,
+      const UNIQUE_PROBABILITY = 0.15;
 
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-       <path fill="currentColor" d="M5.688 19.116q-1.092 0-1.851-.763q-.76-.763-.76-1.853H1.692V6.616q0-.691.463-1.153T3.308 5h13.23v3.616h2.308l3.462 4.653V16.5h-1.616q0 1.09-.764 1.853t-1.856.762t-1.85-.762t-.76-1.853H8.307q0 1.096-.764 1.856t-1.856.76m.004-1q.675 0 1.145-.47t.47-1.146t-.47-1.145t-1.145-.47t-1.145.47t-.47 1.145t.47 1.145t1.145.47m12.385 0q.675 0 1.145-.47t.47-1.145t-.47-1.145t-1.145-.47t-1.145.47t-.47 1.145t.47 1.145t1.145.47M16.538 13.5h4.712l-2.942-3.884h-1.77z"/>
-     </svg>`,
+      function create({ rootEl, getIsCollapsed }) {
+        const container = rootEl.querySelector(".logo-collapsed");
+        if (!container) return { onSidebarStateChange: () => {} };
 
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-       <path fill="currentColor" d="M4.475 19.256q-1.038 0-1.766-.731q-.728-.73-.728-1.77v-5.384q0-.671.472-1.143t1.143-.472h5.212V5.583q0-.348.23-.578t.577-.23h3.25q1.039 0 1.77.73q.73.732.73 1.77v4.173h1.302V10.1q0-.304.115-.583q.114-.278.332-.496l.648-.642q.292-.292.693-.237t.593.43l2.652 4.997q.217.404-.022.795q-.24.392-.7.392h-2.81q-.614 0-1.048-.434q-.433-.433-.453-1.066v-.808H15.36v2.23q.538.349.839.888q.301.54.301 1.19q0 1.038-.73 1.769t-1.77.73q-.892 0-1.58-.55t-.866-1.43H6.92q-.177.88-.865 1.43t-1.581.55m0-1q.617 0 1.062-.44q.444-.442.444-1.06t-.441-1.058t-1.06-.441t-1.058.441q-.441.442-.441 1.059t.438 1.059q.439.44 1.056.44m9.525 0q.617 0 1.059-.44q.441-.442.441-1.06t-.441-1.058T14 15.256t-1.059.441t-.441 1.059t.441 1.059q.442.44 1.059.44m6.675-4.5l-2.386-4.501l-.462.48q-.077.078-.116.174q-.038.096-.038.192v3.156q.02.211.154.356q.134.144.346.144zM9.808 11.449h4.558V7.275q0-.617-.442-1.059q-.441-.441-1.058-.441H9.808z"/>
-     </svg>`,
+        let stage = null;
+        let logoEl = null;
+        let running = false;
+        let startTimer = null;
+        let lastNormalIndex = -1;
 
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-       <path fill="currentColor" d="M4.962 20.5q-1.039 0-1.77-.73T2.462 18q0-.592.26-1.112q.259-.52.74-.888v-4.5H5.75V6h6.096L16.2 16.19q.13.312.216.633q.084.321.084.677q0 1.258-.871 2.129T13.5 20.5q-.967 0-1.743-.547T10.67 18.5H7.402q-.171.88-.86 1.44q-.688.56-1.58.56m12.538-1v-15h1v14h3.039v1zm-12.538 0q.617 0 1.058-.441q.441-.442.441-1.059t-.44-1.059q-.442-.441-1.06-.441t-1.058.441T3.462 18t.441 1.059t1.059.441m8.538 0q.817 0 1.409-.591q.591-.592.591-1.409t-.591-1.409T13.5 15.5t-1.409.591q-.591.592-.591 1.409t.591 1.409t1.409.591m-3.825-5h3.86q.25 0 .49.058t.471.173L11.194 7H6.75v4.5z"/>
-     </svg>`,
+        const timeouts = new Set();
+        const rafs = new Set();
 
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-       <path fill="currentColor" d="M6.996 20.23q-1.092 0-1.852-.762q-.76-.763-.76-1.852h-.769q-.666 0-1.14-.475Q2 16.666 2 16v-5h11V7.616q0-.667.475-1.141T14.615 6H16.5v-.5q0-.343.232-.575t.576-.233h.384q.344 0 .576.233t.232.575V6h.608q.525 0 .949.302q.424.301.585.804l1.283 3.798q.044.133.06.258q.015.125.015.26v6.194h-2.384q0 1.09-.765 1.852t-1.855.763t-1.852-.763t-.76-1.852H9.616q0 1.096-.765 1.855q-.764.76-1.856.76m.005-1q.675 0 1.145-.47t.47-1.136t-.47-1.145T7 16t-1.145.48t-.47 1.145t.47 1.136T7 19.23m10 0q.675 0 1.145-.47t.47-1.136t-.47-1.145T17 16t-1.145.48t-.47 1.145t.47 1.136t1.145.47M14 11h6.9l-1.196-3.577q-.058-.192-.221-.308Q19.319 7 19.108 7h-4.492q-.27 0-.443.173T14 7.615zM2 10v-.885h1v-2.23H2V6h9.385v.885h-1v2.23h1V10zm1.885-.885H6.25v-2.23H3.884zm3.25 0H9.5v-2.23H7.134z"/>
-     </svg>`,
+        const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-       <path fill="currentColor" d="M1.616 16.385v-2H11.7L2.885 7.446v3.439h-1v-5h.384l12.116 6.704V5.385h3.538l4.462 5.346v5.654h-2.231q.327 1.096-.375 2.048t-1.894.952t-1.894-.952t-.375-2.048H8.654q.327 1.096-.375 2.048q-.702.951-1.894.951q-1.193 0-1.894-.951q-.702-.952-.375-2.049zM6.385 18.5q.65 0 1.075-.444T7.885 17t-.425-1.056t-1.075-.444t-1.075.444T4.885 17t.425 1.056t1.075.444m11.5 0q.65 0 1.074-.444T19.385 17t-.425-1.056t-1.075-.444t-1.075.444T16.385 17t.425 1.056t1.075.444m-2.5-7.77h5.708l-3.657-4.345h-2.05z"/>
-     </svg>`,
-  ];
+        function buildStage() {
+          if (stage) return;
+          stage = document.createElement("div");
+          stage.className = "mini-logo-stage";
+          logoEl = document.createElement("div");
+          logoEl.className = "mini-logo-img";
+          stage.appendChild(logoEl);
+          container.appendChild(stage);
+        }
 
-  // ✅ уникальные лого (редкий сценарий)
-  const UNIQUE_LOGO = {
-    idle: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-             <path fill="currentColor" d="M12.096 6.27q-.69 0-1.191-.502t-.501-1.191t.5-1.191t1.192-.502q.69 0 1.192.502t.5 1.191t-.5 1.191t-1.192.501m5.231 15.27V17q0-.23-.135-.365q-.134-.135-.365-.135h-4.692q-.633 0-1.086-.453t-.453-1.086V9q0-.633.434-1.066t1.066-.434q.35 0 .701.195t.832.751q1.394 1.631 2.42 2.234t2.393.781v1q-1.46-.153-2.626-.796q-1.168-.642-2.374-1.923v5.412h3.347q.632 0 1.085.453q.453.452.453 1.085v4.846zm-7.23 0q-1.864 0-3.202-1.338T5.558 17q0-1.742 1.137-3.002t2.901-1.494v1.012q-1.298.195-2.168 1.16T6.558 17q0 1.48 1.029 2.51q1.029 1.028 2.51 1.028q1.359 0 2.323-.87q.965-.87 1.16-2.168h1.012q-.196 1.725-1.475 2.882q-1.278 1.156-3.02 1.156"/>
-           </svg>`,
+        function clearStartDelay() {
+          if (startTimer) {
+            clearTimeout(startTimer);
+            startTimer = null;
+          }
+        }
 
-    move: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-             <path fill="currentColor" d="M8.192 21q-1.748 0-2.97-1.251T4 16.75t1.241-2.99q1.242-1.24 2.97-1.24v1.019q-1.326 0-2.269.942T5 16.75t.942 2.27t2.289.942t2.288-.943t.943-2.269h1q0 1.748-1.261 2.999T8.192 21m8.347-1v-3.75q0-.192-.106-.308t-.318-.115H11q-1.004 0-1.575-.87t-.14-1.8l2.042-4.484H8.802l-.696 1.839l-.944-.32l.661-1.8q.168-.44.488-.656t.785-.217h3.873q.875 0 1.328.644q.453.643.06 1.514l-2.207 4.785h3.927q.614 0 1.038.433q.424.434.424 1.047V20zm-1.77-13.192q-.671 0-1.134-.463t-.462-1.134q0-.67.463-1.133t1.133-.463t1.124.463t.453 1.133t-.453 1.134q-.452.463-1.124.463"/>
-           </svg>`,
-  };
+        function clearTimers() {
+          timeouts.forEach((id) => clearTimeout(id));
+          timeouts.clear();
+          rafs.forEach((id) => cancelAnimationFrame(id));
+          rafs.clear();
+        }
 
-  const UNIQUE_PROBABILITY = 0.15;
+        function resetDom() {
+          if (!logoEl) return;
+          logoEl.style.transition = "none";
+          logoEl.style.transform = "translateX(-100%)";  // ✅ было -120%
+          logoEl.innerHTML = "";
+        }
 
-  function create({ rootEl, getIsCollapsed }) {
-    const container = rootEl.querySelector(".logo-collapsed");
-    if (!container) return { onSidebarStateChange: () => {} };
+        function stop() {
+          running = false;
+          clearTimers();
+          resetDom();
+          if (stage) {
+            stage.remove();
+            stage = null;
+            logoEl = null;
+          }
+        }
 
-    let stage = null;
-    let logoEl = null;
-    let running = false;
-    let startTimer = null;
-    let lastNormalIndex = -1;
+        function wait(ms) {
+          return new Promise((resolve) => {
+            const id = window.setTimeout(() => {
+              timeouts.delete(id);
+              resolve();
+            }, ms);
+            timeouts.add(id);
+          });
+        }
 
-    const timeouts = new Set();
-    const rafs = new Set();
+        function nextFrame() {
+          return new Promise((resolve) => {
+            const id = requestAnimationFrame(() => {
+              rafs.delete(id);
+              resolve();
+            });
+            rafs.add(id);
+          });
+        }
 
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+        function isActive() {
+          return running && getIsCollapsed?.();
+        }
 
-    function buildStage() {
-      if (stage) return;
-      stage = document.createElement("div");
-      stage.className = "mini-logo-stage";
-      logoEl = document.createElement("div");
-      logoEl.className = "mini-logo-img";
-      stage.appendChild(logoEl);
-      container.appendChild(stage);
-    }
+        function setTransition(value) {
+          if (logoEl) logoEl.style.transition = value || "none";
+        }
 
-    function clearStartDelay() {
-      if (startTimer) {
-        clearTimeout(startTimer);
-        startTimer = null;
-      }
-    }
+        function setPosition(pos, transitionValue = null) {
+          if (!logoEl) return;
+          const translate =
+            pos === "center"
+              ? "translateX(0)"
+              : pos === "right"
+              ? "translateX(100%)"   // ✅ было 120%
+              : "translateX(-100%)"; // ✅ было -120%
 
-    function clearTimers() {
-      timeouts.forEach((id) => clearTimeout(id));
-      timeouts.clear();
-      rafs.forEach((id) => cancelAnimationFrame(id));
-      rafs.clear();
-    }
+          setTransition(transitionValue);
+          logoEl.style.transform = translate;
+        }
 
-    function resetDom() {
-      if (!logoEl) return;
-      logoEl.style.transition = "none";
-      logoEl.style.transform = "translateX(-120%)";
-      logoEl.innerHTML = "";
-    }
+        function setLogo(svgString) {
+          if (logoEl) logoEl.innerHTML = svgString || "";
+        }
 
-    function stop() {
-      running = false;
-      clearTimers();
-      resetDom();
-      if (stage) {
-        stage.remove();
-        stage = null;
-        logoEl = null;
-      }
-    }
+        function pickNormalLogo() {
+          if (NORMAL_LOGOS.length === 0) return "";
+          if (NORMAL_LOGOS.length === 1) return NORMAL_LOGOS[0];
 
-    function wait(ms) {
-      return new Promise((resolve) => {
-        const id = window.setTimeout(() => {
-          timeouts.delete(id);
-          resolve();
-        }, ms);
-        timeouts.add(id);
-      });
-    }
+          let attempts = 0;
+          let idx = lastNormalIndex;
 
-    function nextFrame() {
-      return new Promise((resolve) => {
-        const id = requestAnimationFrame(() => {
-          rafs.delete(id);
-          resolve();
-        });
-        rafs.add(id);
-      });
-    }
+          while (attempts < NORMAL_LOGOS.length) {
+            idx = Math.floor(Math.random() * NORMAL_LOGOS.length);
+            if (idx !== lastNormalIndex) break;
+            attempts++;
+          }
 
-    function isActive() {
-      return running && getIsCollapsed?.();
-    }
+          lastNormalIndex = idx;
+          return NORMAL_LOGOS[idx] || "";
+        }
 
-    function setTransition(value) {
-      if (logoEl) logoEl.style.transition = value || "none";
-    }
+        async function playNormalCycle() {
+          setLogo(pickNormalLogo());
+          setPosition("left");
+          await nextFrame();
+          if (!isActive()) return;
 
-    function setPosition(pos, transitionValue = null) {
-      if (!logoEl) return;
-      const translate =
-        pos === "center"
-          ? "translateX(0)"
-          : pos === "right"
-          ? "translateX(120%)"
-          : "translateX(-120%)";
-      setTransition(transitionValue);
-      logoEl.style.transform = translate;
-    }
+          setPosition("center", "transform 300ms ease-out");
+          await wait(300);
+          if (!isActive()) return;
 
-    function setLogo(svgString) {
-      if (logoEl) logoEl.innerHTML = svgString || "";
-    }
+          setTransition("none");
+          await wait(7000);
+          if (!isActive()) return;
 
-    function pickNormalLogo() {
-      if (NORMAL_LOGOS.length === 0) return "";
-      if (NORMAL_LOGOS.length === 1) return NORMAL_LOGOS[0];
+          setPosition("right", "transform 450ms ease-in");
+          await wait(450);
+          if (!isActive()) return;
 
-      let attempts = 0;
-      let idx = lastNormalIndex;
+          setPosition("left");
+          await wait(500);
+        }
 
-      while (attempts < NORMAL_LOGOS.length) {
-        idx = Math.floor(Math.random() * NORMAL_LOGOS.length);
-        if (idx !== lastNormalIndex) break;
-        attempts++;
-      }
+        async function playUniqueCycle() {
+          if (!UNIQUE_LOGO.move || !UNIQUE_LOGO.idle) {
+            await playNormalCycle();
+            return;
+          }
 
-      lastNormalIndex = idx;
-      return NORMAL_LOGOS[idx] || "";
-    }
+          setLogo(UNIQUE_LOGO.move);
+          setPosition("left");
+          await nextFrame();
+          if (!isActive()) return;
 
-    async function playNormalCycle() {
-      setLogo(pickNormalLogo());
-      setPosition("left");
-      await nextFrame();
-      if (!isActive()) return;
-      setPosition("center", "transform 300ms ease-out");
-      await wait(300);
-      if (!isActive()) return;
-      setTransition("none");
-      await wait(7000);
-      if (!isActive()) return;
-      setPosition("right", "transform 450ms ease-in");
-      await wait(450);
-      if (!isActive()) return;
-      setPosition("left");
-      await wait(500);
-    }
+          setPosition("center", "transform 300ms ease-out");
+          await wait(300);
+          if (!isActive()) return;
 
-    async function playUniqueCycle() {
-      if (!UNIQUE_LOGO.move || !UNIQUE_LOGO.idle) {
-        await playNormalCycle();
-        return;
-      }
+          setTransition("none");
+          setLogo(UNIQUE_LOGO.idle);
+          await wait(2000);
+          if (!isActive()) return;
 
-      setLogo(UNIQUE_LOGO.move);
-      setPosition("left");
-      await nextFrame();
-      if (!isActive()) return;
-      setPosition("center", "transform 300ms ease-out");
-      await wait(300);
-      if (!isActive()) return;
-      setTransition("none");
-      setLogo(UNIQUE_LOGO.idle);
-      await wait(2000);
-      if (!isActive()) return;
-      setLogo(UNIQUE_LOGO.move);
-      setPosition("right", "transform 700ms ease-in");
-      await wait(700);
-      if (!isActive()) return;
-      setPosition("left");
-      await wait(500);
-    }
+          setLogo(UNIQUE_LOGO.move);
+          setPosition("right", "transform 700ms ease-in");
+          await wait(700);
+          if (!isActive()) return;
 
-    async function runLoop() {
-      if (!logoEl) return;
-      while (isActive()) {
-        const useUnique =
-          !prefersReducedMotion.matches &&
-          Math.random() < UNIQUE_PROBABILITY;
+          setPosition("left");
+          await wait(500);
+        }
 
-        if (useUnique) await playUniqueCycle();
-        else await playNormalCycle();
-      }
-    }
+        async function runLoop() {
+          if (!logoEl) return;
+          while (isActive()) {
+            const useUnique =
+              !prefersReducedMotion.matches &&
+              Math.random() < UNIQUE_PROBABILITY;
 
-    function start() {
-      if (!getIsCollapsed?.()) return;
-      buildStage();
-      resetDom();
-      running = true;
+            if (useUnique) await playUniqueCycle();
+            else await playNormalCycle();
+          }
+        }
 
-      if (prefersReducedMotion.matches) {
-        setLogo(NORMAL_LOGOS[0] || "");
-        setPosition("center");
-        return;
-      }
+        function start() {
+          if (!getIsCollapsed?.()) return;
+          buildStage();
+          resetDom();
+          running = true;
 
-      runLoop();
-    }
+          if (prefersReducedMotion.matches) {
+            setLogo(NORMAL_LOGOS[0] || "");
+            setPosition("center");
+            return;
+          }
 
-    function handleMotionChange() {
-      clearStartDelay();
-      if (!getIsCollapsed?.()) {
-        stop();
-        return;
-      }
-      stop();
-      start();
-    }
+          runLoop();
+        }
 
-    prefersReducedMotion.addEventListener("change", handleMotionChange);
-
-    function onSidebarStateChange(state) {
-      if (!state) return;
-
-      if (state.collapsed) {
-        clearStartDelay();
-        stop();
-        startTimer = window.setTimeout(() => {
-          startTimer = null;
+        function handleMotionChange() {
+          clearStartDelay();
+          if (!getIsCollapsed?.()) {
+            stop();
+            return;
+          }
+          stop();
           start();
-        }, 240);
-        return;
+        }
+
+        prefersReducedMotion.addEventListener("change", handleMotionChange);
+
+        function onSidebarStateChange(state) {
+          if (!state) return;
+
+          if (state.collapsed) {
+            clearStartDelay();
+            stop();
+            startTimer = window.setTimeout(() => {
+              startTimer = null;
+              start();
+            }, 240);
+            return;
+          }
+
+          clearStartDelay();
+          stop();
+        }
+
+        return { onSidebarStateChange };
       }
 
-      clearStartDelay();
-      stop();
-    }
-
-    return { onSidebarStateChange };
-  }
-
-  return { create };
-})();
+      return { create };
+    })();
 
     /* ======================================================================
        BLOCK 7) SIDEBAR VIEW (рендер + события)
-====================================================================== */
-const SidebarView = (() => {
+    ====================================================================== */
+    const SidebarView = (() => {
 
-  function create({ service }) {
-    let rootEl = null;
-    let lastCollapsed = null;
-    let logoTyping = null;
-    let collapsedCarousel = null;
-    let lastPageOk = true;
+      function create({ service }) {
+        let rootEl = null;
+        let lastCollapsed = null;
+        let logoTyping = null;
+        let collapsedCarousel = null;
+        let lastPageOk = true;
 
-    function mount(container) {
-      rootEl = document.createElement("div");
-      rootEl.innerHTML = `
-        <aside class="sidebar" id="sidebar">
-          <div class="logo-area">
-            <div class="logo-wrap" id="logoWrap">
-              <div class="logo-main ty-logo" id="logoMain"></div>
-              <div class="logo-pill ty-pill" id="logoPill"><span>кабинет</span></div>
-            </div>
-            <div class="logo-collapsed" aria-hidden="true"></div>
-          </div>
+        function mount(container) {
+          rootEl = document.createElement("div");
+          rootEl.innerHTML = `
+            <aside class="sidebar" id="sidebar">
+              <div class="logo-area">
+                <div class="logo-wrap" id="logoWrap">
+                  <div class="logo-main ty-logo" id="logoMain"></div>
+                  <div class="logo-pill ty-pill" id="logoPill"><span>кабинет</span></div>
+                </div>
+                <div class="logo-collapsed" aria-hidden="true"></div>
+              </div>
 
-          <div class="nav-section">
-            <div class="nav-section-title ty-section">Навигация</div>
-            <nav class="nav" id="navMain"></nav>
-          </div>
+              <div class="nav-section">
+                <div class="nav-section-title ty-section">Навигация</div>
+                <nav class="nav" id="navMain"></nav>
+              </div>
 
-          <div class="nav-section-divider"></div>
+              <div class="nav-section-divider"></div>
 
-          <div class="nav-section">
-            <div class="nav-section-title ty-section">Закладки</div>
-            <nav class="nav" id="navBookmarks"></nav>
-          </div>
+              <div class="nav-section">
+                <div class="nav-section-title ty-section">Закладки</div>
+                <nav class="nav" id="navBookmarks"></nav>
+              </div>
 
-          <button class="collapse-row ty-section" id="collapseBtn" type="button" aria-expanded="true">
-            <span class="collapse-ico" aria-hidden="true"></span>
-            <span class="collapse-text">Свернуть</span>
-          </button>
-        </aside>
+              <button class="collapse-row ty-section" id="collapseBtn" type="button" aria-expanded="true">
+                <span class="collapse-ico" aria-hidden="true"></span>
+                <span class="collapse-text">Свернуть</span>
+              </button>
+            </aside>
 
-        <main class="main" id="main">
-          <button class="bookmark-btn" id="bookmarkBtn" type="button" aria-label="Добавить в закладки"></button>
-          <div id="pageRoot"></div>
-        </main>
-      `;
-      container.appendChild(rootEl);
+            <main class="main" id="main">
+              <button class="bookmark-btn" id="bookmarkBtn" type="button" aria-label="Добавить в закладки"></button>
+              <div id="pageRoot"></div>
+            </main>
+          `;
+          container.appendChild(rootEl);
 
-      logoTyping = LogoTyping.create({
-        rootEl,
-        getIsCollapsed: () => service.getState().collapsed
-      });
+          logoTyping = LogoTyping.create({
+            rootEl,
+            getIsCollapsed: () => service.getState().collapsed
+          });
 
-      collapsedCarousel = CollapsedLogoCarousel.create({
-        rootEl,
-        getIsCollapsed: () => service.getState().collapsed,
-      });
+          collapsedCarousel = CollapsedLogoCarousel.create({
+            rootEl,
+            getIsCollapsed: () => service.getState().collapsed,
+          });
 
-      const bookmarkBtn = rootEl.querySelector("#bookmarkBtn");
-      bookmarkBtn.innerHTML = Icons.ICONS.bookmark;
+          const bookmarkBtn = rootEl.querySelector("#bookmarkBtn");
+          bookmarkBtn.innerHTML = Icons.ICONS.bookmark;
 
-      window.addEventListener("page:loaded", (e)=>{
-        lastPageOk = Boolean(e?.detail?.ok);
+          window.addEventListener("page:loaded", (e)=>{
+            lastPageOk = Boolean(e?.detail?.ok);
 
-        const meta = getActivePageMeta(service.getState());
-        if (lastPageOk) {
-          service.syncBookmarkMeta(meta);
+            const meta = getActivePageMeta(service.getState());
+            if (lastPageOk) {
+              service.syncBookmarkMeta(meta);
+            }
+
+            updateBookmarkState(service.getState());
+          });
+
+          wireDOMEvents();
+          service.onChange(render);
+          render(service.getState());
         }
 
-        updateBookmarkState(service.getState());
-      });
+        function updateBookmarkState(state){
+          const btn = rootEl.querySelector("#bookmarkBtn");
+          if (!btn) return;
 
-      wireDOMEvents();
-      service.onChange(render);
-      render(service.getState());
-    }
+          const isBookmarkable = state.activeId && !NON_BOOKMARKABLE_IDS.has(state.activeId);
+          const isDisabled = !isBookmarkable || !lastPageOk;
 
-    function updateBookmarkState(state){
-      const btn = rootEl.querySelector("#bookmarkBtn");
-      if (!btn) return;
+          const isBookmarked = state.items.some(
+            i => i.group === "bookmark" && i.id === state.activeId
+          );
 
-      const isBookmarkable = state.activeId && !NON_BOOKMARKABLE_IDS.has(state.activeId);
-      const isDisabled = !isBookmarkable || !lastPageOk;
+          const isActive = !isDisabled && isBookmarked;
 
-      const isBookmarked = state.items.some(
-        i => i.group === "bookmark" && i.id === state.activeId
-      );
-
-      const isActive = !isDisabled && isBookmarked;
-
-      btn.classList.toggle("is-disabled", isDisabled);
-      btn.classList.toggle("is-active", isActive);
-      btn.setAttribute("aria-pressed", String(isActive));
-      btn.setAttribute(
-        "aria-label",
-        isDisabled
-          ? "Добавить в закладки"
-          : isActive
-            ? "Убрать из закладок"
-            : "Добавить в закладки"
-      );
-    }
-
-    function getActivePageMeta(state){
-      const id = state?.activeId;
-      const pageRoot = rootEl.querySelector("#pageRoot");
-      const titleNode = pageRoot?.querySelector("[data-page-title], h1");
-      const titleText = (titleNode?.textContent || "").trim();
-
-      const navItem = state?.items?.find(i => i.id === id);
-
-      return {
-        id,
-        label: titleText || navItem?.label || id || "",
-      };
-    }
-
-    function render(state) {
-      const sidebar = rootEl.querySelector("#sidebar");
-      const navMain = rootEl.querySelector("#navMain");
-      const navBookmarks = rootEl.querySelector("#navBookmarks");
-
-      const collapseBtn = rootEl.querySelector("#collapseBtn");
-      const collapseText = rootEl.querySelector(".collapse-text");
-      const collapseIco = rootEl.querySelector(".collapse-ico");
-
-      sidebar.classList.toggle("is-collapsed", state.collapsed);
-      collapseBtn.setAttribute("aria-expanded", String(!state.collapsed));
-
-      collapseIco.innerHTML = state.collapsed
-        ? Icons.ICONS.chevronRightSmall
-        : Icons.ICONS.chevronLeftSmall;
-
-      collapseText.textContent = state.collapsed ? "Развернуть" : "Свернуть";
-
-      const mainItems = state.items.filter(i => i.group === "main");
-      navMain.innerHTML = mainItems.map(item => navItemHtml(item, item.id === state.activeId)).join("");
-
-      const bookmarkItems = state.items.filter(i => i.group === "bookmark");
-      navBookmarks.innerHTML = bookmarkItems.map(item => navItemHtml(item, item.id === state.activeId)).join("");
-
-      logoTyping.onSidebarStateChange(state, lastCollapsed);
-      collapsedCarousel.onSidebarStateChange(state, lastCollapsed);
-      lastCollapsed = state.collapsed;
-
-      updateBookmarkState(state);
-    }
-
-    function navItemHtml(item, active){
-      const svg = Icons.ICONS[item.iconKey] || "";
-      return `
-        <a class="nav-item ty-nav ${active ? "is-active" : ""}" href="#" data-id="${item.id}">
-          <span class="ico" aria-hidden="true">${svg}</span>
-          <span class="text">${item.label}</span>
-        </a>
-      `;
-    }
-
-    function wireDOMEvents() {
-      rootEl.addEventListener("click", async (e) => {
-        const navItem = e.target.closest(".nav-item");
-        if (navItem) {
-          e.preventDefault();
-          const id = navItem.dataset.id;
-          service.selectItem(id);
-          await Pages.showPage(id);
-          return;
+          btn.classList.toggle("is-disabled", isDisabled);
+          btn.classList.toggle("is-active", isActive);
+          btn.setAttribute("aria-pressed", String(isActive));
+          btn.setAttribute(
+            "aria-label",
+            isDisabled
+              ? "Добавить в закладки"
+              : isActive
+                ? "Убрать из закладок"
+                : "Добавить в закладки"
+          );
         }
 
-        const bookmarkBtn = e.target.closest("#bookmarkBtn");
-        if (bookmarkBtn){
-          e.preventDefault();
-          if (bookmarkBtn.classList.contains("is-disabled") || !lastPageOk) return;
-          const meta = getActivePageMeta(service.getState());
-          if (!meta?.id || NON_BOOKMARKABLE_IDS.has(meta.id)) return;
-          service.toggleBookmarkCurrent(meta);
-          return;
+        function getActivePageMeta(state){
+          const id = state?.activeId;
+          const pageRoot = rootEl.querySelector("#pageRoot");
+          const titleNode = pageRoot?.querySelector("[data-page-title], h1");
+          const titleText = (titleNode?.textContent || "").trim();
+
+          const navItem = state?.items?.find(i => i.id === id);
+
+          return {
+            id,
+            label: titleText || navItem?.label || id || "",
+          };
         }
 
-        const collapseBtn = e.target.closest("#collapseBtn");
-        if (collapseBtn) service.toggle();
-      });
-    }
+        function render(state) {
+          const sidebar = rootEl.querySelector("#sidebar");
+          const navMain = rootEl.querySelector("#navMain");
+          const navBookmarks = rootEl.querySelector("#navBookmarks");
 
-    return { mount };
-  }
+          const collapseBtn = rootEl.querySelector("#collapseBtn");
+          const collapseText = rootEl.querySelector(".collapse-text");
+          const collapseIco = rootEl.querySelector(".collapse-ico");
 
-  return { create };
-})();
+          sidebar.classList.toggle("is-collapsed", state.collapsed);
+          collapseBtn.setAttribute("aria-expanded", String(!state.collapsed));
+
+          collapseIco.innerHTML = state.collapsed
+            ? Icons.ICONS.chevronRightSmall
+            : Icons.ICONS.chevronLeftSmall;
+
+          collapseText.textContent = state.collapsed ? "Развернуть" : "Свернуть";
+
+          const mainItems = state.items.filter(i => i.group === "main");
+          navMain.innerHTML = mainItems.map(item => navItemHtml(item, item.id === state.activeId)).join("");
+
+          const bookmarkItems = state.items.filter(i => i.group === "bookmark");
+          navBookmarks.innerHTML = bookmarkItems.map(item => navItemHtml(item, item.id === state.activeId)).join("");
+
+          logoTyping.onSidebarStateChange(state, lastCollapsed);
+          collapsedCarousel.onSidebarStateChange(state, lastCollapsed);
+          lastCollapsed = state.collapsed;
+
+          updateBookmarkState(state);
+        }
+
+        function navItemHtml(item, active){
+          const svg = Icons.ICONS[item.iconKey] || "";
+          return `
+            <a class="nav-item ty-nav ${active ? "is-active" : ""}" href="#" data-id="${item.id}">
+              <span class="ico" aria-hidden="true">${svg}</span>
+              <span class="text">${item.label}</span>
+            </a>
+          `;
+        }
+
+        function wireDOMEvents() {
+          rootEl.addEventListener("click", async (e) => {
+            const navItem = e.target.closest(".nav-item");
+            if (navItem) {
+              e.preventDefault();
+              const id = navItem.dataset.id;
+              service.selectItem(id);
+              await Pages.showPage(id);
+              return;
+            }
+
+            const bookmarkBtn = e.target.closest("#bookmarkBtn");
+            if (bookmarkBtn){
+              e.preventDefault();
+              if (bookmarkBtn.classList.contains("is-disabled") || !lastPageOk) return;
+              const meta = getActivePageMeta(service.getState());
+              if (!meta?.id || NON_BOOKMARKABLE_IDS.has(meta.id)) return;
+              service.toggleBookmarkCurrent(meta);
+              return;
+            }
+
+            const collapseBtn = e.target.closest("#collapseBtn");
+            if (collapseBtn) service.toggle();
+          });
+        }
+
+        return { mount };
+      }
+
+      return { create };
+    })();
 
     /* ======================================================================
        BLOCK 8) HOTKEYS (только Shift+Я)
