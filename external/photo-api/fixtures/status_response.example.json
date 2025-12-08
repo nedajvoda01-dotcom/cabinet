@@ -1,0 +1,15 @@
+{
+  "correlation_id": "c9aa33b1-1700000000",
+  "task_id": "mask-778899",
+  "status": "done",
+  "progress": 1,
+  "results": [
+    {
+      "photo_id": 101,
+      "order_no": 0,
+      "status": "masked",
+      "masked_url": "http://storage.local/masked/a6/0.jpg",
+      "masked_key": "masked/a6/0.jpg"
+    }
+  ]
+}
