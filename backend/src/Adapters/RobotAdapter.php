@@ -1,0 +1,87 @@
+<?php
+// backend/src/Adapters/RobotAdapter.php
+
+namespace App\Adapters;
+
+final class RobotAdapter
+{
+    public function __construct(
+        private HttpClient $http,
+        private string $baseUrl,
+        private string $apiKey
+    ) {}
+
+    /**
+     * Start robot session inside Dolphin profile.
+     * Returns {session_id, meta}
+     */
+    public function start(array $profile): array
+    {
+        $url = rtrim($this->baseUrl, '/') . "/sessions/start";
+        $resp = $this->http->post($url, [
+            'profile' => $profile,
+        ], [
+            'Authorization' => "Bearer {$this->apiKey}",
+        ]);
+        $this->http->assertOk($resp, "robot");
+
+        if (!is_array($resp['body']) || empty($resp['body']['session_id'])) {
+            throw new AdapterException("Robot start contract broken", "robot_contract", true);
+        }
+        return $resp['body'];
+    }
+
+    /**
+     * Publish card to Avito via robot.
+     * Input: PublishRequest (card + media + mapped avito payload)
+     * Output: PublishResult {avito_item_id, avito_status, meta}
+     */
+    public function publish(string $sessionId, array $avitoPayload): array
+    {
+        $url = rtrim($this->baseUrl, '/') . "/publish";
+        $resp = $this->http->post($url, [
+            'session_id' => $sessionId,
+            'payload' => $avitoPayload,
+        ], [
+            'Authorization' => "Bearer {$this->apiKey}",
+        ]);
+        $this->http->assertOk($resp, "robot");
+
+        if (!is_array($resp['body']) || empty($resp['body']['avito_item_id'])) {
+            throw new AdapterException("Robot publish contract broken", "robot_publish_contract", true, ['body'=>$resp['body']]);
+        }
+        return $resp['body'];
+    }
+
+    /**
+     * Poll publish status by robot job / avito id.
+     */
+    public function pollStatus(string $avitoItemId): array
+    {
+        $url = rtrim($this->baseUrl, '/') . "/publish/{$avitoItemId}/status";
+        $resp = $this->http->get($url, [
+            'Authorization' => "Bearer {$this->apiKey}",
+        ]);
+        $this->http->assertOk($resp, "robot");
+
+        return is_array($resp['body']) ? $resp['body'] : [];
+    }
+
+    public function stop(string $sessionId): void
+    {
+        $url = rtrim($this->baseUrl, '/') . "/sessions/{$sessionId}/stop";
+        $resp = $this->http->post($url, null, [
+            'Authorization' => "Bearer {$this->apiKey}",
+        ]);
+        $this->http->assertOk($resp, "robot");
+    }
+
+    public function health(): array
+    {
+        $url = rtrim($this->baseUrl, '/') . "/health";
+        $resp = $this->http->get($url);
+        $this->http->assertOk($resp, "robot");
+
+        return is_array($resp['body']) ? $resp['body'] : ['ok'=>true];
+    }
+}
