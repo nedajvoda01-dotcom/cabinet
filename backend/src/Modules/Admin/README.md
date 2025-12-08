@@ -1,26 +1,63 @@
 # Admin module
 
-Доменный модуль для административных операций.
+Административный домен (Spec v1).
 
-## Layering
+## Назначение
 
-- `AdminController.php` — HTTP/REST входные точки.
-- `AdminService.php` — бизнес-логика.
-- `AdminModel.php` — доступ к данным.
-- `AdminSchemas.php` — DTO/валидация форматов.
-- `AdminJobs.php` — фоновые задачи.
+Admin — системный контур для наблюдаемости и управления pipeline:
+- контроль очередей и задач,
+- DLQ/ретраи,
+- health системы,
+- аудит/логи,
+- управление пользователями и ролями.
 
-## Current endpoints (draft)
+## Реализованные endpoints (по Spec)
 
-> Эти эндпоинты-заглушки нужны как шаблон.  
-> После первой реальной фичи список обновим.
+### Queues
+- `GET /admin/queues`
+  - список очередей (depth, in_flight, retrying, paused)
+- `GET /admin/queues/:type/jobs`
+  - задачи конкретной очереди
+- `POST /admin/queues/:type/pause`
+  - поставить очередь на паузу
+- `POST /admin/queues/:type/resume`
+  - снять паузу
 
-- `GET /admin/{id}` → `AdminController::getAdminAction`
-- `GET /admin` → `AdminController::listAdminsAction`
-- `POST /admin/example` → `AdminController::exampleAction`
+### DLQ
+- `GET /admin/dlq`
+  - список задач в DLQ
+- `GET /admin/dlq/:id`
+  - конкретная DLQ-задача
+- `POST /admin/dlq/:id/retry`
+  - ручной retry одной DLQ-задачи
+- `POST /admin/dlq/bulk-retry`
+  - массовый retry (опционально по type и limit)
 
-## Notes
+### System
+- `GET /admin/health`
+  - health-сводка системы (минимум: БД)
+- `GET /admin/logs`
+  - объединённый стрим audit + system logs с фильтрами
 
-- Бизнес-валидация делается в `AdminService`.
-- Любые новые форматы запросов/ответов добавляются через `AdminSchemas`.
-- Если понадобятся статусы/StateMachine или внешние контракты — добавим отдельно по Spec.
+### Users / Roles
+- `GET /admin/users`
+  - список пользователей с поиском/фильтрами
+- `POST /admin/users/:id/roles`
+  - полная замена ролей пользователя
+
+## Слои
+
+- `AdminController.php` — HTTP/REST.
+- `AdminService.php` — бизнес оркестрация.
+- `AdminModel.php` — доступ к данным и интеграциям.
+- `AdminSchemas.php` — DTO/форматная валидация.
+- `AdminJobs.php` — постановка retry-задач.
+
+## Зависимости и точки адаптации
+
+`AdminModel` использует дефолтные таблицы:
+- `queues`, `jobs`, `audit_logs`, `system_logs`, `users`, `users_roles`.
+Если у вас другие названия/поля — правьте **только AdminModel**.
+
+Очередь/шина воркеров подключается в `AdminJobs`
+(методы `dispatchDlqRetry`, `dispatchDlqBulkRetry`).
