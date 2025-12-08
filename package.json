@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test:unit:back": "phpunit tests/unit/backend",
+    "test:int:back": "phpunit tests/integration",
+    "test:e2e": "jest tests/e2e",
+    "test:all": "npm run test:unit:back && npm run test:int:back && npm run test:e2e"
+  }
+}
