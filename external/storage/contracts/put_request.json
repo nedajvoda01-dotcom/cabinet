@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StoragePutRequest",
+  "type": "object",
+  "required": ["correlation_id", "key", "content_type", "size_bytes", "source"],
+  "properties": {
+    "correlation_id": { "type": "string", "minLength": 8 },
+    "key": { "type": "string", "minLength": 1 },
+    "content_type": { "type": "string", "minLength": 3 },
+    "size_bytes": { "type": "integer", "minimum": 1 },
+    "source": {
+      "type": "string",
+      "enum": ["backend", "parser", "photo_api", "robot"]
+    },
+    "meta": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
