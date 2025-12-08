@@ -146,6 +146,7 @@ return static function ($router): void {
         // Admin (monitoring / ops)
         // -------------------------
         $r->group('/admin', function ($rr) {
+            // --- existing ---
             $rr->get('/health', [AdminController::class, 'healthAction']);
             $rr->get('/stats',  [AdminController::class, 'statsAction']);
             $rr->get('/audit',  [AdminController::class, 'auditListAction']);
@@ -154,6 +155,21 @@ return static function ($router): void {
             $rr->post('/cards/:id/parse',   [AdminController::class, 'forceParseAction']);
             $rr->post('/cards/:id/photos',  [AdminController::class, 'forcePhotosAction']);
             $rr->post('/cards/:id/publish', [AdminController::class, 'forcePublishAction']);
+
+            // --- ADDED by Spec: Queues ---
+            $rr->get('/queues',                 [AdminController::class, 'listQueuesAction']);
+            $rr->get('/queues/:type/jobs',      [AdminController::class, 'listQueueJobsAction']);
+            $rr->post('/queues/:type/pause',    [AdminController::class, 'pauseQueueAction']);
+            $rr->post('/queues/:type/resume',   [AdminController::class, 'resumeQueueAction']);
+
+            // --- ADDED by Spec: DLQ ---
+            $rr->get('/dlq',                    [AdminController::class, 'listDlqAction']);
+            $rr->get('/dlq/:id',                [AdminController::class, 'getDlqAction']);
+            $rr->post('/dlq/:id/retry',         [AdminController::class, 'retryDlqAction']);
+            $rr->post('/dlq/bulk-retry',        [AdminController::class, 'bulkRetryDlqAction']);
+
+            // --- ADDED by Spec: Logs ---
+            $rr->get('/logs',                   [AdminController::class, 'listLogsAction']);
         });
     });
 
