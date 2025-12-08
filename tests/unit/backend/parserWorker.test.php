@@ -69,7 +69,8 @@ final class ParserWorkerUnitTest extends TestCase
                 return $payload['stage'] === 'parser'
                     && $payload['status'] === 'done'
                     && $payload['card_id'] === 10
-                    && isset($payload['correlation_id']);
+                    && isset($payload['correlation_id'])
+                    && $payload['correlation_id'] === 'corr-1';
             }));
 
         $worker = new class($queues, 'w1', $adapter, $parserService, $cards, $ws) extends ParserWorker {
@@ -87,5 +88,3 @@ final class ParserWorkerUnitTest extends TestCase
         $job->id = 1;
 
         $worker->runHandle($job);
-    }
-}
