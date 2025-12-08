@@ -6,21 +6,35 @@ namespace Backend\Modules\Admin;
 /**
  * AdminJobs
  *
- * Фоновые задания Admin-домена.
- * Сейчас пустой контейнер для будущих задач.
+ * В Spec Admin управляет retry/DLQ и очередями через jobs/workers.
+ * Здесь — постановка задач в очередь (реальная очередь подключается в вашем DI).
  */
 final class AdminJobs
 {
     public function __construct(
-        // сюда обычно инжектится очередь/лог/конфиг
+        // TODO: инжект очереди/шины задач вашего проекта
+        // private QueueBus $bus
     ) {}
 
     /**
-     * Пример постановки job.
+     * Поставить retry для конкретного DLQ job.
+     * Здесь мы не меняем БД — это делает AdminModel,
+     * а job просто "пинает" воркер.
      */
-    public function dispatchExampleJob(array $payload): void
+    public function dispatchDlqRetry(int $jobId): void
     {
-        // Заглушка. Дальше подключим реальную очередь.
-        // $this->queue->push('admin.example', $payload);
+        // TODO: заменить на реальный enqueue
+        // $this->bus->push('dlq.retry', ['job_id' => $jobId]);
+    }
+
+    /**
+     * Поставить bulk retry.
+     */
+    public function dispatchDlqBulkRetry(array $jobIds): void
+    {
+        if (!$jobIds) return;
+
+        // TODO: реальный enqueue пачки
+        // $this->bus->push('dlq.bulk_retry', ['ids' => $jobIds]);
     }
 }
