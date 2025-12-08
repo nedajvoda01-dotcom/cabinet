@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DolphinSessionResponse",
+  "type": "object",
+  "required": ["correlation_id", "status", "session_id"],
+  "properties": {
+    "correlation_id": { "type": "string" },
+    "status": { "type": "string", "enum": ["ok", "error"] },
+    "session_id": { "type": ["string", "integer"] },
+    "ws_url": { "type": ["string", "null"], "format": "uri" },
+    "error": { "$ref": "./errors.json#/definitions/DolphinError" }
+  },
+  "additionalProperties": false
+}
