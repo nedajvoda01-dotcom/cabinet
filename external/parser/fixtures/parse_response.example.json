@@ -1,0 +1,17 @@
+{
+  "external_id": "a6-1122334455",
+  "status": "ok",
+  "correlation_id": "c9aa33b1-1700000000",
+  "data": {
+    "title": "Audi A6, 2018",
+    "description": "Отличное состояние...",
+    "vehicle": { "brand": "Audi", "model": "A6", "year": 2018 },
+    "price": { "value": 2350000, "currency": "RUB" },
+    "location": { "city": "Москва", "address": "..." },
+    "meta": { "mileage": 67000 }
+  },
+  "photos": [
+    { "url": "https://img.auto.ru/1.jpg", "order_no": 0 },
+    { "url": "https://img.auto.ru/2.jpg", "order_no": 1 }
+  ]
+}
