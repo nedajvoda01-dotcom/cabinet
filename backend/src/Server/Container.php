@@ -41,7 +41,9 @@ final class Container
 
     private function bootstrapDefaults(): void
     {
+        // ----------------------------------------------------
         // DB PDO
+        // ----------------------------------------------------
         $this->set(\PDO::class, function(Container $c) {
             $db = $c->config()['db'];
             $pdo = new \PDO($db['dsn'], $db['user'], $db['pass'], [
@@ -51,29 +53,60 @@ final class Container
             return $pdo;
         });
 
-        // Queues subsystem
-        $this->set(\App\Queues\RetryPolicy::class, fn() => new \App\Queues\RetryPolicy());
-        $this->set(\App\Queues\QueueRepository::class, fn(Container $c) => new \App\Queues\QueueRepository($c->get(\PDO::class)));
-        $this->set(\App\Queues\DlqRepository::class, fn(Container $c) => new \App\Queues\DlqRepository($c->get(\PDO::class)));
-        $this->set(\App\Queues\QueueService::class, fn(Container $c) => new \App\Queues\QueueService(
-            $c->get(\App\Queues\QueueRepository::class),
-            $c->get(\App\Queues\DlqRepository::class),
-            $c->get(\App\Queues\RetryPolicy::class),
-        ));
+        // ----------------------------------------------------
+        // Logger (DB-backed)
+        // ----------------------------------------------------
+        $this->set(\Backend\Logger\LoggerInterface::class, fn(Container $c) =>
+            new \Backend\Logger\DbLogger($c->get(\PDO::class))
+        );
 
+        // ----------------------------------------------------
+        // Queues subsystem
+        // ----------------------------------------------------
+        $this->set(\App\Queues\RetryPolicy::class, fn() => new \App\Queues\RetryPolicy());
+
+        $this->set(\App\Queues\QueueRepository::class,
+            fn(Container $c) => new \App\Queues\QueueRepository($c->get(\PDO::class))
+        );
+
+        $this->set(\App\Queues\DlqRepository::class,
+            fn(Container $c) => new \App\Queues\DlqRepository($c->get(\PDO::class))
+        );
+
+        // ВАЖНО: QueueService теперь получает LoggerInterface
+        $this->set(\App\Queues\QueueService::class,
+            fn(Container $c) => new \App\Queues\QueueService(
+                $c->get(\App\Queues\QueueRepository::class),
+                $c->get(\App\Queues\DlqRepository::class),
+                $c->get(\App\Queues\RetryPolicy::class),
+                $c->get(\Backend\Logger\LoggerInterface::class),
+            )
+        );
+
+        // ----------------------------------------------------
         // HttpClient
+        // ----------------------------------------------------
         $this->set(\App\Adapters\HttpClient::class, fn() => new \App\Adapters\HttpClient());
 
+        // ----------------------------------------------------
         // Storage adapter
+        // ----------------------------------------------------
         $this->set(\App\Adapters\S3Adapter::class, function(Container $c) {
             $s = $c->config()['integrations']['storage'];
             return new \App\Adapters\S3Adapter(
-                $s['bucket'], $s['endpoint'], $s['access_key'], $s['secret_key'],
-                $s['region'], $s['fs_root'], $s['path_style']
+                $s['bucket'],
+                $s['endpoint'],
+                $s['access_key'],
+                $s['secret_key'],
+                $s['region'],
+                $s['fs_root'],
+                $s['path_style']
             );
         });
 
+        // ----------------------------------------------------
         // ParserAdapter
+        // ----------------------------------------------------
         $this->set(\App\Adapters\ParserAdapter::class, function(Container $c) {
             $p = $c->config()['integrations']['parser'];
             return new \App\Adapters\ParserAdapter(
@@ -84,7 +117,9 @@ final class Container
             );
         });
 
+        // ----------------------------------------------------
         // PhotoApiAdapter
+        // ----------------------------------------------------
         $this->set(\App\Adapters\PhotoApiAdapter::class, function(Container $c) {
             $p = $c->config()['integrations']['photo_api'];
             return new \App\Adapters\PhotoApiAdapter(
@@ -94,22 +129,40 @@ final class Container
             );
         });
 
+        // ----------------------------------------------------
         // Dolphin / Robot / Avito
+        // ----------------------------------------------------
         $this->set(\App\Adapters\DolphinAdapter::class, function(Container $c) {
             $d = $c->config()['integrations']['dolphin'];
-            return new \App\Adapters\DolphinAdapter($c->get(\App\Adapters\HttpClient::class), $d['base_url'], $d['api_key']);
+            return new \App\Adapters\DolphinAdapter(
+                $c->get(\App\Adapters\HttpClient::class),
+                $d['base_url'],
+                $d['api_key']
+            );
         });
+
         $this->set(\App\Adapters\RobotAdapter::class, function(Container $c) {
             $r = $c->config()['integrations']['robot'];
-            return new \App\Adapters\RobotAdapter($c->get(\App\Adapters\HttpClient::class), $r['base_url'], $r['api_key']);
+            return new \App\Adapters\RobotAdapter(
+                $c->get(\App\Adapters\HttpClient::class),
+                $r['base_url'],
+                $r['api_key']
+            );
         });
+
         $this->set(\App\Adapters\AvitoAdapter::class, fn() => new \App\Adapters\AvitoAdapter());
 
+        // ----------------------------------------------------
         // WS
+        // ----------------------------------------------------
         $this->set(\App\WS\WsServerInterface::class, fn() => new \App\WS\WsServer());
-        $this->set(\App\WS\WsEmitter::class, fn(Container $c) => new \App\WS\WsEmitter($c->get(\App\WS\WsServerInterface::class)));
+        $this->set(\App\WS\WsEmitter::class,
+            fn(Container $c) => new \App\WS\WsEmitter($c->get(\App\WS\WsServerInterface::class))
+        );
 
+        // ----------------------------------------------------
         // HealthAdapter
+        // ----------------------------------------------------
         $this->set(\App\Adapters\HealthAdapter::class, fn(Container $c) => new \App\Adapters\HealthAdapter(
             $c->get(\App\Adapters\ParserAdapter::class),
             $c->get(\App\Adapters\PhotoApiAdapter::class),
@@ -118,36 +171,104 @@ final class Container
             $c->get(\App\Adapters\DolphinAdapter::class),
         ));
 
-        // Modules Services / Controllers
-        // Тут мы предполагаем что классы уже есть.
-        $this->set(\Backend\Modules\Auth\AuthService::class, fn(Container $c) => new \Backend\Modules\Auth\AuthService($c->get(\PDO::class), $c->config()['auth']));
-        $this->set(\Backend\Modules\Users\UsersService::class, fn(Container $c) => new \Backend\Modules\Users\UsersService($c->get(\PDO::class)));
-        $this->set(\Backend\Modules\Cards\CardsService::class, fn(Container $c) => new \Backend\Modules\Cards\CardsService($c->get(\PDO::class), $c->get(\App\Queues\QueueService::class)));
-        $this->set(\Backend\Modules\Parser\ParserService::class, fn(Container $c) => new \Backend\Modules\Parser\ParserService($c->get(\PDO::class)));
-        $this->set(\Backend\Modules\Photos\PhotosService::class, fn(Container $c) => new \Backend\Modules\Photos\PhotosService($c->get(\PDO::class)));
-        $this->set(\Backend\Modules\Export\ExportService::class, fn(Container $c) => new \Backend\Modules\Export\ExportService($c->get(\PDO::class)));
-        $this->set(\Backend\Modules\Publish\PublishService::class, fn(Container $c) => new \Backend\Modules\Publish\PublishService($c->get(\PDO::class)));
+        // ----------------------------------------------------
+        // Modules Services
+        // ----------------------------------------------------
+        $this->set(\Backend\Modules\Auth\AuthService::class,
+            fn(Container $c) => new \Backend\Modules\Auth\AuthService(
+                $c->get(\PDO::class),
+                $c->config()['auth']
+            )
+        );
 
-        $this->set(\Backend\Modules\Admin\AdminService::class, fn(Container $c) => new \Backend\Modules\Admin\AdminService(
-            $c->get(\App\Queues\QueueRepository::class),
-            $c->get(\App\Queues\QueueService::class),
-            $c->get(\App\Queues\DlqRepository::class),
-            $c->get(\App\Adapters\HealthAdapter::class),
-            $c->get(\App\WS\WsEmitter::class),
-            $c->get(\PDO::class),
-        ));
+        $this->set(\Backend\Modules\Users\UsersService::class,
+            fn(Container $c) => new \Backend\Modules\Users\UsersService($c->get(\PDO::class))
+        );
 
+        $this->set(\Backend\Modules\Cards\CardsService::class,
+            fn(Container $c) => new \Backend\Modules\Cards\CardsService(
+                $c->get(\PDO::class),
+                $c->get(\App\Queues\QueueService::class)
+            )
+        );
+
+        $this->set(\Backend\Modules\Parser\ParserService::class,
+            fn(Container $c) => new \Backend\Modules\Parser\ParserService($c->get(\PDO::class))
+        );
+
+        $this->set(\Backend\Modules\Photos\PhotosService::class,
+            fn(Container $c) => new \Backend\Modules\Photos\PhotosService($c->get(\PDO::class))
+        );
+
+        $this->set(\Backend\Modules\Export\ExportService::class,
+            fn(Container $c) => new \Backend\Modules\Export\ExportService($c->get(\PDO::class))
+        );
+
+        $this->set(\Backend\Modules\Publish\PublishService::class,
+            fn(Container $c) => new \Backend\Modules\Publish\PublishService($c->get(\PDO::class))
+        );
+
+        $this->set(\Backend\Modules\Admin\AdminService::class,
+            fn(Container $c) => new \Backend\Modules\Admin\AdminService(
+                $c->get(\App\Queues\QueueRepository::class),
+                $c->get(\App\Queues\QueueService::class),
+                $c->get(\App\Queues\DlqRepository::class),
+                $c->get(\App\Adapters\HealthAdapter::class),
+                $c->get(\App\WS\WsEmitter::class),
+                $c->get(\PDO::class),
+            )
+        );
+
+        // ----------------------------------------------------
         // Controllers
-        $this->set(\Backend\Modules\Auth\AuthController::class, fn(Container $c) => new \Backend\Modules\Auth\AuthController($c->get(\Backend\Modules\Auth\AuthService::class)));
-        $this->set(\Backend\Modules\Users\UsersController::class, fn(Container $c) => new \Backend\Modules\Users\UsersController($c->get(\Backend\Modules\Users\UsersService::class)));
-        $this->set(\Backend\Modules\Cards\CardsController::class, fn(Container $c) => new \Backend\Modules\Cards\CardsController($c->get(\Backend\Modules\Cards\CardsService::class)));
-        $this->set(\Backend\Modules\Parser\ParserController::class, fn(Container $c) => new \Backend\Modules\Parser\ParserController(
-            $c->get(\Backend\Modules\Parser\ParserService::class),
-            $c->get(\App\Queues\QueueService::class)
-        ));
-        $this->set(\Backend\Modules\Photos\PhotosController::class, fn(Container $c) => new \Backend\Modules\Photos\PhotosController($c->get(\Backend\Modules\Photos\PhotosService::class)));
-        $this->set(\Backend\Modules\Export\ExportController::class, fn(Container $c) => new \Backend\Modules\Export\ExportController($c->get(\Backend\Modules\Export\ExportService::class)));
-        $this->set(\Backend\Modules\Publish\PublishController::class, fn(Container $c) => new \Backend\Modules\Publish\PublishController($c->get(\Backend\Modules\Publish\PublishService::class)));
-        $this->set(\Backend\Modules\Admin\AdminController::class, fn(Container $c) => new \Backend\Modules\Admin\AdminController($c->get(\Backend\Modules\Admin\AdminService::class)));
+        // ----------------------------------------------------
+        $this->set(\Backend\Modules\Auth\AuthController::class,
+            fn(Container $c) => new \Backend\Modules\Auth\AuthController(
+                $c->get(\Backend\Modules\Auth\AuthService::class)
+            )
+        );
+
+        $this->set(\Backend\Modules\Users\UsersController::class,
+            fn(Container $c) => new \Backend\Modules\Users\UsersController(
+                $c->get(\Backend\Modules\Users\UsersService::class)
+            )
+        );
+
+        $this->set(\Backend\Modules\Cards\CardsController::class,
+            fn(Container $c) => new \Backend\Modules\Cards\CardsController(
+                $c->get(\Backend\Modules\Cards\CardsService::class)
+            )
+        );
+
+        $this->set(\Backend\Modules\Parser\ParserController::class,
+            fn(Container $c) => new \Backend\Modules\Parser\ParserController(
+                $c->get(\Backend\Modules\Parser\ParserService::class),
+                $c->get(\App\Queues\QueueService::class)
+            )
+        );
+
+        $this->set(\Backend\Modules\Photos\PhotosController::class,
+            fn(Container $c) => new \Backend\Modules\Photos\PhotosController(
+                $c->get(\Backend\Modules\Photos\PhotosService::class)
+            )
+        );
+
+        $this->set(\Backend\Modules\Export\ExportController::class,
+            fn(Container $c) => new \Backend\Modules\Export\ExportController(
+                $c->get(\Backend\Modules\Export\ExportService::class)
+            )
+        );
+
+        $this->set(\Backend\Modules\Publish\PublishController::class,
+            fn(Container $c) => new \Backend\Modules\Publish\PublishController(
+                $c->get(\Backend\Modules\Publish\PublishService::class)
+            )
+        );
+
+        $this->set(\Backend\Modules\Admin\AdminController::class,
+            fn(Container $c) => new \Backend\Modules\Admin\AdminController(
+                $c->get(\Backend\Modules\Admin\AdminService::class)
+            )
+        );
     }
 }
