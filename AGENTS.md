@@ -1,36 +1,50 @@
-# AGENT.md — Autocontent Architecture & Repo Rules (v4, frozen tree)
+# AGENTS.md — Autocontent Architecture + Codex Rules (v1, single source)
 
-Этот документ — **замороженная, но гибкая** схема репозитория Autocontent.  
-Он задаёт **верхний скелет**, границы слоёв и правила зависимостей.  
-Менять скелет можно только через ADR (Architecture Decision Record).
+Этот файл совмещает:
+1) **Архитектурный AGENT.md** (замороженный каркас, границы слоёв).
+2) **Инструкции для Codex/AGENTs** — как работать в этом репо.
+
+**Считать этот файл единственным источником истины для структуры.**
 
 ---
 
 ## 0) Контекст
 
-Autocontent — конвейер авто‑объявлений:
+Autocontent — конвейер авто-объявлений:
 
 1) Парсер Auto.ru / auto-parser.ru **API** → данные + фото.  
 2) Backend (**PHP**) создаёт карточки и управляет пайплайнами.  
-3) PhotoPipeline: raw → **Photo API** (on‑prem) → **S3 storage** (on‑prem MinIO/FS).  
+3) PhotoPipeline: raw → **Photo API** (on-prem) → **S3 storage** (on-prem MinIO/FS).  
 4) ExportPipeline: формирует пакеты → storage.  
 5) PublishPipeline: **внутренний Robot** публикует через **Dolphin Anty** в Avito.  
 6) Всё тяжёлое — через **очереди + воркеры + retry + DLQ**, статусы → WS.
 
 Принцип: ядро решает **“что/когда”**, внешка выполняет **“как”**.  
-Даже ваши on‑prem сервисы остаются *external* по отношению к ядру.
+Даже ваши on-prem сервисы остаются *external* по отношению к ядру.
+
+### Принцип реализации качества
+Любой модуль/воркер/адаптер реализуется **полностью по Autocontent Spec**:
+- все статусы пайплайна
+- все retry/DLQ ветки
+- WS события
+- схемы/валидации
+- тесты unit + integration + e2e  
+Частичная реализация считается незавершённой.
 
 ---
 
-## 1) Полная замороженная структура (Tree)
+## 1) Замороженная структура (Tree)
+
+> В текущем GitHub-репозитории корнем является `cabinet/`.  
+> Структура ниже — эталонный каркас, а реальные пути в репо соответствуют ему с префиксом `cabinet/`.
 
 **Корневые папки и расположение — заморожены.**  
 Внутри модулей/фич можно добавлять файлы, **не ломая каркас**.
 
 ```text
-full_project/
+cabinet/
 ├── README.md
-├── AGENT.md
+├── AGENTS.md  (этот файл)
 ├── package.json
 ├── autostart.js
 ├── run_app.bat
@@ -77,24 +91,9 @@ full_project/
 ├── tests/
 │   ├── unit/
 │   │   ├── backend/
-│   │   │   ├── cards.test.php
-│   │   │   ├── photos.test.php
-│   │   │   ├── export.test.php
-│   │   │   ├── publish.test.php
-│   │   │   ├── stateMachine.test.php
-│   │   │   └── queue.test.php
 │   │   └── frontend/
-│   │       ├── reducers.test.ts
-│   │       └── hooks.test.ts
 │   ├── integration/
-│   │   ├── parser.integration.test.php
-│   │   ├── photos.integration.test.php
-│   │   ├── export.integration.test.php
-│   │   └── publish.integration.test.php
 │   ├── e2e/
-│   │   ├── full_cycle.e2e.test.ts
-│   │   ├── dlq_retry.e2e.test.ts
-│   │   └── admin_panel.e2e.test.ts
 │   ├── fixtures/
 │   └── mocks/
 │
@@ -146,66 +145,69 @@ full_project/
         ├── apps/
         ├── AppShell.tsx
         └── index.tsx
-```
+2) Backend (PHP) — границы и правила
+Слои
+Modules/ — домены и state machine.
 
----
+Adapters/ — все интеграции: Parser/Photo/S3/Robot/Dolphin/Avito.
 
-## 2) Backend (PHP) — границы и правила
+Queues/ — jobs + retry + DLQ.
 
-### Слои
-- **Modules/** — домены и state machine.  
-- **Adapters/** — все интеграции: Parser/Photo/S3/Robot/Dolphin/Avito.  
-- **Queues/** — jobs + retry + DLQ.  
-- **Workers/** — асинхронное исполнение.  
-- **WS/** — realtime.  
-- **DB/** — хранение и миграции.
+Workers/ — асинхронное исполнение.
 
-### Обязательные правила
-1) **Modules не вызывают внешку напрямую** — только через Adapters.  
-2) **Modules ставят jobs**, Workers исполняют.  
-3) **Workers импортируют Modules+Adapters**, но не Controllers/Routes.  
-4) **Adapters не импортируют Modules.**  
-5) **Robot внутри backend, но за RobotAdapter** (Publish знает только адаптер).
+WS/ — realtime.
 
----
+DB/ — хранение и миграции.
 
-## 3) External — правила
+Обязательные правила зависимостей
+Modules не вызывают внешку напрямую — только через Adapters.
 
-1) **contracts/** — истина интерфейса.  
-2) **fixtures/** — тестовые данные.  
-3) Если появится свой парсер → добавляем `external/parser/service/`, корень не меняем.
+Modules ставят jobs, Workers исполняют.
 
----
+Workers импортируют Modules+Adapters, но не Controllers/Routes.
 
-## 4) Frontend — правила слоёв
+Adapters не импортируют Modules.
 
-1) `design/**` → только UI/токены, без API.  
-2) `shared/**` → инфраструктура, не тянет features/apps.  
-3) `features/**` → бизнес‑UI, импортирует design+shared.  
-4) `apps/**` → operator/admin композиция из features.
+Robot внутри backend, но за RobotAdapter (Publish знает только адаптер).
 
----
+3) External — правила
+contracts/ — истина интерфейса.
 
-## 5) Авто‑контроль структуры (минимум обязателен)
+fixtures/ — тестовые данные.
 
+Если появится свой парсер → добавляем external/parser/service/, корень не меняем.
+
+4) Frontend — правила слоёв
+design/** → только UI/токены, без API.
+
+shared/** → инфраструктура, не тянет features/apps.
+
+features/** → бизнес-UI, импортирует design+shared.
+
+apps/** → operator/admin композиция из features.
+
+5) Авто-контроль структуры (минимум обязателен)
 В CI должны быть:
-- lint (front+back)
-- boundary‑lint (front+back)
-- unit tests
-- integration/e2e tests
+
+lint (front+back)
+
+boundary-lint (front+back)
+
+unit tests
+
+integration/e2e tests
 
 PR, нарушающий границы, должен падать.
 
----
+6) ADR — как менять скелет
+Если всё-таки надо поменять скелет:
 
-## 6) ADR — как менять скелет
-
-Если всё‑таки надо поменять скелет:
-
-`docs/architecture/ADR-XXXX-title.md`
+docs/architecture/ADR-XXXX-title.md
 
 Шаблон:
-```markdown
+
+markdown
+Копировать код
 # ADR-XXXX: title
 ## Status
 Proposed | Accepted | Rejected | Deprecated
@@ -217,24 +219,115 @@ Proposed | Accepted | Rejected | Deprecated
 Плюсы/минусы/риски/миграция.
 ## Alternatives considered
 Что ещё было и почему отказались.
-```
+Менять корень можно только после Accepted.
 
-Менять корень можно только после `Accepted`.
+7) Запрещено
+Backend
+внешние HTTP/SDK вызовы из Modules
 
----
+бизнес-логика в Adapters
 
-## 7) Запрещено
+воркеры внутри доменов
 
-### Backend
-- внешние HTTP/SDK вызовы из Modules  
-- бизнес‑логика в Adapters  
-- воркеры внутри доменов  
-- импорт Modules из Adapters
+импорт Modules из Adapters
 
-### Frontend
-- бизнес/данные в design  
-- features импортируют apps  
-- shared тянет features
+Frontend
+бизнес/данные в design
 
-### External
-- менять формат без contracts
+features импортируют apps
+
+shared тянет features
+
+External
+менять формат без contracts
+
+========= Codex / Agent Instructions =========
+Codex, follow everything above. This section adds execution rules.
+
+8) Source of truth for behavior
+Functional requirements live in Autocontent Spec.htm.
+
+This file (AGENTS.md) defines repo structure and boundaries.
+
+If Spec conflicts with boundaries, follow boundaries and propose compliant alternative.
+
+9) How to work in this repo (Codex)
+Always search for existing patterns before adding new ones.
+
+Prefer extending existing Models/Services/Schemas/Workers.
+
+Keep changes minimal per task, but implement the FULL required behavior for touched area.
+
+Do not create new top-level folders.
+
+Always propagate correlation_id through pipelines, logs, queues, WS.
+
+10) Tests (REQUIRED)
+For any behavior change, add/extend:
+
+cabinet/tests/unit/backend
+
+cabinet/tests/integration
+
+cabinet/tests/e2e
+
+Run:
+
+npm run test:all
+
+phpunit tests/unit/backend
+
+phpunit tests/integration
+
+npm run test:e2e
+
+If tests fail — fix until green.
+
+11) Code style
+PHP 8.2+, strict types, typed props, explicit returns.
+
+Prefer small pure methods.
+
+Never swallow exceptions silently.
+
+No business logic inside Adapters: only transport/translation.
+
+12) Branch/PR behavior
+Make changes on current branch.
+
+Commit message: codex: <short summary>.
+
+PR description must include:
+
+what changed
+
+why
+
+how tested (exact commands)
+
+13) When task is large
+Before coding:
+
+Write a short design in cabinet/PLANS.md
+
+List affected files & steps
+
+Wait for user approval in prompt thread
+Then implement.
+
+14) Review guidelines (for @codex review)
+Flag P0/P1:
+
+boundary violations
+
+missing retries/DLQ for any async pipeline
+
+missing WS status events for long tasks
+
+security/auth regressions
+
+schema mismatch between backend/frontend
+
+makefile
+Копировать код
+::contentReference[oaicite:0]{index=0}
