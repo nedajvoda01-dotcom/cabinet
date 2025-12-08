@@ -1,0 +1,21 @@
+{
+  "correlation_id": "c9aa33b1-1700000000",
+  "status": "ok",
+  "items": [
+    {
+      "key": "masked/a6/0.jpg",
+      "size_bytes": 233112,
+      "etag": "etag1",
+      "url": "http://storage.local/masked/a6/0.jpg",
+      "updated_at": "2025-01-01T10:00:00Z"
+    },
+    {
+      "key": "masked/a6/1.jpg",
+      "size_bytes": 240991,
+      "etag": "etag2",
+      "url": "http://storage.local/masked/a6/1.jpg",
+      "updated_at": "2025-01-01T10:00:02Z"
+    }
+  ],
+  "next_cursor": null
+}
