@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ParserParseRequest",
+  "type": "object",
+  "required": ["source", "url", "correlation_id"],
+  "properties": {
+    "source": { "type": "string", "enum": ["auto_ru", "auto_parser_ru"] },
+    "url": { "type": "string", "format": "uri" },
+    "correlation_id": { "type": "string", "minLength": 8 },
+    "options": {
+      "type": "object",
+      "properties": {
+        "with_photos": { "type": "boolean", "default": true },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 10, "default": 5 }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
