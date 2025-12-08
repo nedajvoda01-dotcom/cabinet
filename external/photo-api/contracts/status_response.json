@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PhotoStatusResponse",
+  "type": "object",
+  "required": ["correlation_id", "task_id", "status", "progress"],
+  "properties": {
+    "correlation_id": { "type": "string" },
+    "task_id": { "type": ["string", "integer"] },
+    "status": {
+      "type": "string",
+      "enum": ["queued", "processing", "done", "failed"]
+    },
+    "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+    "results": {
+      "type": "array",
+      "items": { "$ref": "./mask_response.json#/properties/results/items" }
+    },
+    "error": { "$ref": "./errors.json#/definitions/PhotoApiError" }
+  },
+  "additionalProperties": false
+}
