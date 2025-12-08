@@ -29,35 +29,6 @@ final class ParserAdapter
     }
 
     /**
-     * Download raw photos and upload to S3 raw/.
-     * Returns list of {raw_key, raw_url, order}.
-     */
-    public function ingestRawPhotos(array $photoUrls, int $cardDraftId): array
-    {
-        $out = [];
-        $order = 0;
-
-        foreach ($photoUrls as $url) {
-            $order++;
-            if (!is_string($url) || $url === '') continue;
-
-            $bin = $this->downloadBinary($url);
-            $ext = $this->guessExt($url) ?? 'jpg';
-
-            $key = "raw/{$cardDraftId}/{$order}.{$ext}";
-            $this->s3->putObject($key, $bin, "image/{$ext}");
-
-            $out[] = [
-                'order' => $order,
-                'raw_key' => $key,
-                'raw_url' => $this->s3->publicUrl($key),
-            ];
-        }
-
-        return $out;
-    }
-
-    /**
      * Poll mode: fetch ads from parser API if used.
      * Optional for MVP but included as max Spec capability.
      */
@@ -90,7 +61,7 @@ final class ParserAdapter
 
     // -------- helpers
 
-    private function downloadBinary(string $url): string
+    public function downloadBinary(string $url): string
     {
         $resp = $this->http->get($url);
         if ($resp['status'] >= 400) {
@@ -99,7 +70,19 @@ final class ParserAdapter
         return (string)$resp['raw'];
     }
 
-    private function guessExt(string $url): ?string
+    public function uploadRaw(string $key, string $binary, string $extension): string
+    {
+        $this->s3->putObject($key, $binary, "image/{$extension}");
+
+        return $this->s3->publicUrl($key);
+    }
+
+    public function publicUrl(string $key): string
+    {
+        return $this->s3->publicUrl($key);
+    }
+
+    public function guessExt(string $url): ?string
     {
         $p = parse_url($url, PHP_URL_PATH);
         if (!$p) return null;
