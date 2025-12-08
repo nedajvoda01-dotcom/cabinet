@@ -60,16 +60,18 @@ final class ParserWorkerUnitTest extends TestCase
         $queues = $this->createMock(QueueService::class);
         $queues->expects($this->once())
             ->method('enqueuePhotos')
-            ->with(10, ['source' => 'parser']);
+            ->with(10, ['source' => 'parser', 'correlation_id' => 'corr-1']);
 
         $ws = $this->createMock(WsEmitter::class);
-        $ws->expects($this->once())
+        $ws->expects($this->atLeastOnce())
             ->method('emit')
-            ->with('card.status.updated', [
-                'card_id' => 10,
-                'stage' => 'parser',
-                'status' => 'ready',
-            ]);
+            ->with('pipeline.stage', $this->callback(function ($payload) {
+                return $payload['stage'] === 'parser'
+                    && $payload['status'] === 'done'
+                    && $payload['card_id'] === 10
+                    && isset($payload['correlation_id'])
+                    && $payload['correlation_id'] === 'corr-1';
+            }));
 
         $worker = new class($queues, 'w1', $adapter, $parserService, $cards, $ws) extends ParserWorker {
             public function runHandle(QueueJob $job): void
@@ -79,12 +81,10 @@ final class ParserWorkerUnitTest extends TestCase
         };
 
         $job = new QueueJob();
-        $job->payload = ['push' => $pushPayload];
+        $job->payload = ['push' => $pushPayload, 'task_id' => 5, 'correlation_id' => 'corr-1'];
         $job->type = QueueTypes::PARSER;
         $job->entity = 'parser_payload';
         $job->entityId = 99;
         $job->id = 1;
 
         $worker->runHandle($job);
-    }
-}
