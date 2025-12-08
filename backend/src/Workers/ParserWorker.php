@@ -43,7 +43,7 @@ final class ParserWorker extends BaseWorker
         $draftCardId = $this->cardsService->createDraftFromAd($norm['ad']);
 
         // 2) Инжестим raw фотки в storage
-        $rawPhotos = $this->parserAdapter->ingestRawPhotos($norm['photos'], $draftCardId);
+        $rawPhotos = $this->ingestRawPhotos($norm['photos'], $draftCardId);
 
         // 3) Сохраняем результат в ParserModule
         // ожидаем: attachRawPhotos(draftCardId, rawPhotos)
@@ -60,5 +60,34 @@ final class ParserWorker extends BaseWorker
             'stage' => 'parser',
             'status' => 'ready',
         ]);
+    }
+
+    /**
+     * Оркестрация инжеста raw фоток для parser push.
+     * Бизнес-правила остаются здесь, адаптер только выполняет IO.
+     */
+    private function ingestRawPhotos(array $photoUrls, int $cardDraftId): array
+    {
+        $out = [];
+        $order = 0;
+
+        foreach ($photoUrls as $url) {
+            $order++;
+            if (!is_string($url) || $url === '') continue;
+
+            $binary = $this->parserAdapter->downloadBinary($url);
+            $ext = $this->parserAdapter->guessExt($url) ?? 'jpg';
+
+            $key = "raw/{$cardDraftId}/{$order}.{$ext}";
+            $publicUrl = $this->parserAdapter->uploadRaw($key, $binary, $ext);
+
+            $out[] = [
+                'order' => $order,
+                'raw_key' => $key,
+                'raw_url' => $publicUrl,
+            ];
+        }
+
+        return $out;
     }
 }
