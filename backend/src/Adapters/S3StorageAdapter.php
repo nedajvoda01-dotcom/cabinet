@@ -1,12 +1,13 @@
 <?php
-// backend/src/Adapters/S3Adapter.php
+// backend/src/Adapters/S3StorageAdapter.php
 
 namespace App\Adapters;
 
-use Aws\S3\S3Client;
+use App\Adapters\Ports\StoragePort;
 use Aws\Exception\AwsException;
+use Aws\S3\S3Client;
 
-final class S3Adapter
+final class S3StorageAdapter implements StoragePort
 {
     private ?S3Client $client = null;
     private bool $useFsFallback = false;

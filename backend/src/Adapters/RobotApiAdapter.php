@@ -1,9 +1,12 @@
 <?php
-// backend/src/Adapters/RobotAdapter.php
+// backend/src/Adapters/RobotApiAdapter.php
 
 namespace App\Adapters;
 
-final class RobotAdapter
+use App\Adapters\HttpClient;
+use App\Adapters\Ports\RobotPort;
+
+final class RobotApiAdapter implements RobotPort
 {
     public function __construct(
         private HttpClient $http,

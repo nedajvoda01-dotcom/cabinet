@@ -3,11 +3,11 @@
 
 namespace App\Workers;
 
+use App\Adapters\Ports\ParserPort;
 use App\Queues\QueueJob;
 use App\Queues\QueueTypes;
-use App\Adapters\ParserAdapter;
-use App\Modules\Parser\ParserService;
 use App\Modules\Cards\CardsService;
+use App\Modules\Parser\ParserService;
 use App\WS\WsEmitter;
 
 final class ParserWorker extends BaseWorker
@@ -17,7 +17,7 @@ final class ParserWorker extends BaseWorker
     public function __construct(
         \App\Queues\QueueService $queues,
         string $workerId,
-        private ParserAdapter $parserAdapter,
+        private ParserPort $parserAdapter,
         private ParserService $parserService,
         private CardsService $cardsService,
         private WsEmitter $ws

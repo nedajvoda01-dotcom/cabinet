@@ -9,7 +9,7 @@ use App\Queues\QueueJob;
 use App\Queues\QueueTypes;
 use App\Queues\QueueService;
 use App\Adapters\AdapterException;
-use App\Adapters\ParserAdapter;
+use App\Adapters\Ports\ParserPort;
 use App\Modules\Parser\ParserService;
 use App\Modules\Cards\CardsService;
 use App\WS\WsEmitter;
@@ -25,7 +25,7 @@ final class ParserWorkerIntegrationTest extends TestCase
         $job->entityId = 1;
         $job->id = 42;
 
-        $adapter = $this->createMock(ParserAdapter::class);
+        $adapter = $this->createMock(ParserPort::class);
         $adapter->method('normalizePush')->willReturn($job->payload['push']);
         $adapter->method('downloadBinary')->willThrowException(new AdapterException('boom', 'parser_photo_download', true));
         $adapter->method('guessExt')->willReturn(null);

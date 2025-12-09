@@ -8,7 +8,7 @@ use App\Workers\ParserWorker;
 use App\Queues\QueueJob;
 use App\Queues\QueueService;
 use App\Queues\QueueTypes;
-use App\Adapters\ParserAdapter;
+use App\Adapters\Ports\ParserPort;
 use App\Modules\Parser\ParserService;
 use App\Modules\Cards\CardsService;
 use App\WS\WsEmitter;
@@ -22,7 +22,7 @@ final class ParserWorkerUnitTest extends TestCase
             'photos' => ['http://x/1.jpg', 'http://x/2.png'],
         ];
 
-        $adapter = $this->createMock(ParserAdapter::class);
+        $adapter = $this->createMock(ParserPort::class);
         $adapter->expects($this->once())
             ->method('normalizePush')
             ->with($pushPayload)

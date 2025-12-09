@@ -1,9 +1,12 @@
 <?php
-// backend/src/Adapters/PhotoApiAdapter.php
+// backend/src/Adapters/PhotoProcessorAdapter.php
 
 namespace App\Adapters;
 
-final class PhotoApiAdapter
+use App\Adapters\Ports\PhotoProcessorPort;
+use App\Adapters\HttpClient;
+
+final class PhotoProcessorAdapter implements PhotoProcessorPort
 {
     public function __construct(
         private HttpClient $http,

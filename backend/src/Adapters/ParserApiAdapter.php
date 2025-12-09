@@ -1,13 +1,16 @@
 <?php
-// backend/src/Adapters/ParserAdapter.php
+// backend/src/Adapters/ParserApiAdapter.php
 
 namespace App\Adapters;
 
-final class ParserAdapter
+use App\Adapters\Ports\ParserPort;
+use App\Adapters\Ports\StoragePort;
+
+final class ParserApiAdapter implements ParserPort
 {
     public function __construct(
         private HttpClient $http,
-        private S3Adapter $s3,
+        private StoragePort $s3,
         private string $baseUrl,
         private string $apiKey
     ) {}
