@@ -46,7 +46,7 @@ final class PublishService
         $to = $this->sm->nextStatus('card', $cardStatus, 'publish', ['platform' => $platform]);
         if ($to) $this->sm->applyStatus('card', $cardId, $to);
 
-        $this->jobs->dispatchPublishRun((int)$task['id']);
+        $this->jobs->dispatchPublishRun($cardId, (int)$task['id'], $dto['correlation_id'] ?? null);
         $this->model->writeAudit($actorUserId, 'publish_run', "Publish task #{$task['id']} queued for card #{$cardId} ({$platform})");
 
         return $task;
@@ -78,7 +78,7 @@ final class PublishService
             $dto['reason']
         );
 
-        $this->jobs->dispatchPublishCancel($taskId, $dto['reason']);
+        $this->jobs->dispatchPublishCancel((int)$task['card_id'], $taskId, $dto['reason'], $dto['correlation_id'] ?? null);
 
         // карточка -> publish_canceled если SM позволяет
         $cardId = (int)$task['card_id'];
@@ -101,7 +101,7 @@ final class PublishService
 
         $this->model->incrementAttempts($taskId);
         $updated = $this->model->updateTaskStatus($taskId, 'queued', null, null, null, null);
-        $this->jobs->dispatchPublishRetry($taskId, $dto['reason'], (bool)$dto['force']);
+        $this->jobs->dispatchPublishRetry((int)$task['card_id'], $taskId, $dto['reason'], (bool)$dto['force'], $dto['correlation_id'] ?? null);
 
         $this->model->writeAudit($actorUserId, 'publish_retry', "Publish task #{$taskId} retry requested ({$dto['reason']})");
         return $updated;

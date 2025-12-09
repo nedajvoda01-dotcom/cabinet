@@ -3,23 +3,25 @@
 
 namespace App\Workers;
 
+use App\Adapters\Ports\MarketplacePort;
+use App\Adapters\Ports\RobotPort;
+use App\Adapters\Ports\RobotProfilePort;
+use App\Modules\Cards\CardsService;
+use App\Modules\Publish\PublishService;
 use App\Queues\QueueJob;
 use App\Queues\QueueTypes;
-use App\Adapters\AvitoAdapter;
-use App\Adapters\RobotAdapter;
-use App\Adapters\DolphinAdapter;
-use App\Modules\Publish\PublishService;
-use App\Modules\Cards\CardsService;
 use App\WS\WsEmitter;
 
 final class PublishWorker extends BaseWorker
 {
+    private array $lastJobMeta = [];
+
     public function __construct(
         \App\Queues\QueueService $queues,
         string $workerId,
-        private AvitoAdapter $avitoAdapter,
-        private RobotAdapter $robot,
-        private DolphinAdapter $dolphin,
+        private MarketplacePort $avitoAdapter,
+        private RobotPort $robot,
+        private RobotProfilePort $dolphin,
         private PublishService $publishService,
         private CardsService $cardsService,
         private WsEmitter $ws
@@ -35,6 +37,14 @@ final class PublishWorker extends BaseWorker
     protected function handle(QueueJob $job): void
     {
         $cardId = $job->entityId;
+        $this->lastJobMeta = [
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'card_id' => $cardId,
+            'publish_task_id' => $job->payload['task_id'] ?? null,
+            'stage' => 'publish',
+        ];
+
+        $this->emitStage($job, 'running');
 
         // 1) собрать snapshot карточки
         // ожидаем: snapshotForPublish(cardId) -> array
@@ -67,13 +77,32 @@ final class PublishWorker extends BaseWorker
             'avito_item_id' => $result['avito_item_id'],
             'session_id' => $session['session_id'],
             'profile_id' => $profile['profile_id'],
+            'correlation_id' => $this->lastJobMeta['correlation_id'],
         ]);
+        $this->lastJobMeta['publish_job_id'] = $publishJobId;
 
-        $this->ws->emit("publish.progress", [
-            'card_id' => $cardId,
+        $this->emitStage($job, 'running', [
             'publish_job_id' => $publishJobId,
-            'status' => 'publish_processing',
             'avito_item_id' => $result['avito_item_id'],
         ]);
+    }
+
+    protected function afterFailure(QueueJob $job, array $error, string $outcome): void
+    {
+        $status = $outcome === 'retrying' ? 'retrying' : 'dlq';
+        $this->emitStage($job, $status, ['error' => $error]);
+    }
+
+    private function emitStage(QueueJob $job, string $status, array $extra = []): void
+    {
+        $payload = array_merge([
+            'correlation_id' => $this->lastJobMeta['correlation_id'] ?? ($job->payload['correlation_id'] ?? null),
+            'card_id' => $this->lastJobMeta['card_id'] ?? $job->entityId,
+            'publish_job_id' => $this->lastJobMeta['publish_job_id'] ?? null,
+            'stage' => 'publish',
+            'status' => $status,
+        ], $extra);
+
+        $this->ws->emit('pipeline.stage', $payload);
     }
 }

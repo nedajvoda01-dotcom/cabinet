@@ -3,22 +3,24 @@
 
 namespace App\Workers;
 
+use App\Adapters\Ports\MarketplacePort;
+use App\Adapters\Ports\RobotPort;
+use App\Adapters\Ports\RobotProfilePort;
+use App\Modules\Publish\PublishService;
 use App\Queues\QueueJob;
 use App\Queues\QueueTypes;
-use App\Adapters\RobotAdapter;
-use App\Adapters\DolphinAdapter;
-use App\Adapters\AvitoAdapter;
-use App\Modules\Publish\PublishService;
 use App\WS\WsEmitter;
 
 final class RobotStatusWorker extends BaseWorker
 {
+    private array $lastJobMeta = [];
+
     public function __construct(
         \App\Queues\QueueService $queues,
         string $workerId,
-        private RobotAdapter $robot,
-        private DolphinAdapter $dolphin,
-        private AvitoAdapter $avitoAdapter,
+        private RobotPort $robot,
+        private RobotProfilePort $dolphin,
+        private MarketplacePort $avitoAdapter,
         private PublishService $publishService,
         private WsEmitter $ws
     ) {
@@ -33,6 +35,13 @@ final class RobotStatusWorker extends BaseWorker
     protected function handle(QueueJob $job): void
     {
         $publishJobId = $job->entityId;
+        $this->lastJobMeta = [
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'publish_job_id' => $publishJobId,
+            'stage' => 'robot_status',
+        ];
+
+        $this->emitStage($job, 'running');
 
         $avitoItemId = (string)($job->payload['avito_item_id'] ?? '');
         $sessionId   = (string)($job->payload['session_id'] ?? '');
@@ -47,8 +56,7 @@ final class RobotStatusWorker extends BaseWorker
 
         // ожидаем: updateJobStatus(publishJobId, normStatus, meta)
         $this->publishService->updateJobStatus($publishJobId, $normStatus, $st);
-
-        $this->ws->emit("publish.status.updated", [
+        $this->emitStage($job, 'running', [
             'publish_job_id' => $publishJobId,
             'status' => $normStatus,
             'avito_item_id' => $avitoItemId,
@@ -67,7 +75,26 @@ final class RobotStatusWorker extends BaseWorker
                 'avito_item_id' => $avitoItemId,
                 'session_id' => $sessionId,
                 'profile_id' => $profileId,
+                'correlation_id' => $this->lastJobMeta['correlation_id'],
             ]);
         }
+    }
+
+    protected function afterFailure(QueueJob $job, array $error, string $outcome): void
+    {
+        $status = $outcome === 'retrying' ? 'retrying' : 'dlq';
+        $this->emitStage($job, $status, ['error' => $error]);
+    }
+
+    private function emitStage(QueueJob $job, string $status, array $extra = []): void
+    {
+        $payload = array_merge([
+            'correlation_id' => $this->lastJobMeta['correlation_id'] ?? ($job->payload['correlation_id'] ?? null),
+            'publish_job_id' => $this->lastJobMeta['publish_job_id'] ?? $job->entityId,
+            'stage' => 'robot_status',
+            'status' => $status,
+        ], $extra);
+
+        $this->ws->emit('pipeline.stage', $payload);
     }
 }

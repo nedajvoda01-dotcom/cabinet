@@ -88,9 +88,24 @@ final class Container
         // ----------------------------------------------------
         $this->set(\App\Adapters\HttpClient::class, fn() => new \App\Adapters\HttpClient());
 
+        $this->set(\App\Utils\ContractValidator::class, fn() => new \App\Utils\ContractValidator());
+
         // ----------------------------------------------------
         // Storage adapter
         // ----------------------------------------------------
+        $this->set(\App\Adapters\S3StorageAdapter::class, function(Container $c) {
+            $s = $c->config()['integrations']['storage'];
+            return new \App\Adapters\S3StorageAdapter(
+                $s['bucket'],
+                $s['endpoint'],
+                $s['access_key'],
+                $s['secret_key'],
+                $s['region'],
+                $s['fs_root'],
+                $s['path_style']
+            );
+        });
+
         $this->set(\App\Adapters\S3Adapter::class, function(Container $c) {
             $s = $c->config()['integrations']['storage'];
             return new \App\Adapters\S3Adapter(
@@ -104,6 +119,8 @@ final class Container
             );
         });
 
+        $this->set(\App\Adapters\Ports\StoragePort::class, fn(Container $c) => $c->get(\App\Adapters\S3StorageAdapter::class));
+
         // ----------------------------------------------------
         // ParserAdapter
         // ----------------------------------------------------
@@ -112,45 +129,59 @@ final class Container
             return new \App\Adapters\ParserAdapter(
                 $c->get(\App\Adapters\HttpClient::class),
                 $c->get(\App\Adapters\S3Adapter::class),
+                $c->get(\App\Utils\ContractValidator::class),
                 $p['base_url'],
                 $p['api_key']
             );
         });
+
+        $this->set(\App\Adapters\Ports\ParserPort::class, fn(Container $c) => $c->get(\App\Adapters\ParserAdapter::class));
 
         // ----------------------------------------------------
         // PhotoApiAdapter
         // ----------------------------------------------------
-        $this->set(\App\Adapters\PhotoApiAdapter::class, function(Container $c) {
+        $this->set(\App\Adapters\PhotoProcessorAdapter::class, function(Container $c) {
             $p = $c->config()['integrations']['photo_api'];
-            return new \App\Adapters\PhotoApiAdapter(
+            return new \App\Adapters\PhotoProcessorAdapter(
                 $c->get(\App\Adapters\HttpClient::class),
+                $c->get(\App\Utils\ContractValidator::class),
                 $p['base_url'],
                 $p['api_key']
             );
         });
 
+        $this->set(\App\Adapters\Ports\PhotoProcessorPort::class, fn(Container $c) => $c->get(\App\Adapters\PhotoProcessorAdapter::class));
+
         // ----------------------------------------------------
         // Dolphin / Robot / Avito
         // ----------------------------------------------------
-        $this->set(\App\Adapters\DolphinAdapter::class, function(Container $c) {
+        $this->set(\App\Adapters\DolphinProfileAdapter::class, function(Container $c) {
             $d = $c->config()['integrations']['dolphin'];
-            return new \App\Adapters\DolphinAdapter(
+            return new \App\Adapters\DolphinProfileAdapter(
                 $c->get(\App\Adapters\HttpClient::class),
+                $c->get(\App\Utils\ContractValidator::class),
                 $d['base_url'],
                 $d['api_key']
             );
         });
 
-        $this->set(\App\Adapters\RobotAdapter::class, function(Container $c) {
+        $this->set(\App\Adapters\Ports\RobotProfilePort::class, fn(Container $c) => $c->get(\App\Adapters\DolphinProfileAdapter::class));
+
+        $this->set(\App\Adapters\RobotApiAdapter::class, function(Container $c) {
             $r = $c->config()['integrations']['robot'];
-            return new \App\Adapters\RobotAdapter(
+            return new \App\Adapters\RobotApiAdapter(
                 $c->get(\App\Adapters\HttpClient::class),
+                $c->get(\App\Utils\ContractValidator::class),
                 $r['base_url'],
                 $r['api_key']
             );
         });
 
-        $this->set(\App\Adapters\AvitoAdapter::class, fn() => new \App\Adapters\AvitoAdapter());
+        $this->set(\App\Adapters\Ports\RobotPort::class, fn(Container $c) => $c->get(\App\Adapters\RobotApiAdapter::class));
+
+        $this->set(\App\Adapters\AvitoMarketplaceAdapter::class, fn() => new \App\Adapters\AvitoMarketplaceAdapter());
+
+        $this->set(\App\Adapters\Ports\MarketplacePort::class, fn(Container $c) => $c->get(\App\Adapters\AvitoMarketplaceAdapter::class));
 
         // ----------------------------------------------------
         // WS
@@ -164,11 +195,11 @@ final class Container
         // HealthAdapter
         // ----------------------------------------------------
         $this->set(\App\Adapters\HealthAdapter::class, fn(Container $c) => new \App\Adapters\HealthAdapter(
-            $c->get(\App\Adapters\ParserAdapter::class),
-            $c->get(\App\Adapters\PhotoApiAdapter::class),
-            $c->get(\App\Adapters\S3Adapter::class),
-            $c->get(\App\Adapters\RobotAdapter::class),
-            $c->get(\App\Adapters\DolphinAdapter::class),
+            $c->get(\App\Adapters\Ports\ParserPort::class),
+            $c->get(\App\Adapters\Ports\PhotoProcessorPort::class),
+            $c->get(\App\Adapters\Ports\StoragePort::class),
+            $c->get(\App\Adapters\Ports\RobotPort::class),
+            $c->get(\App\Adapters\Ports\RobotProfilePort::class),
         ));
 
         // ----------------------------------------------------
