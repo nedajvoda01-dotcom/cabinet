@@ -13,6 +13,8 @@ use App\WS\WsEmitter;
 
 final class PhotosWorker extends BaseWorker
 {
+    private array $lastJobMeta = [];
+
     public function __construct(
         \App\Queues\QueueService $queues,
         string $workerId,
@@ -33,12 +35,21 @@ final class PhotosWorker extends BaseWorker
     protected function handle(QueueJob $job): void
     {
         $cardId = $job->entityId;
+        $this->lastJobMeta = [
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'card_id' => $cardId,
+            'task_id' => $job->payload['task_id'] ?? null,
+            'stage' => 'photos',
+        ];
+
+        $this->emitStage($job, 'running');
 
         // ожидаем: getRawPhotos(cardId) -> [{order, raw_key, raw_url, mask_params?}]
         $rawPhotos = $this->photosService->getRawPhotos($cardId);
         if (!$rawPhotos) {
             // нечего обрабатывать — считаем stage done
             $this->photosService->markStageDone($cardId);
+            $this->emitStage($job, 'done', ['progress' => 100]);
             return;
         }
 
@@ -69,11 +80,10 @@ final class PhotosWorker extends BaseWorker
             ];
 
             $done++;
-            $this->ws->emit("photos.progress", [
-                'card_id' => $cardId,
+            $this->emitStage($job, 'running', [
+                'progress' => $total ? (int)(($done / $total) * 100) : 100,
                 'done' => $done,
                 'total' => $total,
-                'percent' => $total ? (int)(($done / $total) * 100) : 100,
             ]);
         }
 
@@ -85,13 +95,31 @@ final class PhotosWorker extends BaseWorker
         // создаём экспортный пакет и ставим export job
         // ожидаем: createExport(cardId) -> exportId
         $exportId = $this->exportService->createExport($cardId);
-        $this->queues->enqueueExport($exportId, ['card_id' => $cardId]);
-
-        $this->ws->emit("card.status.updated", [
+        $this->queues->enqueueExport($exportId, [
             'card_id' => $cardId,
-            'stage' => 'photos',
-            'status' => 'ready',
+            'correlation_id' => $this->lastJobMeta['correlation_id'],
         ]);
+
+        $this->emitStage($job, 'done', ['progress' => 100]);
+    }
+
+    protected function afterFailure(QueueJob $job, array $error, string $outcome): void
+    {
+        $status = $outcome === 'retrying' ? 'retrying' : 'dlq';
+        $this->emitStage($job, $status, ['error' => $error]);
+    }
+
+    private function emitStage(QueueJob $job, string $status, array $extra = []): void
+    {
+        $payload = array_merge([
+            'correlation_id' => $this->lastJobMeta['correlation_id'] ?? ($job->payload['correlation_id'] ?? null),
+            'card_id' => $this->lastJobMeta['card_id'] ?? $job->entityId,
+            'task_id' => $this->lastJobMeta['task_id'] ?? ($job->payload['task_id'] ?? null),
+            'stage' => 'photos',
+            'status' => $status,
+        ], $extra);
+
+        $this->ws->emit('pipeline.stage', $payload);
     }
 
     private function downloadBinary(string $url): string
