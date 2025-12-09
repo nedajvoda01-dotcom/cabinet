@@ -1,9 +1,12 @@
 <?php
-// backend/src/Adapters/DolphinAdapter.php
+// backend/src/Adapters/DolphinProfileAdapter.php
 
 namespace App\Adapters;
 
-final class DolphinAdapter
+use App\Adapters\HttpClient;
+use App\Adapters\Ports\RobotProfilePort;
+
+final class DolphinProfileAdapter implements RobotProfilePort
 {
     public function __construct(
         private HttpClient $http,

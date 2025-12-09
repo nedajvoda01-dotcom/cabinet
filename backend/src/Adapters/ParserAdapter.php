@@ -3,7 +3,9 @@
 
 namespace App\Adapters;
 
-final class ParserAdapter
+use App\Adapters\Ports\ParserPort;
+
+final class ParserAdapter implements ParserPort
 {
     public function __construct(
         private HttpClient $http,

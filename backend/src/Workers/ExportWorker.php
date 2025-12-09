@@ -3,11 +3,11 @@
 
 namespace App\Workers;
 
-use App\Queues\QueueJob;
-use App\Queues\QueueTypes;
-use App\Adapters\S3Adapter;
+use App\Adapters\Ports\StoragePort;
 use App\Modules\Export\ExportService;
 use App\Modules\Publish\PublishService;
+use App\Queues\QueueJob;
+use App\Queues\QueueTypes;
 use App\WS\WsEmitter;
 
 final class ExportWorker extends BaseWorker
@@ -17,7 +17,7 @@ final class ExportWorker extends BaseWorker
     public function __construct(
         \App\Queues\QueueService $queues,
         string $workerId,
-        private S3Adapter $s3,
+        private StoragePort $s3,
         private ExportService $exportService,
         private PublishService $publishService,
         private WsEmitter $ws

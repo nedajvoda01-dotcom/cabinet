@@ -3,12 +3,12 @@
 
 namespace App\Workers;
 
+use App\Adapters\Ports\PhotoProcessorPort;
+use App\Adapters\Ports\StoragePort;
+use App\Modules\Export\ExportService;
+use App\Modules\Photos\PhotosService;
 use App\Queues\QueueJob;
 use App\Queues\QueueTypes;
-use App\Adapters\PhotoApiAdapter;
-use App\Adapters\S3Adapter;
-use App\Modules\Photos\PhotosService;
-use App\Modules\Export\ExportService;
 use App\WS\WsEmitter;
 
 final class PhotosWorker extends BaseWorker
@@ -18,8 +18,8 @@ final class PhotosWorker extends BaseWorker
     public function __construct(
         \App\Queues\QueueService $queues,
         string $workerId,
-        private PhotoApiAdapter $photoApi,
-        private S3Adapter $s3,
+        private PhotoProcessorPort $photoApi,
+        private StoragePort $s3,
         private PhotosService $photosService,
         private ExportService $exportService,
         private WsEmitter $ws

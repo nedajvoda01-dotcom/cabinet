@@ -8,9 +8,11 @@ use App\Workers\ExportWorker;
 use App\Queues\QueueTypes;
 use App\Queues\QueueJob;
 use App\Queues\QueueService;
+use App\Adapters\Ports\StoragePort;
 
 use Backend\Modules\Export\ExportService;
 use Backend\Modules\Cards\CardsService;
+use Backend\Modules\Publish\PublishService;
 use Backend\Modules\Export\ExportModel;
 
 final class ExportIntegrationTest extends TestCase
@@ -32,6 +34,7 @@ final class ExportIntegrationTest extends TestCase
 
         $builder   = new FakeAvitoXmlBuilderExportInt();
         $s3        = new FakeS3AdapterExportInt();
+        $publishSvc = $this->createMock(PublishService::class);
 
         // подготовка: две карточки готовы к экспорту
         $c1 = $cardsSvc->create(['title'=>'car1','source'=>'auto_ru'], 1);
@@ -51,10 +54,9 @@ final class ExportIntegrationTest extends TestCase
         $worker = new ExportWorker(
             $queue,
             'w-exp-1',
-            $exportSvc,
-            $cardsSvc,
-            $builder,
             $s3,
+            $exportSvc,
+            $publishSvc,
             new NullWsEmitterExportInt()
         );
 
@@ -95,18 +97,33 @@ final class FakeAvitoXmlBuilderExportInt
     }
 }
 
-final class FakeS3AdapterExportInt
+final class FakeS3AdapterExportInt implements StoragePort
 {
     public array $puts = [];
 
-    public function putString(string $key, string $body, string $contentType, string $correlationId): array
+    public function putObject(string $key, string $binary, string $contentType = 'application/octet-stream'): void
     {
-        $this->puts[] = compact('key','body','contentType','correlationId');
-        return [
-            'status' => 'ok',
-            'key' => $key,
-            'url' => 'http://storage.local/' . $key,
-        ];
+        $this->puts[] = compact('key', 'binary', 'contentType');
+    }
+
+    public function publicUrl(string $key): string
+    {
+        return 'http://storage.local/' . $key;
+    }
+
+    public function presignGet(string $key, int $expiresSec = 3600): string
+    {
+        return 'http://signed/' . $key;
+    }
+
+    public function listPrefix(string $prefix): array
+    {
+        return array_column($this->puts, 'key');
+    }
+
+    public function getObject(string $key): string
+    {
+        return '';
     }
 }
 

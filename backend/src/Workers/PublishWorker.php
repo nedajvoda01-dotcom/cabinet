@@ -3,13 +3,13 @@
 
 namespace App\Workers;
 
+use App\Adapters\Ports\MarketplacePort;
+use App\Adapters\Ports\RobotPort;
+use App\Adapters\Ports\RobotProfilePort;
+use App\Modules\Cards\CardsService;
+use App\Modules\Publish\PublishService;
 use App\Queues\QueueJob;
 use App\Queues\QueueTypes;
-use App\Adapters\AvitoAdapter;
-use App\Adapters\RobotAdapter;
-use App\Adapters\DolphinAdapter;
-use App\Modules\Publish\PublishService;
-use App\Modules\Cards\CardsService;
 use App\WS\WsEmitter;
 
 final class PublishWorker extends BaseWorker
@@ -19,9 +19,9 @@ final class PublishWorker extends BaseWorker
     public function __construct(
         \App\Queues\QueueService $queues,
         string $workerId,
-        private AvitoAdapter $avitoAdapter,
-        private RobotAdapter $robot,
-        private DolphinAdapter $dolphin,
+        private MarketplacePort $avitoAdapter,
+        private RobotPort $robot,
+        private RobotProfilePort $dolphin,
         private PublishService $publishService,
         private CardsService $cardsService,
         private WsEmitter $ws
