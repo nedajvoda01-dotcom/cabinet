@@ -1,5 +1,5 @@
 <?php
-// backend/src/Adapters/PhotoProcessorAdapter.php
+// cabinet/backend/src/Adapters/PhotoProcessorAdapter.php
 
 namespace App\Adapters;
 
@@ -24,11 +24,13 @@ final class PhotoProcessorAdapter implements PhotoProcessorPort
     public function maskPhoto(string $rawUrl, array $maskParams = []): array
     {
         $url = rtrim($this->baseUrl, '/') . "/process";
+
         $payload = [
             'raw_url' => $rawUrl,
             'mask_params' => $maskParams,
         ];
 
+        // Fail-fast request validation
         $this->contracts->validate($payload, $this->contractPath('mask_request.json'));
 
         $resp = $this->http->post($url, $payload, [
@@ -37,10 +39,16 @@ final class PhotoProcessorAdapter implements PhotoProcessorPort
 
         $this->http->assertOk($resp, "photo_api");
 
+        // Fail-fast response validation
         $this->contracts->validate((array)$resp['body'], $this->contractPath('mask_response.json'));
 
         if (!is_array($resp['body']) || empty($resp['body']['masked_url'])) {
-            throw new AdapterException("Photo API contract broken", "photo_api_contract", true, ['body'=>$resp['body']]);
+            throw new AdapterException(
+                "Photo API contract broken",
+                "photo_api_contract",
+                true,
+                ['body' => $resp['body']]
+            );
         }
 
         return [
@@ -51,15 +59,4 @@ final class PhotoProcessorAdapter implements PhotoProcessorPort
 
     public function health(): array
     {
-        $url = rtrim($this->baseUrl, '/') . "/health";
-        $resp = $this->http->get($url);
-        $this->http->assertOk($resp, "photo_api");
-
-        return is_array($resp['body']) ? $resp['body'] : ['ok'=>true];
-    }
-
-    private function contractPath(string $file): string
-    {
-        return dirname(__DIR__, 3) . "/external/photo-api/contracts/{$file}";
-    }
-}
+        $url = rtrim($this->baseUrl, '/') .
