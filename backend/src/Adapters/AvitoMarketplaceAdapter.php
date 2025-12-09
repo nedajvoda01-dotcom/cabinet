@@ -1,13 +1,15 @@
 <?php
-// backend/src/Adapters/AvitoAdapter.php
+// backend/src/Adapters/AvitoMarketplaceAdapter.php
 
 namespace App\Adapters;
+
+use App\Adapters\Ports\MarketplacePort;
 
 /**
  * Pure mapper CardSnapshot -> AvitoPayload.
  * Не ходит в сеть, не знает DB, только формат.
  */
-final class AvitoAdapter
+final class AvitoMarketplaceAdapter implements MarketplacePort
 {
     public function mapCard(array $card): array
     {
