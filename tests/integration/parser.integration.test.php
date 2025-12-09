@@ -72,6 +72,22 @@ final class FakeParserAdapter implements ParserPort
         return $push;
     }
 
+    public function ingestRawPhotos(array $photoUrls, int $cardDraftId): array
+    {
+        $out = [];
+        $order = 0;
+        foreach ($photoUrls as $url) {
+            $order++;
+            $out[] = [
+                'order' => $order,
+                'raw_key' => "raw/{$cardDraftId}/{$order}.jpg",
+                'raw_url' => "http://storage/raw/{$cardDraftId}/{$order}.jpg",
+            ];
+        }
+
+        return $out;
+    }
+
     public function poll(int $limit = 20): array
     {
         return [];
@@ -79,27 +95,6 @@ final class FakeParserAdapter implements ParserPort
 
     public function ack(string $externalId, array $meta = []): void
     {
-    }
-
-    public function downloadBinary(string $url): string
-    {
-        return 'binary:' . $url;
-    }
-
-    public function uploadRaw(string $key, string $binary, string $extension): string
-    {
-        return "http://storage/{$key}";
-    }
-
-    public function publicUrl(string $key): string
-    {
-        return "http://storage/{$key}";
-    }
-
-    public function guessExt(string $url): ?string
-    {
-        $ext = pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION);
-        return $ext ? strtolower($ext) : null;
     }
 }
 

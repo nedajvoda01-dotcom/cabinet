@@ -92,19 +92,7 @@ final class ParserAdapter implements ParserPort
 
     // -------- helpers
 
-    public function uploadRaw(string $key, string $binary, string $extension): string
-    {
-        $this->s3->putObject($key, $binary, "image/{$extension}");
-
-        return $key;
-    }
-
-    public function publicUrl(string $key): string
-    {
-        return $this->s3->publicUrl($key);
-    }
-
-    public function downloadBinary(string $url): string
+    private function downloadBinary(string $url): string
     {
         $resp = $this->http->get($url);
         if ($resp['status'] >= 400) {
@@ -113,7 +101,7 @@ final class ParserAdapter implements ParserPort
         return (string)$resp['raw'];
     }
 
-    public function guessExt(string $url): ?string
+    private function guessExt(string $url): ?string
     {
         $p = parse_url($url, PHP_URL_PATH);
         if (!$p) return null;
