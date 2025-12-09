@@ -1,15 +1,17 @@
 <?php
-// backend/src/Adapters/ParserAdapter.php
+// cabinet/backend/src/Adapters/ParserAdapter.php
 
 namespace App\Adapters;
 
 use App\Adapters\Ports\ParserPort;
+use App\Utils\ContractValidator;
 
 final class ParserAdapter implements ParserPort
 {
     public function __construct(
         private HttpClient $http,
         private S3Adapter $s3,
+        private ContractValidator $contracts,
         private string $baseUrl,
         private string $apiKey
     ) {}
@@ -21,11 +23,17 @@ final class ParserAdapter implements ParserPort
      */
     public function normalizePush(array $push): array
     {
+        // Fail-fast: валидируем входящий payload по контракту parser push
+        $this->contracts->validate($push, $this->contractPath('parse_response.json'));
+
         if (!isset($push['ad']) || !is_array($push['ad'])) {
             throw new AdapterException("ParserPush invalid: missing ad", "parser_contract", false);
         }
+
         $photos = $push['photos'] ?? [];
-        if (!is_array($photos)) $photos = [];
+        if (!is_array($photos)) {
+            $photos = [];
+        }
 
         return ['ad' => $push['ad'], 'photos' => $photos];
     }
@@ -37,14 +45,19 @@ final class ParserAdapter implements ParserPort
     public function poll(int $limit = 20): array
     {
         $url = rtrim($this->baseUrl, '/') . "/poll?limit={$limit}";
+
         $resp = $this->http->get($url, [
             'Authorization' => "Bearer {$this->apiKey}",
         ]);
+
         $this->http->assertOk($resp, "parser");
 
         if (!is_array($resp['body'])) {
             throw new AdapterException("ParserPoll invalid JSON", "parser_poll_contract", true);
         }
+
+        // Fail-fast: валидируем ответ poll по контракту
+        $this->contracts->validate($resp['body'], $this->contractPath('parse_response.json'));
 
         return $resp['body'];
     }
@@ -52,13 +65,24 @@ final class ParserAdapter implements ParserPort
     public function ack(string $externalId, array $meta = []): void
     {
         $url = rtrim($this->baseUrl, '/') . "/ack";
-        $resp = $this->http->post($url, [
+
+        $payload = [
             'external_id' => $externalId,
             'meta' => $meta,
-        ], [
+        ];
+
+        // Если у ack есть контракт — можно включить здесь.
+        // Сейчас не трогаем, чтобы не менять поведение вне явных схем.
+        // $this->contracts->validate($payload, $this->contractPath('ack_request.json'));
+
+        $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
         ]);
+
         $this->http->assertOk($resp, "parser");
+
+        // Аналогично можно валидировать ответ, если контракт есть:
+        // $this->contracts->validate((array)$resp['body'], $this->contractPath('ack_response.json'));
     }
 
     // -------- helpers
@@ -66,9 +90,16 @@ final class ParserAdapter implements ParserPort
     public function downloadBinary(string $url): string
     {
         $resp = $this->http->get($url);
+
         if ($resp['status'] >= 400) {
-            throw new AdapterException("Photo download failed: {$url}", "parser_photo_download", true, ['url'=>$url,'status'=>$resp['status']]);
+            throw new AdapterException(
+                "Photo download failed: {$url}",
+                "parser_photo_download",
+                true,
+                ['url' => $url, 'status' => $resp['status']]
+            );
         }
+
         return (string)$resp['raw'];
     }
 
@@ -88,7 +119,13 @@ final class ParserAdapter implements ParserPort
     {
         $p = parse_url($url, PHP_URL_PATH);
         if (!$p) return null;
+
         $ext = strtolower(pathinfo($p, PATHINFO_EXTENSION));
         return $ext ?: null;
+    }
+
+    private function contractPath(string $file): string
+    {
+        return dirname(__DIR__, 3) . "/external/parser/contracts/{$file}";
     }
 }

@@ -1,15 +1,17 @@
 <?php
-// backend/src/Adapters/RobotApiAdapter.php
+// cabinet/backend/src/Adapters/RobotApiAdapter.php
 
 namespace App\Adapters;
 
 use App\Adapters\HttpClient;
 use App\Adapters\Ports\RobotPort;
+use App\Utils\ContractValidator;
 
 final class RobotApiAdapter implements RobotPort
 {
     public function __construct(
         private HttpClient $http,
+        private ContractValidator $contracts,
         private string $baseUrl,
         private string $apiKey
     ) {}
@@ -21,16 +23,27 @@ final class RobotApiAdapter implements RobotPort
     public function start(array $profile): array
     {
         $url = rtrim($this->baseUrl, '/') . "/sessions/start";
-        $resp = $this->http->post($url, [
+
+        $payload = [
             'profile' => $profile,
-        ], [
+        ];
+
+        // Fail-fast request validation
+        $this->contracts->validate($payload, $this->contractPath('publish_request.json'));
+
+        $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
         ]);
+
         $this->http->assertOk($resp, "robot");
+
+        // Fail-fast response validation
+        $this->contracts->validate((array)$resp['body'], $this->contractPath('publish_response.json'));
 
         if (!is_array($resp['body']) || empty($resp['body']['session_id'])) {
             throw new AdapterException("Robot start contract broken", "robot_contract", true);
         }
+
         return $resp['body'];
     }
 
@@ -42,17 +55,33 @@ final class RobotApiAdapter implements RobotPort
     public function publish(string $sessionId, array $avitoPayload): array
     {
         $url = rtrim($this->baseUrl, '/') . "/publish";
-        $resp = $this->http->post($url, [
+
+        $payload = [
             'session_id' => $sessionId,
             'payload' => $avitoPayload,
-        ], [
+        ];
+
+        // Fail-fast request validation
+        $this->contracts->validate($payload, $this->contractPath('publish_request.json'));
+
+        $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
         ]);
+
         $this->http->assertOk($resp, "robot");
 
+        // Fail-fast response validation
+        $this->contracts->validate((array)$resp['body'], $this->contractPath('publish_response.json'));
+
         if (!is_array($resp['body']) || empty($resp['body']['avito_item_id'])) {
-            throw new AdapterException("Robot publish contract broken", "robot_publish_contract", true, ['body'=>$resp['body']]);
+            throw new AdapterException(
+                "Robot publish contract broken",
+                "robot_publish_contract",
+                true,
+                ['body' => $resp['body']]
+            );
         }
+
         return $resp['body'];
     }
 
@@ -62,10 +91,15 @@ final class RobotApiAdapter implements RobotPort
     public function pollStatus(string $avitoItemId): array
     {
         $url = rtrim($this->baseUrl, '/') . "/publish/{$avitoItemId}/status";
+
         $resp = $this->http->get($url, [
             'Authorization' => "Bearer {$this->apiKey}",
         ]);
+
         $this->http->assertOk($resp, "robot");
+
+        // Fail-fast response validation
+        $this->contracts->validate((array)$resp['body'], $this->contractPath('run_status_response.json'));
 
         return is_array($resp['body']) ? $resp['body'] : [];
     }
@@ -73,18 +107,27 @@ final class RobotApiAdapter implements RobotPort
     public function stop(string $sessionId): void
     {
         $url = rtrim($this->baseUrl, '/') . "/sessions/{$sessionId}/stop";
+
         $resp = $this->http->post($url, null, [
             'Authorization' => "Bearer {$this->apiKey}",
         ]);
+
         $this->http->assertOk($resp, "robot");
     }
 
     public function health(): array
     {
         $url = rtrim($this->baseUrl, '/') . "/health";
+
         $resp = $this->http->get($url);
+
         $this->http->assertOk($resp, "robot");
 
-        return is_array($resp['body']) ? $resp['body'] : ['ok'=>true];
+        return is_array($resp['body']) ? $resp['body'] : ['ok' => true];
+    }
+
+    private function contractPath(string $file): string
+    {
+        return dirname(__DIR__, 3) . "/external/robot/contracts/{$file}";
     }
 }
