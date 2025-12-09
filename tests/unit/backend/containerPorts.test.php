@@ -12,7 +12,7 @@ use App\Adapters\Ports\RobotPort;
 use App\Adapters\Ports\RobotProfilePort;
 use App\Adapters\Ports\MarketplacePort;
 use App\Adapters\S3StorageAdapter;
-use App\Adapters\ParserApiAdapter;
+use App\Adapters\ParserAdapter;
 use App\Adapters\PhotoProcessorAdapter;
 use App\Adapters\RobotApiAdapter;
 use App\Adapters\DolphinProfileAdapter;
@@ -27,7 +27,7 @@ final class ContainerPortsTest extends TestCase
         $container = new Container($this->config());
 
         $this->assertInstanceOf(S3StorageAdapter::class, $container->get(StoragePort::class));
-        $this->assertInstanceOf(ParserApiAdapter::class, $container->get(ParserPort::class));
+        $this->assertInstanceOf(ParserAdapter::class, $container->get(ParserPort::class));
         $this->assertInstanceOf(PhotoProcessorAdapter::class, $container->get(PhotoProcessorPort::class));
         $this->assertInstanceOf(RobotApiAdapter::class, $container->get(RobotPort::class));
         $this->assertInstanceOf(DolphinProfileAdapter::class, $container->get(RobotProfilePort::class));

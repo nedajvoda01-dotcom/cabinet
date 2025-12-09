@@ -104,22 +104,35 @@ final class Container
             );
         });
 
+        $this->set(\App\Adapters\S3Adapter::class, function(Container $c) {
+            $s = $c->config()['integrations']['storage'];
+            return new \App\Adapters\S3Adapter(
+                $s['bucket'],
+                $s['endpoint'],
+                $s['access_key'],
+                $s['secret_key'],
+                $s['region'],
+                $s['fs_root'],
+                $s['path_style']
+            );
+        });
+
         $this->set(\App\Adapters\Ports\StoragePort::class, fn(Container $c) => $c->get(\App\Adapters\S3StorageAdapter::class));
 
         // ----------------------------------------------------
         // ParserAdapter
         // ----------------------------------------------------
-        $this->set(\App\Adapters\ParserApiAdapter::class, function(Container $c) {
+        $this->set(\App\Adapters\ParserAdapter::class, function(Container $c) {
             $p = $c->config()['integrations']['parser'];
-            return new \App\Adapters\ParserApiAdapter(
+            return new \App\Adapters\ParserAdapter(
                 $c->get(\App\Adapters\HttpClient::class),
-                $c->get(\App\Adapters\Ports\StoragePort::class),
+                $c->get(\App\Adapters\S3Adapter::class),
                 $p['base_url'],
                 $p['api_key']
             );
         });
 
-        $this->set(\App\Adapters\Ports\ParserPort::class, fn(Container $c) => $c->get(\App\Adapters\ParserApiAdapter::class));
+        $this->set(\App\Adapters\Ports\ParserPort::class, fn(Container $c) => $c->get(\App\Adapters\ParserAdapter::class));
 
         // ----------------------------------------------------
         // PhotoApiAdapter
