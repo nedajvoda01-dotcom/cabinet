@@ -6,6 +6,7 @@ declare(strict_types=1);
 return [
     'env' => getenv('APP_ENV') ?: 'dev',
     'debug' => (getenv('APP_DEBUG') ?: '0') === '1',
+    'integrations_mode' => getenv('INTEGRATIONS_MODE') ?: 'real',
 
     'db' => [
         'dsn'  => getenv('DB_DSN')  ?: 'pgsql:host=localhost;port=5432;dbname=autocontent',

@@ -59,4 +59,15 @@ final class PhotoProcessorAdapter implements PhotoProcessorPort
 
     public function health(): array
     {
-        $url = rtrim($this->baseUrl, '/') .
+        $url = rtrim($this->baseUrl, '/') . "/health";
+        $resp = $this->http->get($url);
+        $this->http->assertOk($resp, "photo_api");
+
+        return is_array($resp['body']) ? $resp['body'] : ['ok' => true];
+    }
+
+    private function contractPath(string $file): string
+    {
+        return dirname(__DIR__, 3) . "/external/photo-api/contracts/{$file}";
+    }
+}
