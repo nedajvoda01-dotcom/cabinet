@@ -52,6 +52,8 @@ final class ParserWorker extends BaseWorker
         // 4) Ставим photos pipeline job
         $this->queues->enqueuePhotos($draftCardId, [
             'source' => 'parser',
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'idempotency_key' => $this->idempotencyKey($job, 'photos'),
         ]);
 
         // 5) WS событие

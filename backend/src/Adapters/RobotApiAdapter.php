@@ -1,12 +1,17 @@
 <?php
-// backend/src/Adapters/RobotAdapter.php
+// backend/src/Adapters/RobotApiAdapter.php
 
 namespace App\Adapters;
 
-final class RobotAdapter
+use App\Adapters\HttpClient;
+use App\Adapters\Ports\RobotPort;
+use App\Utils\ContractValidator;
+
+final class RobotApiAdapter implements RobotPort
 {
     public function __construct(
         private HttpClient $http,
+        private ContractValidator $contracts,
         private string $baseUrl,
         private string $apiKey
     ) {}
@@ -15,15 +20,21 @@ final class RobotAdapter
      * Start robot session inside Dolphin profile.
      * Returns {session_id, meta}
      */
-    public function start(array $profile): array
+    public function start(array $profile, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/sessions/start";
-        $resp = $this->http->post($url, [
+        $payload = [
             'profile' => $profile,
-        ], [
+        ];
+
+        $this->contracts->validate($payload, $this->contractPath('publish_request.json'));
+
+        $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
         $this->http->assertOk($resp, "robot");
+
+        $this->contracts->validate((array)$resp['body'], $this->contractPath('publish_response.json'));
 
         if (!is_array($resp['body']) || empty($resp['body']['session_id'])) {
             throw new AdapterException("Robot start contract broken", "robot_contract", true);
@@ -36,16 +47,22 @@ final class RobotAdapter
      * Input: PublishRequest (card + media + mapped avito payload)
      * Output: PublishResult {avito_item_id, avito_status, meta}
      */
-    public function publish(string $sessionId, array $avitoPayload): array
+    public function publish(string $sessionId, array $avitoPayload, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/publish";
-        $resp = $this->http->post($url, [
+        $payload = [
             'session_id' => $sessionId,
             'payload' => $avitoPayload,
-        ], [
+        ];
+
+        $this->contracts->validate($payload, $this->contractPath('publish_request.json'));
+
+        $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
         $this->http->assertOk($resp, "robot");
+
+        $this->contracts->validate((array)$resp['body'], $this->contractPath('publish_response.json'));
 
         if (!is_array($resp['body']) || empty($resp['body']['avito_item_id'])) {
             throw new AdapterException("Robot publish contract broken", "robot_publish_contract", true, ['body'=>$resp['body']]);
@@ -64,15 +81,17 @@ final class RobotAdapter
         ]);
         $this->http->assertOk($resp, "robot");
 
+        $this->contracts->validate((array)$resp['body'], $this->contractPath('run_status_response.json'));
+
         return is_array($resp['body']) ? $resp['body'] : [];
     }
 
-    public function stop(string $sessionId): void
+    public function stop(string $sessionId, ?string $idempotencyKey = null): void
     {
         $url = rtrim($this->baseUrl, '/') . "/sessions/{$sessionId}/stop";
         $resp = $this->http->post($url, null, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
         $this->http->assertOk($resp, "robot");
     }
 
@@ -83,5 +102,10 @@ final class RobotAdapter
         $this->http->assertOk($resp, "robot");
 
         return is_array($resp['body']) ? $resp['body'] : ['ok'=>true];
+    }
+
+    private function contractPath(string $file): string
+    {
+        return dirname(__DIR__, 3) . "/external/robot/contracts/{$file}";
     }
 }

@@ -1,0 +1,6 @@
+{
+  "correlation_id": "c-dolphin-1",
+  "status": "ok",
+  "session_id": "session-77",
+  "ws_url": "wss://dolphin.example/ws/session-77"
+}
