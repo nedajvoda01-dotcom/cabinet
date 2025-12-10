@@ -48,7 +48,6 @@ final class PublishWorker extends BaseWorker
         $this->emitStage($job, 'running');
 
         // 1) собрать snapshot карточки
-        // ожидаем: snapshotForPublish(cardId) -> array
         $snapshot = $this->cardsService->snapshotForPublish($cardId);
 
         // 2) Avito payload (pure mapping)
@@ -62,10 +61,13 @@ final class PublishWorker extends BaseWorker
         $session = $this->robot->start($profile, $this->idempotencyKey($job, 'robot_start'));
 
         // 5) publish via robot
-        $result = $this->robot->publish((string)$session['session_id'], $avitoPayload, $this->idempotencyKey($job, 'robot_publish'));
+        $result = $this->robot->publish(
+            (string)$session['session_id'],
+            $avitoPayload,
+            $this->idempotencyKey($job, 'robot_publish')
+        );
 
         // 6) сохранить publish job в модуле Publish
-        // ожидаем: createJob(cardId, sessionId, avitoItemId, meta) -> publishJobId
         $publishJobId = $this->publishService->createJob(
             $cardId,
             (string)$session['session_id'],
@@ -91,7 +93,7 @@ final class PublishWorker extends BaseWorker
 
     protected function afterFailure(QueueJob $job, array $error, string $outcome): void
     {
-        $status = $outcome === 'retrying' ? 'retrying' : 'dead';
+        $status = $outcome === 'retrying' ? 'retrying' : 'dlq';
         $this->emitStage($job, $status, ['error' => $error]);
     }
 

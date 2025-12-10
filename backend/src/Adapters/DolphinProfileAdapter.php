@@ -1,5 +1,5 @@
 <?php
-// backend/src/Adapters/DolphinProfileAdapter.php
+// cabinet/backend/src/Adapters/DolphinProfileAdapter.php
 
 namespace App\Adapters;
 
@@ -16,19 +16,25 @@ final class DolphinProfileAdapter implements RobotProfilePort
         private string $apiKey
     ) {}
 
+    /**
+     * Allocate Dolphin profile for card snapshot.
+     * Optional idempotencyKey is passed to HttpClient for safe retries.
+     */
     public function allocateProfile(array $cardSnapshot, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/profiles/allocate";
 
-        $this->contracts->validate($cardSnapshot, $this->contractPath('profile_request.json'));
+        // Валидируем фактический request payload, который уходит во внешку
+        $payload = ['card' => $cardSnapshot];
+        $this->contracts->validate($payload, $this->contractPath('profile_request.json'));
 
-        $resp = $this->http->post($url, [
-            'card' => $cardSnapshot,
-        ], [
+        $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
         ], $idempotencyKey);
 
         $this->http->assertOk($resp, "dolphin");
+
+        // Fail-fast response validation
         $this->contracts->validate((array)$resp['body'], $this->contractPath('profile_response.json'));
 
         if (!is_array($resp['body']) || empty($resp['body']['profile_id'])) {
@@ -38,37 +44,39 @@ final class DolphinProfileAdapter implements RobotProfilePort
         return $resp['body'];
     }
 
+    /**
+     * Start Dolphin profile session.
+     * В mainline body не отправлялся (profile_id только в path),
+     * поэтому request-валидацию не делаем, чтобы не менять поведение.
+     */
     public function startProfile(string $profileId, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/profiles/{$profileId}/start";
-        $payload = [
-            'profile_id' => $profileId,
-        ];
 
-        $this->contracts->validate($payload, $this->contractPath('session_request.json'));
-
-        $resp = $this->http->post($url, $payload, [
+        $resp = $this->http->post($url, null, [
             'Authorization' => "Bearer {$this->apiKey}",
         ], $idempotencyKey);
+
         $this->http->assertOk($resp, "dolphin");
 
+        // Fail-fast response validation
         $this->contracts->validate((array)$resp['body'], $this->contractPath('session_response.json'));
 
         return is_array($resp['body']) ? $resp['body'] : [];
     }
 
+    /**
+     * Stop Dolphin profile session.
+     * Аналогично startProfile — body не отправляем.
+     */
     public function stopProfile(string $profileId, ?string $idempotencyKey = null): void
     {
         $url = rtrim($this->baseUrl, '/') . "/profiles/{$profileId}/stop";
-        $payload = [
-            'profile_id' => $profileId,
-        ];
 
-        $this->contracts->validate($payload, $this->contractPath('profile_request.json'));
-
-        $resp = $this->http->post($url, $payload, [
+        $resp = $this->http->post($url, null, [
             'Authorization' => "Bearer {$this->apiKey}",
         ], $idempotencyKey);
+
         $this->http->assertOk($resp, "dolphin");
     }
 
@@ -76,9 +84,10 @@ final class DolphinProfileAdapter implements RobotProfilePort
     {
         $url = rtrim($this->baseUrl, '/') . "/health";
         $resp = $this->http->get($url);
+
         $this->http->assertOk($resp, "dolphin");
 
-        return is_array($resp['body']) ? $resp['body'] : ['ok'=>true];
+        return is_array($resp['body']) ? $resp['body'] : ['ok' => true];
     }
 
     private function contractPath(string $file): string

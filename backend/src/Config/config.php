@@ -40,7 +40,7 @@ return [
             'access_key' => getenv('S3_ACCESS_KEY') ?: 'minio',
             'secret_key' => getenv('S3_SECRET_KEY') ?: 'minio123',
             'region'     => getenv('S3_REGION') ?: 'us-east-1',
-            'fs_root'    => getenv('S3_FS_ROOT') ?: null, // если SDK нет — путь к on-prem FS
+            'fs_root'    => getenv('S3_FS_ROOT') ?: null,
             'path_style' => (getenv('S3_PATH_STYLE') ?: '1') === '1',
         ],
         'dolphin' => [

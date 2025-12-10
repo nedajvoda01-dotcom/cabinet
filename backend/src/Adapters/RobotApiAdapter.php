@@ -23,22 +23,27 @@ final class RobotApiAdapter implements RobotPort
     public function start(array $profile, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/sessions/start";
+
         $payload = [
             'profile' => $profile,
         ];
 
+        // Fail-fast request validation
         $this->contracts->validate($payload, $this->contractPath('publish_request.json'));
 
         $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
         ], $idempotencyKey);
+
         $this->http->assertOk($resp, "robot");
 
+        // Fail-fast response validation
         $this->contracts->validate((array)$resp['body'], $this->contractPath('publish_response.json'));
 
         if (!is_array($resp['body']) || empty($resp['body']['session_id'])) {
             throw new AdapterException("Robot start contract broken", "robot_contract", true);
         }
+
         return $resp['body'];
     }
 
@@ -50,23 +55,33 @@ final class RobotApiAdapter implements RobotPort
     public function publish(string $sessionId, array $avitoPayload, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/publish";
+
         $payload = [
             'session_id' => $sessionId,
             'payload' => $avitoPayload,
         ];
 
+        // Fail-fast request validation
         $this->contracts->validate($payload, $this->contractPath('publish_request.json'));
 
         $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
         ], $idempotencyKey);
+
         $this->http->assertOk($resp, "robot");
 
+        // Fail-fast response validation
         $this->contracts->validate((array)$resp['body'], $this->contractPath('publish_response.json'));
 
         if (!is_array($resp['body']) || empty($resp['body']['avito_item_id'])) {
-            throw new AdapterException("Robot publish contract broken", "robot_publish_contract", true, ['body'=>$resp['body']]);
+            throw new AdapterException(
+                "Robot publish contract broken",
+                "robot_publish_contract",
+                true,
+                ['body' => $resp['body']]
+            );
         }
+
         return $resp['body'];
     }
 
@@ -76,11 +91,14 @@ final class RobotApiAdapter implements RobotPort
     public function pollStatus(string $avitoItemId): array
     {
         $url = rtrim($this->baseUrl, '/') . "/publish/{$avitoItemId}/status";
+
         $resp = $this->http->get($url, [
             'Authorization' => "Bearer {$this->apiKey}",
         ]);
+
         $this->http->assertOk($resp, "robot");
 
+        // Fail-fast response validation
         $this->contracts->validate((array)$resp['body'], $this->contractPath('run_status_response.json'));
 
         return is_array($resp['body']) ? $resp['body'] : [];
@@ -89,9 +107,11 @@ final class RobotApiAdapter implements RobotPort
     public function stop(string $sessionId, ?string $idempotencyKey = null): void
     {
         $url = rtrim($this->baseUrl, '/') . "/sessions/{$sessionId}/stop";
+
         $resp = $this->http->post($url, null, [
             'Authorization' => "Bearer {$this->apiKey}",
         ], $idempotencyKey);
+
         $this->http->assertOk($resp, "robot");
     }
 
@@ -99,9 +119,10 @@ final class RobotApiAdapter implements RobotPort
     {
         $url = rtrim($this->baseUrl, '/') . "/health";
         $resp = $this->http->get($url);
+
         $this->http->assertOk($resp, "robot");
 
-        return is_array($resp['body']) ? $resp['body'] : ['ok'=>true];
+        return is_array($resp['body']) ? $resp['body'] : ['ok' => true];
     }
 
     private function contractPath(string $file): string

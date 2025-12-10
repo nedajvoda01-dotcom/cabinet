@@ -1,5 +1,5 @@
 <?php
-// backend/src/Server/Container.php
+// cabinet/backend/src/Server/Container.php
 
 namespace Backend\Server;
 
@@ -93,7 +93,7 @@ final class Container
         );
 
         // ----------------------------------------------------
-        // HttpClient
+        // HttpClient + ContractValidator
         // ----------------------------------------------------
         $this->set(\App\Adapters\HttpClient::class, function(Container $c) {
             $http = $c->config()['http'] ?? [];
@@ -106,7 +106,7 @@ final class Container
         $this->set(\App\Utils\ContractValidator::class, fn() => new \App\Utils\ContractValidator());
 
         // ----------------------------------------------------
-        // Storage adapter
+        // Storage adapters (real + fake)
         // ----------------------------------------------------
         $this->set(\App\Adapters\S3StorageAdapter::class, function(Container $c) {
             $s = $c->config()['integrations']['storage'];
@@ -121,6 +121,7 @@ final class Container
             );
         });
 
+        // если где-то в коде ещё используется старое имя S3Adapter — оставляем биндинг
         $this->set(\App\Adapters\S3Adapter::class, function(Container $c) {
             $s = $c->config()['integrations']['storage'];
             return new \App\Adapters\S3Adapter(
@@ -143,7 +144,7 @@ final class Container
         );
 
         // ----------------------------------------------------
-        // ParserAdapter
+        // Parser adapters (real + fake)
         // ----------------------------------------------------
         $this->set(\App\Adapters\ParserAdapter::class, function(Container $c) {
             $p = $c->config()['integrations']['parser'];
@@ -165,7 +166,7 @@ final class Container
         );
 
         // ----------------------------------------------------
-        // PhotoApiAdapter
+        // Photo processor adapters (real + fake)
         // ----------------------------------------------------
         $this->set(\App\Adapters\PhotoProcessorAdapter::class, function(Container $c) {
             $p = $c->config()['integrations']['photo_api'];
@@ -186,7 +187,7 @@ final class Container
         );
 
         // ----------------------------------------------------
-        // Dolphin / Robot / Avito
+        // Dolphin Profile (RobotProfilePort) real + fake
         // ----------------------------------------------------
         $this->set(\App\Adapters\DolphinProfileAdapter::class, function(Container $c) {
             $d = $c->config()['integrations']['dolphin'];
@@ -206,6 +207,9 @@ final class Container
                 : $c->get(\App\Adapters\DolphinProfileAdapter::class)
         );
 
+        // ----------------------------------------------------
+        // Robot API (RobotPort) real + fake
+        // ----------------------------------------------------
         $this->set(\App\Adapters\RobotApiAdapter::class, function(Container $c) {
             $r = $c->config()['integrations']['robot'];
             return new \App\Adapters\RobotApiAdapter(
@@ -224,6 +228,9 @@ final class Container
                 : $c->get(\App\Adapters\RobotApiAdapter::class)
         );
 
+        // ----------------------------------------------------
+        // Marketplace (Avito) real + fake
+        // ----------------------------------------------------
         $this->set(\App\Adapters\AvitoMarketplaceAdapter::class, fn() => new \App\Adapters\AvitoMarketplaceAdapter());
         $this->set(FakeMarketplaceAdapter::class, fn() => new FakeMarketplaceAdapter());
 
@@ -242,7 +249,7 @@ final class Container
         );
 
         // ----------------------------------------------------
-        // HealthAdapter
+        // HealthAdapter — через порты
         // ----------------------------------------------------
         $this->set(\App\Adapters\HealthAdapter::class, fn(Container $c) => new \App\Adapters\HealthAdapter(
             $c->get(\App\Adapters\Ports\ParserPort::class),

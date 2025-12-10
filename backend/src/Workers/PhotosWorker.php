@@ -64,7 +64,12 @@ final class PhotosWorker extends BaseWorker
 
             $maskParams = (array)($p['mask_params'] ?? []);
             $order = (int)($p['order'] ?? ($done + 1));
-            $res = $this->photoApi->maskPhoto($rawUrl, $maskParams, $this->idempotencyKey($job, 'mask_' . $order));
+
+            $res = $this->photoApi->maskPhoto(
+                $rawUrl,
+                $maskParams,
+                $this->idempotencyKey($job, 'mask_' . $order)
+            );
 
             // download masked from Photo API and upload to s3 masked/
             $bin = $this->downloadBinary($res['masked_url']);
@@ -106,7 +111,7 @@ final class PhotosWorker extends BaseWorker
 
     protected function afterFailure(QueueJob $job, array $error, string $outcome): void
     {
-        $status = $outcome === 'retrying' ? 'retrying' : 'dead';
+        $status = $outcome === 'retrying' ? 'retrying' : 'dlq';
         $this->emitStage($job, $status, ['error' => $error]);
     }
 
