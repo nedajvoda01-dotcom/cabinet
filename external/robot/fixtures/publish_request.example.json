@@ -1,0 +1,12 @@
+{
+  "correlation_id": "c-robot-1",
+  "session_id": "session-77",
+  "payload": {
+    "avito_xml_url": "http://storage.local/export/a6.xml",
+    "photos": [
+      "http://storage.local/masked/a6/0.jpg",
+      "http://storage.local/masked/a6/1.jpg"
+    ],
+    "meta": {"card_id": 55}
+  }
+}
