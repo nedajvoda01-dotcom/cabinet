@@ -23,9 +23,9 @@ final class HttpClient
         $this->transport = $transport;
     }
 
-    public function get(string $url, array $headers = []): array
+    public function get(string $url, array $headers = [], ?string $idempotencyKey = null): array
     {
-        return $this->request('GET', $url, null, $headers);
+        return $this->request('GET', $url, null, $headers, $idempotencyKey);
     }
 
     public function post(string $url, array|string|null $body = null, array $headers = [], ?string $idempotencyKey = null): array
@@ -46,8 +46,13 @@ final class HttpClient
     /**
      * @return array{status:int, headers:array, body:mixed, raw:string, meta:array}
      */
-    public function request(string $method, string $url, array|string|null $body, array $headers = [], ?string $idempotencyKey = null): array
-    {
+    public function request(
+        string $method,
+        string $url,
+        array|string|null $body,
+        array $headers = [],
+        ?string $idempotencyKey = null
+    ): array {
         $normalizedHeaders = $this->normalizeHeaders($headers, $idempotencyKey);
         $requestMeta = [
             'url' => $url,
@@ -77,8 +82,12 @@ final class HttpClient
 
         $outHeaders = [];
         $headerLines = [];
-        foreach ($normalizedHeaders as $k => $v) $headerLines[] = "{$k}: {$v}";
-        if (!empty($headerLines)) curl_setopt($ch, CURLOPT_HTTPHEADER, $headerLines);
+        foreach ($normalizedHeaders as $k => $v) {
+            $headerLines[] = "{$k}: {$v}";
+        }
+        if (!empty($headerLines)) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headerLines);
+        }
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -145,7 +154,7 @@ final class HttpClient
             "{$service} HTTP {$st}: {$msg}",
             "{$service}_http_{$st}",
             $retryable,
-            ['status'=>$st, 'body'=>$resp['body'], 'service'=>$service]
+            ['status' => $st, 'body' => $resp['body'], 'service' => $service]
         );
     }
 
@@ -154,7 +163,6 @@ final class HttpClient
         if ($idempotencyKey) {
             $headers['Idempotency-Key'] = $idempotencyKey;
         }
-
         return $headers;
     }
 

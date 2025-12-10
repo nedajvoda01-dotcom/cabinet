@@ -144,6 +144,7 @@ final class QueueService
         if (($error['code'] ?? null) === 'contract_mismatch') {
             $fatal = true;
         }
+
         $attempts = $job->attempts + 1;
 
         $this->log->error("job failed", [

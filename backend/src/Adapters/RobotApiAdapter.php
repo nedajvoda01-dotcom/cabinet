@@ -3,7 +3,6 @@
 
 namespace App\Adapters;
 
-use App\Adapters\HttpClient;
 use App\Adapters\Ports\RobotPort;
 use App\Utils\ContractValidator;
 
@@ -49,8 +48,6 @@ final class RobotApiAdapter implements RobotPort
 
     /**
      * Publish card to Avito via robot.
-     * Input: PublishRequest (card + media + mapped avito payload)
-     * Output: PublishResult {avito_item_id, avito_status, meta}
      */
     public function publish(string $sessionId, array $avitoPayload, ?string $idempotencyKey = null): array
     {
@@ -86,15 +83,15 @@ final class RobotApiAdapter implements RobotPort
     }
 
     /**
-     * Poll publish status by robot job / avito id.
+     * Poll publish status by avito id.
      */
-    public function pollStatus(string $avitoItemId): array
+    public function pollStatus(string $avitoItemId, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/publish/{$avitoItemId}/status";
 
         $resp = $this->http->get($url, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
 
         $this->http->assertOk($resp, "robot");
 
@@ -119,7 +116,6 @@ final class RobotApiAdapter implements RobotPort
     {
         $url = rtrim($this->baseUrl, '/') . "/health";
         $resp = $this->http->get($url);
-
         $this->http->assertOk($resp, "robot");
 
         return is_array($resp['body']) ? $resp['body'] : ['ok' => true];

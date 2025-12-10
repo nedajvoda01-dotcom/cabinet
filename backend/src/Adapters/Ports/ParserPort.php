@@ -9,9 +9,19 @@ interface ParserPort
 {
     public function normalizePush(array $push): array;
 
+    /**
+     * Internal helper: download+store raw photos and return normalized list.
+     * Not an external API call -> no idempotency key here.
+     */
     public function ingestRawPhotos(array $photoUrls, int $cardDraftId): array;
 
-    public function poll(int $limit = 20): array;
+    /**
+     * External parser API call.
+     */
+    public function poll(int $limit = 20, ?string $idempotencyKey = null): array;
 
+    /**
+     * External parser API call.
+     */
     public function ack(string $externalId, array $meta = [], ?string $idempotencyKey = null): void;
 }

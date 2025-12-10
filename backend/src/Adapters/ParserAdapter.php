@@ -39,16 +39,48 @@ final class ParserAdapter implements ParserPort
     }
 
     /**
-     * Poll mode: fetch ads from parser API if used.
-     * Optional for MVP but included as max Spec capability.
+     * Download raw photos and upload to S3 raw/.
+     * Internal helper/orchestration, not an external call -> no idempotencyKey.
+     * Returns list of {raw_key, raw_url, order}.
      */
-    public function poll(int $limit = 20): array
+    public function ingestRawPhotos(array $photoUrls, int $cardDraftId): array
+    {
+        $out = [];
+        $order = 0;
+
+        foreach ($photoUrls as $url) {
+            if (!is_string($url) || $url === '') {
+                continue;
+            }
+
+            $order++;
+
+            $binary = $this->downloadBinary($url);
+            $ext = $this->guessExt($url) ?? 'jpg';
+
+            $key = "raw/{$cardDraftId}/{$order}.{$ext}";
+            $publicUrl = $this->uploadRaw($key, $binary, $ext);
+
+            $out[] = [
+                'order' => $order,
+                'raw_key' => $key,
+                'raw_url' => $publicUrl,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Poll mode: fetch ads from parser API if used.
+     */
+    public function poll(int $limit = 20, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/poll?limit={$limit}";
 
         $resp = $this->http->get($url, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
 
         $this->http->assertOk($resp, "parser");
 
@@ -71,18 +103,11 @@ final class ParserAdapter implements ParserPort
             'meta' => $meta,
         ];
 
-        // Если у ack есть контракт — можно включить здесь.
-        // Сейчас не трогаем, чтобы не менять поведение вне явных схем.
-        // $this->contracts->validate($payload, $this->contractPath('ack_request.json'));
-
         $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
         ], $idempotencyKey);
 
         $this->http->assertOk($resp, "parser");
-
-        // Аналогично можно валидировать ответ, если контракт есть:
-        // $this->contracts->validate((array)$resp['body'], $this->contractPath('ack_response.json'));
     }
 
     // -------- helpers
@@ -106,6 +131,7 @@ final class ParserAdapter implements ParserPort
     public function uploadRaw(string $key, string $binary, string $extension): string
     {
         $this->s3->putObject($key, $binary, "image/{$extension}");
+
         return $this->s3->publicUrl($key);
     }
 

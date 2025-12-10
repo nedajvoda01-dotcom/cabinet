@@ -82,7 +82,6 @@ final class Container
             fn(Container $c) => new \App\Queues\DlqRepository($c->get(\PDO::class))
         );
 
-        // ВАЖНО: QueueService теперь получает LoggerInterface
         $this->set(\App\Queues\QueueService::class,
             fn(Container $c) => new \App\Queues\QueueService(
                 $c->get(\App\Queues\QueueRepository::class),

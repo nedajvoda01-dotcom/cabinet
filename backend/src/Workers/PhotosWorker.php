@@ -93,12 +93,10 @@ final class PhotosWorker extends BaseWorker
         }
 
         // сохраняем masked в модуль Photos
-        // ожидаем: attachMaskedPhotos(cardId, masked[])
         $this->photosService->attachMaskedPhotos($cardId, $masked);
         $this->photosService->markStageDone($cardId);
 
         // создаём экспортный пакет и ставим export job
-        // ожидаем: createExport(cardId) -> exportId
         $exportId = $this->exportService->createExport($cardId);
         $this->queues->enqueueExport($exportId, [
             'card_id' => $cardId,
@@ -131,8 +129,6 @@ final class PhotosWorker extends BaseWorker
 
     private function downloadBinary(string $url): string
     {
-        // простой бинарный fetch через file_get_contents.
-        // сетевые ошибки → retryable (кидаем AdapterException)
         $bin = @file_get_contents($url);
         if ($bin === false) {
             throw new \App\Adapters\AdapterException(

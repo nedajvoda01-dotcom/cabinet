@@ -52,7 +52,7 @@ final class RobotStatusWorker extends BaseWorker
             throw new \RuntimeException("RobotStatus payload missing avito_item_id");
         }
 
-        $st = $this->robot->pollStatus($avitoItemId);
+        $st = $this->robot->pollStatus($avitoItemId, $this->idempotencyKey($job, 'robot_poll'));
         $normStatus = $this->avitoAdapter->normalizeStatus((string)($st['status'] ?? 'unknown'));
 
         $this->publishService->updateJobStatus($publishJobId, $normStatus, $st);

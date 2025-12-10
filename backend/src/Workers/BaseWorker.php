@@ -18,9 +18,12 @@ abstract class BaseWorker
 
     abstract protected function handle(QueueJob $job): void;
 
+    /** Hook for subclasses to react on successful processing (WS/status). */
     protected function afterSuccess(QueueJob $job): void {}
 
     /**
+     * Hook for subclasses to react on failure classification.
+     *
      * @param array{code?:string,message?:string,meta?:array,fatal?:bool} $error
      * @param string $outcome retrying|dlq
      */
@@ -34,6 +37,7 @@ abstract class BaseWorker
         return $operation ? ($base . ':' . $operation) : $base;
     }
 
+    /** Один тик воркера */
     public function tick(): void
     {
         $job = $this->queues->fetchNext($this->queueType(), $this->workerId);

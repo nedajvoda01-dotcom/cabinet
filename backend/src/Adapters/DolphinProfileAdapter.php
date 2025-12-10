@@ -1,5 +1,5 @@
 <?php
-// cabinet/backend/src/Adapters/DolphinProfileAdapter.php
+// backend/src/Adapters/DolphinProfileAdapter.php
 
 namespace App\Adapters;
 

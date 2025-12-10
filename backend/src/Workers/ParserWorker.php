@@ -47,6 +47,7 @@ final class ParserWorker extends BaseWorker
             'task_id' => $taskId,
             'card_id' => null,
             'stage' => 'parser',
+            'idempotency_key' => $this->idempotencyKey($job),
         ];
 
         $this->emitStage($job, 'running');
@@ -56,6 +57,7 @@ final class ParserWorker extends BaseWorker
         $draftCardId = $this->cardsService->createDraftFromAd($norm['ad']);
         $this->lastJobMeta['card_id'] = $draftCardId;
 
+        // бизнес-оркестрация инжеста в воркере (адаптер — тонкий IO)
         $rawPhotos = $this->ingestRawPhotos($norm['photos'], $draftCardId);
 
         $this->parserService->attachRawPhotos($draftCardId, $rawPhotos);
@@ -86,14 +88,15 @@ final class ParserWorker extends BaseWorker
             'task_id' => $this->lastJobMeta['task_id'] ?? ($job->payload['task_id'] ?? null),
             'stage' => 'parser',
             'status' => $status,
+            'idempotency_key' => $this->lastJobMeta['idempotency_key'] ?? $this->idempotencyKey($job),
         ], $extra);
 
         $this->ws->emit('pipeline.stage', $payload);
     }
 
     /**
-     * Оркестрация инжеста raw фоток для parser push.
-     * Бизнес-правила остаются здесь, адаптер только выполняет IO.
+     * Оркестрация инжеста raw фоток.
+     * Внешний idempotency не нужен: это внутренняя последовательная операция.
      */
     private function ingestRawPhotos(array $photoUrls, int $cardDraftId): array
     {
@@ -102,7 +105,9 @@ final class ParserWorker extends BaseWorker
 
         foreach ($photoUrls as $url) {
             $order++;
-            if (!is_string($url) || $url === '') continue;
+            if (!is_string($url) || $url === '') {
+                continue;
+            }
 
             $binary = $this->parserAdapter->downloadBinary($url);
             $ext = $this->parserAdapter->guessExt($url) ?? 'jpg';
