@@ -32,9 +32,11 @@ final class FakePhotoProcessorAdapter implements PhotoProcessorPort
     {
         $base = $this->fixturesDir ?? dirname(__DIR__, 3) . '/external/photo-api/fixtures';
         $path = $base . '/' . $file;
+
         if (!is_file($path)) {
             return [];
         }
+
         $json = json_decode((string)file_get_contents($path), true);
         return is_array($json) ? $json : [];
     }

@@ -55,7 +55,6 @@ final class RobotStatusWorker extends BaseWorker
         $st = $this->robot->pollStatus($avitoItemId, $this->idempotencyKey($job, 'robot_poll'));
         $normStatus = $this->avitoAdapter->normalizeStatus((string)($st['status'] ?? 'unknown'));
 
-        // ожидаем: updateJobStatus(publishJobId, normStatus, meta)
         $this->publishService->updateJobStatus($publishJobId, $normStatus, $st);
         $this->emitStage($job, 'running', [
             'publish_job_id' => $publishJobId,
@@ -64,14 +63,16 @@ final class RobotStatusWorker extends BaseWorker
             'meta' => $st,
         ]);
 
-        // если финальный статус — закрываем сессию и профиль
         if (in_array($normStatus, ['published', 'publish_failed'], true)) {
-            if ($sessionId) $this->robot->stop($sessionId, $this->idempotencyKey($job, 'robot_stop'));
-            if ($profileId) $this->dolphin->stopProfile($profileId, $this->idempotencyKey($job, 'dolphin_stop'));
+            if ($sessionId) {
+                $this->robot->stop($sessionId, $this->idempotencyKey($job, 'robot_stop'));
+            }
+            if ($profileId) {
+                $this->dolphin->stopProfile($profileId, $this->idempotencyKey($job, 'dolphin_stop'));
+            }
 
             $this->publishService->markJobFinal($publishJobId);
         } else {
-            // не финал — переочередим себя
             $this->queues->enqueueRobotStatus($publishJobId, [
                 'avito_item_id' => $avitoItemId,
                 'session_id' => $sessionId,

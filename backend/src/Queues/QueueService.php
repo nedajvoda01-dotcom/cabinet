@@ -136,8 +136,6 @@ final class QueueService
 
     /**
      * @param array $error {code?, message, meta?, fatal?:bool}
-     */
-    /**
      * @return string retrying|dlq
      */
     public function handleFailure(QueueJob $job, array $error): string
@@ -146,9 +144,9 @@ final class QueueService
         if (($error['code'] ?? null) === 'contract_mismatch') {
             $fatal = true;
         }
+
         $attempts = $job->attempts + 1;
 
-        // общий лог ошибки
         $this->log->error("job failed", [
             'correlation_id' => $job->payload['correlation_id'] ?? null,
             'idempotency_key' => $job->payload['idempotency_key'] ?? null,
@@ -161,7 +159,6 @@ final class QueueService
             'last_error' => $error,
         ]);
 
-        // fatal → сразу DLQ
         if ($fatal) {
             $job->attempts = $attempts;
             $job->lastError = $error;
@@ -186,11 +183,10 @@ final class QueueService
         }
 
         $retryable = $this->policy->isRetryableError($error);
-        if (!$fatal && $retryable && $this->policy->shouldRetry($attempts)) {
+        if ($retryable && $this->policy->shouldRetry($attempts)) {
             $nextRetryAt = $this->policy->nextRetryAt($attempts);
             $this->repo->markRetrying($job->id, $attempts, $nextRetryAt, $error);
 
-            // полезный лог про retry
             $this->log->warn("job scheduled for retry", [
                 'correlation_id' => $job->payload['correlation_id'] ?? null,
                 'idempotency_key' => $job->payload['idempotency_key'] ?? null,
@@ -200,10 +196,10 @@ final class QueueService
                 'next_retry_at' => $nextRetryAt,
                 'card_id' => $job->entity === 'card' ? $job->entityId : null,
             ]);
+
             return 'retrying';
         }
 
-        // attempts exhausted → DLQ
         $job->attempts = $attempts;
         $job->lastError = $error;
 
@@ -211,11 +207,11 @@ final class QueueService
         $this->dlq->put($job);
 
         $this->log->error("job moved to dlq", [
-                'correlation_id' => $job->payload['correlation_id'] ?? null,
-                'idempotency_key' => $job->payload['idempotency_key'] ?? null,
-                'job_id' => $job->id,
-                'type' => $job->type,
-                'attempts' => $attempts,
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'idempotency_key' => $job->payload['idempotency_key'] ?? null,
+            'job_id' => $job->id,
+            'type' => $job->type,
+            'attempts' => $attempts,
             'entity' => $job->entity,
             'entity_id' => $job->entityId,
             'card_id' => $job->entity === 'card' ? $job->entityId : null,

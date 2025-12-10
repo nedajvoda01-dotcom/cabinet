@@ -7,15 +7,6 @@ use App\Queues\QueueJob;
 use App\Queues\QueueService;
 use App\Adapters\AdapterException;
 
-/**
- * Базовый воркер:
- * 1) fetchNext()
- * 2) handle($job)
- * 3) success -> handleSuccess()
- * 4) error   -> handleFailure() (retry/DLQ)
- *
- * Workers импортируют Modules + Adapters, не трогают Controllers/Routes.
- */
 abstract class BaseWorker
 {
     public function __construct(
@@ -23,10 +14,8 @@ abstract class BaseWorker
         protected string $workerId
     ) {}
 
-    /** Какой тип очереди слушает воркер */
     abstract protected function queueType(): string;
 
-    /** Основная обработка job */
     abstract protected function handle(QueueJob $job): void;
 
     /** Hook for subclasses to react on successful processing (WS/status). */
@@ -42,7 +31,8 @@ abstract class BaseWorker
 
     protected function idempotencyKey(QueueJob $job, string $operation = ''): string
     {
-        $base = $job->payload['idempotency_key'] ?? ($job->type . ':' . $job->entity . ':' . $job->entityId . ':' . ($job->payload['correlation_id'] ?? 'nocorrelation'));
+        $base = $job->payload['idempotency_key']
+            ?? ($job->type . ':' . $job->entity . ':' . $job->entityId . ':' . ($job->payload['correlation_id'] ?? 'nocorrelation'));
 
         return $operation ? ($base . ':' . $operation) : $base;
     }
@@ -52,7 +42,6 @@ abstract class BaseWorker
     {
         $job = $this->queues->fetchNext($this->queueType(), $this->workerId);
         if (!$job) {
-            // ничего нет — спокойно выходим
             return;
         }
 
@@ -61,11 +50,9 @@ abstract class BaseWorker
             $this->queues->handleSuccess($job);
             $this->afterSuccess($job);
         } catch (AdapterException $e) {
-            // ошибки адаптеров → retryable/fatal по флагу
             $outcome = $this->queues->handleFailure($job, $e->toErrorArray());
             $this->afterFailure($job, $e->toErrorArray(), $outcome);
         } catch (\Throwable $e) {
-            // любые другие ошибки — retryable по умолчанию
             $error = [
                 'code' => 'worker_exception',
                 'message' => $e->getMessage(),

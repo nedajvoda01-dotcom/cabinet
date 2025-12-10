@@ -43,7 +43,6 @@ final class ExportWorker extends BaseWorker
 
         $this->emitStage($job, 'running');
 
-        // ожидаем: buildPackage(exportId) -> ['binary'=>string, 'file_name'=>string, 'mime'=>string, 'card_id'=>int]
         $pkg = $this->exportService->buildPackage($exportId);
 
         $fileName = $pkg['file_name'] ?? "export_{$exportId}.zip";
@@ -51,13 +50,11 @@ final class ExportWorker extends BaseWorker
 
         $this->s3->putObject($key, (string)$pkg['binary'], $pkg['mime'] ?? 'application/zip');
 
-        // ожидаем: markDone(exportId, publicUrl)
         $url = $this->s3->publicUrl($key);
         $this->exportService->markDone($exportId, $url);
 
         $cardId = (int)($pkg['card_id'] ?? 0);
         if ($cardId > 0) {
-            // publish stage
             $this->queues->enqueuePublish($cardId, [
                 'export_id' => $exportId,
                 'export_url' => $url,
@@ -65,6 +62,7 @@ final class ExportWorker extends BaseWorker
                 'idempotency_key' => $this->idempotencyKey($job, 'publish'),
             ]);
         }
+
         $this->emitStage($job, 'done', ['url' => $url]);
     }
 

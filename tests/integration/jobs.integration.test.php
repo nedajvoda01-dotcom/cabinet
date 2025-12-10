@@ -94,6 +94,7 @@ final class FakeQueueRepo
 
     public function fetchNext(string $type, string $workerId): ?QueueJob { return null; }
     public function markDone(int $id): void { $this->jobs[$id]->status = 'done'; }
+
     public function markRetrying(int $id, int $attempts, \DateTimeImmutable|string $nextRetryAt, array $error): void
     {
         $j = $this->jobs[$id];
@@ -102,6 +103,7 @@ final class FakeQueueRepo
         $j->nextRetryAt = is_string($nextRetryAt) ? $nextRetryAt : $nextRetryAt->format('c');
         $j->lastError = $error;
     }
+
     public function markDead(int $id, int $attempts, array $error): void
     {
         $j = $this->jobs[$id];
