@@ -43,7 +43,7 @@ final class ParserWorker extends BaseWorker
         $draftCardId = $this->cardsService->createDraftFromAd($norm['ad']);
 
         // 2) Инжестим raw фотки в storage
-        $rawPhotos = $this->parserAdapter->ingestRawPhotos($norm['photos'], $draftCardId);
+        $rawPhotos = $this->parserAdapter->ingestRawPhotos($norm['photos'], $draftCardId, $this->idempotencyKey($job, 'ingest'));
 
         // 3) Сохраняем результат в ParserModule
         // ожидаем: attachRawPhotos(draftCardId, rawPhotos)
@@ -52,6 +52,8 @@ final class ParserWorker extends BaseWorker
         // 4) Ставим photos pipeline job
         $this->queues->enqueuePhotos($draftCardId, [
             'source' => 'parser',
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'idempotency_key' => $this->idempotencyKey($job, 'photos'),
         ]);
 
         // 5) WS событие
@@ -59,6 +61,19 @@ final class ParserWorker extends BaseWorker
             'card_id' => $draftCardId,
             'stage' => 'parser',
             'status' => 'ready',
+        ]);
+    }
+
+    protected function afterFailure(QueueJob $job, array $error, string $outcome): void
+    {
+        $status = $outcome === 'retrying' ? 'retrying' : 'dlq';
+        $this->ws->emit('pipeline.stage', [
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'card_id' => $job->entityId,
+            'stage' => 'parser',
+            'status' => $status,
+            'idempotency_key' => $this->idempotencyKey($job),
+            'error' => $error,
         ]);
     }
 }

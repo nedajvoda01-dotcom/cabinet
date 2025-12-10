@@ -19,6 +19,35 @@ final class RetryPolicy
         $this->backoff = $backoffSeconds;
     }
 
+    /**
+     * Классификация ошибок для ретраев: network/timeout/5xx → retry.
+     * contract_mismatch/explicit fatal → не retry.
+     *
+     * @param array{code?:string,message?:string,meta?:array,fatal?:bool} $error
+     */
+    public function isRetryableError(array $error): bool
+    {
+        if (!empty($error['fatal'])) {
+            return false;
+        }
+
+        $code = (string)($error['code'] ?? '');
+        if ($code === 'contract_mismatch') {
+            return false;
+        }
+
+        $status = $error['meta']['status'] ?? null;
+        if (is_int($status) && $status >= 500) {
+            return true;
+        }
+
+        if (str_contains($code, 'timeout') || $code === 'network_error') {
+            return true;
+        }
+
+        return true;
+    }
+
     public function maxAttempts(): int
     {
         return $this->maxAttempts;

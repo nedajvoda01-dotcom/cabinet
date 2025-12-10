@@ -166,12 +166,12 @@ final class FakeQueueRepoPublishInt
     }
 
     public function markDone(int $id): void { $this->jobs[$id]->status = 'done'; }
-    public function markRetrying(int $id, int $attempts, \DateTimeImmutable $nextRetryAt, array $error): void
+    public function markRetrying(int $id, int $attempts, \DateTimeImmutable|string $nextRetryAt, array $error): void
     {
         $j = $this->jobs[$id];
         $j->status = 'retrying';
         $j->attempts = $attempts;
-        $j->nextRetryAt = $nextRetryAt;
+        $j->nextRetryAt = is_string($nextRetryAt) ? $nextRetryAt : $nextRetryAt->format('c');
         $j->lastError = $error;
     }
     public function markDead(int $id, int $attempts, array $error): void

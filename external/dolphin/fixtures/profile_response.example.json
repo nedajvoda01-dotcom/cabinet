@@ -1,0 +1,9 @@
+{
+  "correlation_id": "c-dolphin-1",
+  "status": "ok",
+  "profile": {
+    "id": "profile-42",
+    "name": "avito-publisher",
+    "status": "ready"
+  }
+}
