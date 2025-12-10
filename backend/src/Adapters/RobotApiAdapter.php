@@ -1,12 +1,17 @@
 <?php
-// backend/src/Adapters/RobotAdapter.php
+// backend/src/Adapters/RobotApiAdapter.php
 
 namespace App\Adapters;
 
-final class RobotAdapter
+use App\Adapters\HttpClient;
+use App\Adapters\Ports\RobotPort;
+use App\Utils\ContractValidator;
+
+final class RobotApiAdapter implements RobotPort
 {
     public function __construct(
         private HttpClient $http,
+        private ContractValidator $contracts,
         private string $baseUrl,
         private string $apiKey
     ) {}
@@ -18,12 +23,18 @@ final class RobotAdapter
     public function start(array $profile): array
     {
         $url = rtrim($this->baseUrl, '/') . "/sessions/start";
-        $resp = $this->http->post($url, [
+        $payload = [
             'profile' => $profile,
-        ], [
+        ];
+
+        $this->contracts->validate($payload, $this->contractPath('publish_request.json'));
+
+        $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
         ]);
         $this->http->assertOk($resp, "robot");
+
+        $this->contracts->validate((array)$resp['body'], $this->contractPath('publish_response.json'));
 
         if (!is_array($resp['body']) || empty($resp['body']['session_id'])) {
             throw new AdapterException("Robot start contract broken", "robot_contract", true);
@@ -39,13 +50,19 @@ final class RobotAdapter
     public function publish(string $sessionId, array $avitoPayload): array
     {
         $url = rtrim($this->baseUrl, '/') . "/publish";
-        $resp = $this->http->post($url, [
+        $payload = [
             'session_id' => $sessionId,
             'payload' => $avitoPayload,
-        ], [
+        ];
+
+        $this->contracts->validate($payload, $this->contractPath('publish_request.json'));
+
+        $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
         ]);
         $this->http->assertOk($resp, "robot");
+
+        $this->contracts->validate((array)$resp['body'], $this->contractPath('publish_response.json'));
 
         if (!is_array($resp['body']) || empty($resp['body']['avito_item_id'])) {
             throw new AdapterException("Robot publish contract broken", "robot_publish_contract", true, ['body'=>$resp['body']]);
@@ -63,6 +80,8 @@ final class RobotAdapter
             'Authorization' => "Bearer {$this->apiKey}",
         ]);
         $this->http->assertOk($resp, "robot");
+
+        $this->contracts->validate((array)$resp['body'], $this->contractPath('run_status_response.json'));
 
         return is_array($resp['body']) ? $resp['body'] : [];
     }
@@ -83,5 +102,10 @@ final class RobotAdapter
         $this->http->assertOk($resp, "robot");
 
         return is_array($resp['body']) ? $resp['body'] : ['ok'=>true];
+    }
+
+    private function contractPath(string $file): string
+    {
+        return dirname(__DIR__, 3) . "/external/robot/contracts/{$file}";
     }
 }

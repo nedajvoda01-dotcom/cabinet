@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use App\Workers\ParserWorker;
 use App\Queues\QueueTypes;
 use App\Queues\QueueJob;
+use App\Adapters\Ports\ParserPort;
 use App\Queues\QueueService;
 
 use Backend\Modules\Parser\ParserService;
@@ -64,28 +65,36 @@ final class ParserIntegrationTest extends TestCase
  * ----------------- Fakes -----------------
  */
 
-final class FakeParserAdapter
+final class FakeParserAdapter implements ParserPort
 {
-    public function parse(string $source, string $url, string $correlationId): array
+    public function normalizePush(array $push): array
     {
-        // fixture = external/parser/fixtures/parse_response.example.json
-        return [
-            'external_id' => 'a6-1122334455',
-            'status' => 'ok',
-            'correlation_id' => $correlationId,
-            'data' => [
-                'title' => 'Audi A6, 2018',
-                'description' => 'Отличное состояние...',
-                'vehicle' => ['brand'=>'Audi','model'=>'A6','year'=>2018],
-                'price' => ['value'=>2350000,'currency'=>'RUB'],
-                'location' => ['city'=>'Москва'],
-                'meta' => ['mileage'=>67000],
-            ],
-            'photos' => [
-                ['url'=>'https://img.auto.ru/1.jpg','order_no'=>0],
-                ['url'=>'https://img.auto.ru/2.jpg','order_no'=>1],
-            ],
-        ];
+        return $push;
+    }
+
+    public function ingestRawPhotos(array $photoUrls, int $cardDraftId): array
+    {
+        $out = [];
+        $order = 0;
+        foreach ($photoUrls as $url) {
+            $order++;
+            $out[] = [
+                'order' => $order,
+                'raw_key' => "raw/{$cardDraftId}/{$order}.jpg",
+                'raw_url' => "http://storage/raw/{$cardDraftId}/{$order}.jpg",
+            ];
+        }
+
+        return $out;
+    }
+
+    public function poll(int $limit = 20): array
+    {
+        return [];
+    }
+
+    public function ack(string $externalId, array $meta = []): void
+    {
     }
 }
 

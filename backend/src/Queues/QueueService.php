@@ -126,7 +126,10 @@ final class QueueService
     /**
      * @param array $error {code?, message, meta?, fatal?:bool}
      */
-    public function handleFailure(QueueJob $job, array $error): void
+    /**
+     * @return string retrying|dlq
+     */
+    public function handleFailure(QueueJob $job, array $error): string
     {
         $fatal = (bool)($error['fatal'] ?? false);
         $attempts = $job->attempts + 1;
@@ -163,7 +166,7 @@ final class QueueService
                 'reason' => 'fatal',
             ]);
 
-            return;
+            return 'dlq';
         }
 
         if ($this->policy->shouldRetry($attempts)) {
@@ -179,25 +182,28 @@ final class QueueService
                 'next_retry_at' => $nextRetryAt?->format('c') ?? null,
                 'card_id' => $job->entity === 'card' ? $job->entityId : null,
             ]);
-        } else {
-            // attempts exhausted → DLQ
-            $job->attempts = $attempts;
-            $job->lastError = $error;
-
-            $this->repo->markDead($job->id, $attempts, $error);
-            $this->dlq->put($job);
-
-            $this->log->error("job moved to dlq", [
-                'correlation_id' => $job->payload['correlation_id'] ?? null,
-                'job_id' => $job->id,
-                'type' => $job->type,
-                'attempts' => $attempts,
-                'entity' => $job->entity,
-                'entity_id' => $job->entityId,
-                'card_id' => $job->entity === 'card' ? $job->entityId : null,
-                'last_error' => $error,
-                'reason' => 'attempts_exhausted',
-            ]);
+            return 'retrying';
         }
+
+        // attempts exhausted → DLQ
+        $job->attempts = $attempts;
+        $job->lastError = $error;
+
+        $this->repo->markDead($job->id, $attempts, $error);
+        $this->dlq->put($job);
+
+        $this->log->error("job moved to dlq", [
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'job_id' => $job->id,
+            'type' => $job->type,
+            'attempts' => $attempts,
+            'entity' => $job->entity,
+            'entity_id' => $job->entityId,
+            'card_id' => $job->entity === 'card' ? $job->entityId : null,
+            'last_error' => $error,
+            'reason' => 'attempts_exhausted',
+        ]);
+
+        return 'dlq';
     }
 }
