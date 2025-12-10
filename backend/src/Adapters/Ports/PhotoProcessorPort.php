@@ -7,7 +7,7 @@ namespace App\Adapters\Ports;
 
 interface PhotoProcessorPort
 {
-    public function maskPhoto(string $rawUrl, array $maskParams = []): array;
+    public function maskPhoto(string $rawUrl, array $maskParams = [], ?string $idempotencyKey = null): array;
 
     public function health(): array;
 }

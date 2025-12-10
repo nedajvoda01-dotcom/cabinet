@@ -11,7 +11,7 @@ final class FakeRobotProfileAdapter implements RobotProfilePort
 {
     public function __construct(private ?string $fixturesDir = null) {}
 
-    public function allocateProfile(array $cardSnapshot): array
+    public function allocateProfile(array $cardSnapshot, ?string $idempotencyKey = null): array
     {
         $fixture = $this->fixture('profile_response.example.json');
         return $fixture ?: [
@@ -21,7 +21,7 @@ final class FakeRobotProfileAdapter implements RobotProfilePort
         ];
     }
 
-    public function startProfile(string $profileId): array
+    public function startProfile(string $profileId, ?string $idempotencyKey = null): array
     {
         $fixture = $this->fixture('session_response.example.json');
         return $fixture ?: [
@@ -31,7 +31,7 @@ final class FakeRobotProfileAdapter implements RobotProfilePort
         ];
     }
 
-    public function stopProfile(string $profileId): void
+    public function stopProfile(string $profileId, ?string $idempotencyKey = null): void
     {
         // no-op
     }
@@ -46,9 +46,11 @@ final class FakeRobotProfileAdapter implements RobotProfilePort
     {
         $base = $this->fixturesDir ?? dirname(__DIR__, 3) . '/external/dolphin/fixtures';
         $path = $base . '/' . $file;
+
         if (!is_file($path)) {
             return [];
         }
+
         $json = json_decode((string)file_get_contents($path), true);
         return is_array($json) ? $json : [];
     }

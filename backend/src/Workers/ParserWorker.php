@@ -32,7 +32,6 @@ final class ParserWorker extends BaseWorker
 
     protected function handle(QueueJob $job): void
     {
-        // payload от Modules: { push: ParserPush }
         $push = $job->payload['push'] ?? null;
         if (!$push || !is_array($push)) {
             throw new \RuntimeException("Parser job payload missing push");
@@ -54,22 +53,17 @@ final class ParserWorker extends BaseWorker
 
         $norm = $this->parserAdapter->normalizePush($push);
 
-        // 1) Создаём/обновляем draft карточку (Modules)
-        // ожидаем: createDraftFromAd(ad) -> draftCardId
         $draftCardId = $this->cardsService->createDraftFromAd($norm['ad']);
         $this->lastJobMeta['card_id'] = $draftCardId;
 
-        // 2) Инжестим raw фотки в storage
         $rawPhotos = $this->ingestRawPhotos($norm['photos'], $draftCardId);
 
-        // 3) Сохраняем результат в ParserModule
-        // ожидаем: attachRawPhotos(draftCardId, rawPhotos)
         $this->parserService->attachRawPhotos($draftCardId, $rawPhotos);
 
-        // 4) Ставим photos pipeline job
         $this->queues->enqueuePhotos($draftCardId, [
             'source' => 'parser',
             'correlation_id' => $this->lastJobMeta['correlation_id'],
+            'idempotency_key' => $this->idempotencyKey($job, 'photos'),
         ]);
     }
 
@@ -95,35 +89,6 @@ final class ParserWorker extends BaseWorker
         ], $extra);
 
         $this->ws->emit('pipeline.stage', $payload);
-    }
-
-    /**
-     * Оркестрация инжеста raw фоток для parser push.
-     * Бизнес-правила остаются здесь, адаптер только выполняет IO.
-     */
-    private function ingestRawPhotos(array $photoUrls, int $cardDraftId): array
-    {
-        $out = [];
-        $order = 0;
-
-        foreach ($photoUrls as $url) {
-            $order++;
-            if (!is_string($url) || $url === '') continue;
-
-            $binary = $this->parserAdapter->downloadBinary($url);
-            $ext = $this->parserAdapter->guessExt($url) ?? 'jpg';
-
-            $key = "raw/{$cardDraftId}/{$order}.{$ext}";
-            $publicUrl = $this->parserAdapter->uploadRaw($key, $binary, $ext);
-
-            $out[] = [
-                'order' => $order,
-                'raw_key' => $key,
-                'raw_url' => $publicUrl,
-            ];
-        }
-
-        return $out;
     }
 
     /**

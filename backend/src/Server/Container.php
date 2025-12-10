@@ -95,7 +95,14 @@ final class Container
         // ----------------------------------------------------
         // HttpClient + ContractValidator
         // ----------------------------------------------------
-        $this->set(\App\Adapters\HttpClient::class, fn() => new \App\Adapters\HttpClient());
+        $this->set(\App\Adapters\HttpClient::class, function(Container $c) {
+            $http = $c->config()['http'] ?? [];
+            return new \App\Adapters\HttpClient(
+                (int)($http['timeout_sec'] ?? 30),
+                (int)($http['connect_timeout_sec'] ?? 5)
+            );
+        });
+
         $this->set(\App\Utils\ContractValidator::class, fn() => new \App\Utils\ContractValidator());
 
         // ----------------------------------------------------

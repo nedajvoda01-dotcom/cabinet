@@ -16,7 +16,11 @@ final class DolphinProfileAdapter implements RobotProfilePort
         private string $apiKey
     ) {}
 
-    public function allocateProfile(array $cardSnapshot): array
+    /**
+     * Allocate Dolphin profile for card snapshot.
+     * Optional idempotencyKey is passed to HttpClient for safe retries.
+     */
+    public function allocateProfile(array $cardSnapshot, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/profiles/allocate";
 
@@ -26,7 +30,7 @@ final class DolphinProfileAdapter implements RobotProfilePort
 
         $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
 
         $this->http->assertOk($resp, "dolphin");
 
@@ -40,16 +44,18 @@ final class DolphinProfileAdapter implements RobotProfilePort
         return $resp['body'];
     }
 
-    public function startProfile(string $profileId): array
+    /**
+     * Start Dolphin profile session.
+     * В mainline body не отправлялся (profile_id только в path),
+     * поэтому request-валидацию не делаем, чтобы не менять поведение.
+     */
+    public function startProfile(string $profileId, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/profiles/{$profileId}/start";
 
-        // В mainline body не отправлялся (profile_id только в path).
-        // Чтобы не менять поведение Layer2, request-валидацию тут пропускаем.
-
         $resp = $this->http->post($url, null, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
 
         $this->http->assertOk($resp, "dolphin");
 
@@ -59,16 +65,17 @@ final class DolphinProfileAdapter implements RobotProfilePort
         return is_array($resp['body']) ? $resp['body'] : [];
     }
 
-    public function stopProfile(string $profileId): void
+    /**
+     * Stop Dolphin profile session.
+     * Аналогично startProfile — body не отправляем.
+     */
+    public function stopProfile(string $profileId, ?string $idempotencyKey = null): void
     {
         $url = rtrim($this->baseUrl, '/') . "/profiles/{$profileId}/stop";
 
-        // В mainline body не отправлялся (profile_id только в path).
-        // Не меняем поведение в Layer2.
-
         $resp = $this->http->post($url, null, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
 
         $this->http->assertOk($resp, "dolphin");
     }

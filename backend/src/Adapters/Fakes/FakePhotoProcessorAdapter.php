@@ -11,7 +11,7 @@ final class FakePhotoProcessorAdapter implements PhotoProcessorPort
 {
     public function __construct(private ?string $fixturesDir = null) {}
 
-    public function maskPhoto(string $rawUrl, array $maskParams = []): array
+    public function maskPhoto(string $rawUrl, array $maskParams = [], ?string $idempotencyKey = null): array
     {
         $payload = $this->fixture('mask_response.example.json');
         $result = $payload['results'][0] ?? [];
@@ -32,9 +32,11 @@ final class FakePhotoProcessorAdapter implements PhotoProcessorPort
     {
         $base = $this->fixturesDir ?? dirname(__DIR__, 3) . '/external/photo-api/fixtures';
         $path = $base . '/' . $file;
+
         if (!is_file($path)) {
             return [];
         }
+
         $json = json_decode((string)file_get_contents($path), true);
         return is_array($json) ? $json : [];
     }

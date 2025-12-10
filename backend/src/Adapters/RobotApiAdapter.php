@@ -1,5 +1,5 @@
 <?php
-// cabinet/backend/src/Adapters/RobotApiAdapter.php
+// backend/src/Adapters/RobotApiAdapter.php
 
 namespace App\Adapters;
 
@@ -20,7 +20,7 @@ final class RobotApiAdapter implements RobotPort
      * Start robot session inside Dolphin profile.
      * Returns {session_id, meta}
      */
-    public function start(array $profile): array
+    public function start(array $profile, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/sessions/start";
 
@@ -33,7 +33,7 @@ final class RobotApiAdapter implements RobotPort
 
         $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
 
         $this->http->assertOk($resp, "robot");
 
@@ -52,7 +52,7 @@ final class RobotApiAdapter implements RobotPort
      * Input: PublishRequest (card + media + mapped avito payload)
      * Output: PublishResult {avito_item_id, avito_status, meta}
      */
-    public function publish(string $sessionId, array $avitoPayload): array
+    public function publish(string $sessionId, array $avitoPayload, ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/publish";
 
@@ -66,7 +66,7 @@ final class RobotApiAdapter implements RobotPort
 
         $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
 
         $this->http->assertOk($resp, "robot");
 
@@ -104,13 +104,13 @@ final class RobotApiAdapter implements RobotPort
         return is_array($resp['body']) ? $resp['body'] : [];
     }
 
-    public function stop(string $sessionId): void
+    public function stop(string $sessionId, ?string $idempotencyKey = null): void
     {
         $url = rtrim($this->baseUrl, '/') . "/sessions/{$sessionId}/stop";
 
         $resp = $this->http->post($url, null, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
 
         $this->http->assertOk($resp, "robot");
     }
@@ -118,7 +118,6 @@ final class RobotApiAdapter implements RobotPort
     public function health(): array
     {
         $url = rtrim($this->baseUrl, '/') . "/health";
-
         $resp = $this->http->get($url);
 
         $this->http->assertOk($resp, "robot");

@@ -13,5 +13,5 @@ interface ParserPort
 
     public function poll(int $limit = 20): array;
 
-    public function ack(string $externalId, array $meta = []): void;
+    public function ack(string $externalId, array $meta = [], ?string $idempotencyKey = null): void;
 }

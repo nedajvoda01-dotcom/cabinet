@@ -1,5 +1,5 @@
 <?php
-// cabinet/backend/src/Adapters/ParserAdapter.php
+// backend/src/Adapters/ParserAdapter.php
 
 namespace App\Adapters;
 
@@ -62,7 +62,7 @@ final class ParserAdapter implements ParserPort
         return $resp['body'];
     }
 
-    public function ack(string $externalId, array $meta = []): void
+    public function ack(string $externalId, array $meta = [], ?string $idempotencyKey = null): void
     {
         $url = rtrim($this->baseUrl, '/') . "/ack";
 
@@ -77,7 +77,7 @@ final class ParserAdapter implements ParserPort
 
         $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
 
         $this->http->assertOk($resp, "parser");
 
@@ -106,7 +106,6 @@ final class ParserAdapter implements ParserPort
     public function uploadRaw(string $key, string $binary, string $extension): string
     {
         $this->s3->putObject($key, $binary, "image/{$extension}");
-
         return $this->s3->publicUrl($key);
     }
 

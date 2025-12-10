@@ -39,6 +39,7 @@ final class RobotStatusWorker extends BaseWorker
             'correlation_id' => $job->payload['correlation_id'] ?? null,
             'publish_job_id' => $publishJobId,
             'stage' => 'robot_status',
+            'idempotency_key' => $this->idempotencyKey($job),
         ];
 
         $this->emitStage($job, 'running');
@@ -54,7 +55,6 @@ final class RobotStatusWorker extends BaseWorker
         $st = $this->robot->pollStatus($avitoItemId);
         $normStatus = $this->avitoAdapter->normalizeStatus((string)($st['status'] ?? 'unknown'));
 
-        // ожидаем: updateJobStatus(publishJobId, normStatus, meta)
         $this->publishService->updateJobStatus($publishJobId, $normStatus, $st);
         $this->emitStage($job, 'running', [
             'publish_job_id' => $publishJobId,
@@ -63,19 +63,22 @@ final class RobotStatusWorker extends BaseWorker
             'meta' => $st,
         ]);
 
-        // если финальный статус — закрываем сессию и профиль
         if (in_array($normStatus, ['published', 'publish_failed'], true)) {
-            if ($sessionId) $this->robot->stop($sessionId);
-            if ($profileId) $this->dolphin->stopProfile($profileId);
+            if ($sessionId) {
+                $this->robot->stop($sessionId, $this->idempotencyKey($job, 'robot_stop'));
+            }
+            if ($profileId) {
+                $this->dolphin->stopProfile($profileId, $this->idempotencyKey($job, 'dolphin_stop'));
+            }
 
             $this->publishService->markJobFinal($publishJobId);
         } else {
-            // не финал — переочередим себя
             $this->queues->enqueueRobotStatus($publishJobId, [
                 'avito_item_id' => $avitoItemId,
                 'session_id' => $sessionId,
                 'profile_id' => $profileId,
                 'correlation_id' => $this->lastJobMeta['correlation_id'],
+                'idempotency_key' => $this->idempotencyKey($job, 'robot_status_retry'),
             ]);
         }
     }
@@ -93,6 +96,7 @@ final class RobotStatusWorker extends BaseWorker
             'publish_job_id' => $this->lastJobMeta['publish_job_id'] ?? $job->entityId,
             'stage' => 'robot_status',
             'status' => $status,
+            'idempotency_key' => $this->lastJobMeta['idempotency_key'] ?? $this->idempotencyKey($job),
         ], $extra);
 
         $this->ws->emit('pipeline.stage', $payload);

@@ -40,6 +40,7 @@ final class PhotosWorker extends BaseWorker
             'card_id' => $cardId,
             'task_id' => $job->payload['task_id'] ?? null,
             'stage' => 'photos',
+            'idempotency_key' => $this->idempotencyKey($job),
         ];
 
         $this->emitStage($job, 'running');
@@ -62,13 +63,17 @@ final class PhotosWorker extends BaseWorker
             if (!$rawUrl) continue;
 
             $maskParams = (array)($p['mask_params'] ?? []);
-            $res = $this->photoApi->maskPhoto($rawUrl, $maskParams);
+            $order = (int)($p['order'] ?? ($done + 1));
+
+            $res = $this->photoApi->maskPhoto(
+                $rawUrl,
+                $maskParams,
+                $this->idempotencyKey($job, 'mask_' . $order)
+            );
 
             // download masked from Photo API and upload to s3 masked/
             $bin = $this->downloadBinary($res['masked_url']);
             $ext = $this->guessExt($res['masked_url']) ?? 'jpg';
-            $order = (int)($p['order'] ?? (++$done));
-
             $key = "masked/{$cardId}/{$order}.{$ext}";
             $this->s3->putObject($key, $bin, "image/{$ext}");
 
@@ -98,6 +103,7 @@ final class PhotosWorker extends BaseWorker
         $this->queues->enqueueExport($exportId, [
             'card_id' => $cardId,
             'correlation_id' => $this->lastJobMeta['correlation_id'],
+            'idempotency_key' => $this->idempotencyKey($job, 'export'),
         ]);
 
         $this->emitStage($job, 'done', ['progress' => 100]);
@@ -117,6 +123,7 @@ final class PhotosWorker extends BaseWorker
             'task_id' => $this->lastJobMeta['task_id'] ?? ($job->payload['task_id'] ?? null),
             'stage' => 'photos',
             'status' => $status,
+            'idempotency_key' => $this->lastJobMeta['idempotency_key'] ?? $this->idempotencyKey($job),
         ], $extra);
 
         $this->ws->emit('pipeline.stage', $payload);

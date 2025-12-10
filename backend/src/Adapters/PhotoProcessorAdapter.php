@@ -1,10 +1,9 @@
 <?php
-// cabinet/backend/src/Adapters/PhotoProcessorAdapter.php
+// backend/src/Adapters/PhotoProcessorAdapter.php
 
 namespace App\Adapters;
 
 use App\Adapters\Ports\PhotoProcessorPort;
-use App\Adapters\HttpClient;
 use App\Utils\ContractValidator;
 
 final class PhotoProcessorAdapter implements PhotoProcessorPort
@@ -21,7 +20,7 @@ final class PhotoProcessorAdapter implements PhotoProcessorPort
      * Input contract: { raw_url, mask_params }
      * Output: { masked_url, meta }
      */
-    public function maskPhoto(string $rawUrl, array $maskParams = []): array
+    public function maskPhoto(string $rawUrl, array $maskParams = [], ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/process";
 
@@ -35,7 +34,7 @@ final class PhotoProcessorAdapter implements PhotoProcessorPort
 
         $resp = $this->http->post($url, $payload, [
             'Authorization' => "Bearer {$this->apiKey}",
-        ]);
+        ], $idempotencyKey);
 
         $this->http->assertOk($resp, "photo_api");
 
