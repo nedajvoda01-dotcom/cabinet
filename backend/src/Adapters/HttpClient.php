@@ -3,39 +3,26 @@
 
 namespace App\Adapters;
 
-use RuntimeException;
-
 final class HttpClient
 {
-    /** @var int[] */
-    private array $retryableStatuses;
-
-    /** @var callable|null */
-    private $transport;
-
     public function __construct(
         private int $timeoutSec = 30,
-        private int $connectTimeoutSec = 5,
-        array $retryableStatuses = [500, 502, 503, 504],
-        ?callable $transport = null
-    ) {
-        $this->retryableStatuses = $retryableStatuses;
-        $this->transport = $transport;
+        private int $connectTimeoutSec = 5
+    ) {}
+
+    public function get(string $url, array $headers = []): array
+    {
+        return $this->request('GET', $url, null, $headers);
     }
 
-    public function get(string $url, array $headers = [], ?string $idempotencyKey = null): array
+    public function post(string $url, array|string|null $body = null, array $headers = []): array
     {
-        return $this->request('GET', $url, null, $headers, $idempotencyKey);
+        return $this->request('POST', $url, $body, $headers);
     }
 
-    public function post(string $url, array|string|null $body = null, array $headers = [], ?string $idempotencyKey = null): array
+    public function put(string $url, array|string|null $body = null, array $headers = []): array
     {
-        return $this->request('POST', $url, $body, $headers, $idempotencyKey);
-    }
-
-    public function put(string $url, array|string|null $body = null, array $headers = [], ?string $idempotencyKey = null): array
-    {
-        return $this->request('PUT', $url, $body, $headers, $idempotencyKey);
+        return $this->request('PUT', $url, $body, $headers);
     }
 
     public function delete(string $url, array $headers = []): array
@@ -44,40 +31,18 @@ final class HttpClient
     }
 
     /**
-     * @return array{status:int, headers:array, body:mixed, raw:string, meta:array}
+     * @return array{status:int, headers:array, body:mixed, raw:string}
      */
-    public function request(string $method, string $url, array|string|null $body, array $headers = [], ?string $idempotencyKey = null): array
+    public function request(string $method, string $url, array|string|null $body, array $headers = []): array
     {
-        $normalizedHeaders = $this->normalizeHeaders($headers, $idempotencyKey);
-        $requestMeta = [
-            'url' => $url,
-            'method' => $method,
-            'headers' => $normalizedHeaders,
-        ];
-
-        if ($this->transport) {
-            $result = ($this->transport)([
-                'method' => $method,
-                'url' => $url,
-                'headers' => $normalizedHeaders,
-                'body' => $body,
-            ]);
-
-            if (!is_array($result)) {
-                throw new RuntimeException('HttpClient transport must return response array');
-            }
-
-            return $result + ['meta' => $requestMeta];
-        }
-
         $ch = curl_init($url);
         if ($ch === false) {
-            throw new AdapterException("curl_init failed", "curl_init_failed", true, ['url' => $url]);
+            throw new AdapterException("curl_init failed", "curl_init_failed", true);
         }
 
         $outHeaders = [];
         $headerLines = [];
-        foreach ($normalizedHeaders as $k => $v) $headerLines[] = "{$k}: {$v}";
+        foreach ($headers as $k => $v) $headerLines[] = "{$k}: {$v}";
         if (!empty($headerLines)) curl_setopt($ch, CURLOPT_HTTPHEADER, $headerLines);
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
@@ -109,10 +74,8 @@ final class HttpClient
         $raw = curl_exec($ch);
         if ($raw === false) {
             $err = curl_error($ch);
-            $errno = curl_errno($ch);
             curl_close($ch);
-            $code = $errno === CURLE_OPERATION_TIMEDOUT ? 'timeout' : 'network_error';
-            throw new AdapterException("Network error: {$err}", $code, true, ['url' => $url, 'errno' => $errno]);
+            throw new AdapterException("Network error: {$err}", "network_error", true);
         }
 
         $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -129,37 +92,22 @@ final class HttpClient
             'headers' => $outHeaders,
             'raw' => $raw,
             'body' => $decoded ?? $raw,
-            'meta' => $requestMeta,
         ];
     }
 
-    public function assertOk(array $resp, string $service): void
+    public function assertOk(array $resp, string $service, array $retryOn = [500,502,503,504]): void
     {
         $st = $resp['status'];
         if ($st >= 200 && $st < 300) return;
 
-        $retryable = $this->isRetryableStatus($st);
+        $retryable = in_array($st, $retryOn, true);
         $msg = is_array($resp['body']) ? json_encode($resp['body']) : (string)$resp['raw'];
 
         throw new AdapterException(
             "{$service} HTTP {$st}: {$msg}",
             "{$service}_http_{$st}",
             $retryable,
-            ['status'=>$st, 'body'=>$resp['body'], 'service'=>$service]
+            ['status'=>$st, 'body'=>$resp['body']]
         );
-    }
-
-    private function normalizeHeaders(array $headers, ?string $idempotencyKey = null): array
-    {
-        if ($idempotencyKey) {
-            $headers['Idempotency-Key'] = $idempotencyKey;
-        }
-
-        return $headers;
-    }
-
-    private function isRetryableStatus(int $status): bool
-    {
-        return in_array($status, $this->retryableStatuses, true);
     }
 }

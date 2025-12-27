@@ -32,7 +32,7 @@ final class ExportService
             $dto['params'] ?? []
         );
 
-        $this->jobs->dispatchExportRun((int)$export['id'], $dto['correlation_id'] ?? null);
+        $this->jobs->dispatchExportRun((int)$export['id']);
         $this->model->writeAudit($actorUserId, 'export_create', "Export #{$export['id']} created ({$dto['type']})");
 
         return $export;
@@ -74,7 +74,7 @@ final class ExportService
         }
 
         $updated = $this->model->updateExportStatus($id, 'queued', null, null);
-        $this->jobs->dispatchExportRetry($id, $dto['reason'], (bool)$dto['force'], $dto['correlation_id'] ?? null);
+        $this->jobs->dispatchExportRetry($id, $dto['reason'], (bool)$dto['force']);
         $this->model->writeAudit($actorUserId, 'export_retry', "Export #{$id} retry requested ({$dto['reason']})");
 
         return $updated;

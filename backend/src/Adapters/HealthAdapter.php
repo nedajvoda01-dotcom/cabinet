@@ -6,11 +6,11 @@ namespace App\Adapters;
 final class HealthAdapter
 {
     public function __construct(
-        private \App\Adapters\Ports\ParserPort $parser,
-        private \App\Adapters\Ports\PhotoProcessorPort $photoApi,
-        private \App\Adapters\Ports\StoragePort $s3,
-        private \App\Adapters\Ports\RobotPort $robot,
-        private \App\Adapters\Ports\RobotProfilePort $dolphin
+        private ParserAdapter $parser,
+        private PhotoApiAdapter $photoApi,
+        private S3Adapter $s3,
+        private RobotAdapter $robot,
+        private DolphinAdapter $dolphin
     ) {}
 
     public function checkAll(): array

@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 namespace Backend\Modules\Export;
 
-use App\Queues\QueueJob;
-use App\Queues\QueueService;
-
 /**
  * ExportJobs
  *
@@ -17,30 +14,24 @@ use App\Queues\QueueService;
  */
 final class ExportJobs
 {
-    public function __construct(private QueueService $queues) {}
+    public function __construct(
+        // TODO: инжект вашего QueueBus/Dispatcher
+        // private QueueBus $bus
+    ) {}
 
-    public function dispatchExportRun(int $exportId, ?string $correlationId = null): QueueJob
+    public function dispatchExportRun(int $exportId): void
     {
-        return $this->queues->enqueueExport($exportId, [
-            'export_id' => $exportId,
-            'correlation_id' => $this->correlationId($correlationId),
-            'action' => 'export.run',
-        ]);
+        // TODO: заменить на реальную очередь
+        // $this->bus->push('export.run', ['export_id' => $exportId]);
     }
 
-    public function dispatchExportRetry(int $exportId, string $reason, bool $force, ?string $correlationId = null): QueueJob
+    public function dispatchExportRetry(int $exportId, string $reason, bool $force): void
     {
-        return $this->queues->enqueueExport($exportId, [
-            'export_id' => $exportId,
-            'reason' => $reason,
-            'force' => $force,
-            'correlation_id' => $this->correlationId($correlationId),
-            'action' => 'export.retry',
-        ]);
-    }
-
-    private function correlationId(?string $corr): string
-    {
-        return $corr ?: bin2hex(random_bytes(8));
+        // TODO
+        // $this->bus->push('export.retry', [
+        //     'export_id' => $exportId,
+        //     'reason' => $reason,
+        //     'force' => $force,
+        // ]);
     }
 }

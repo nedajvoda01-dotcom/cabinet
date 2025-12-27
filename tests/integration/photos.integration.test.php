@@ -8,8 +8,6 @@ use App\Workers\PhotosWorker;
 use App\Queues\QueueTypes;
 use App\Queues\QueueJob;
 use App\Queues\QueueService;
-use App\Adapters\Ports\PhotoProcessorPort;
-use App\Adapters\Ports\StoragePort;
 
 use Backend\Modules\Photos\PhotosService;
 use Backend\Modules\Export\ExportService;
@@ -81,54 +79,43 @@ final class PhotosIntegrationTest extends TestCase
  * ----------------- Fakes -----------------
  */
 
-final class FakePhotoApiAdapterPhotosInt implements PhotoProcessorPort
+final class FakePhotoApiAdapterPhotosInt
 {
-    /** @var array<int,array> */
-    public array $inputs = [];
-
-    public function maskPhoto(string $rawUrl, array $maskParams = []): array
+    /**
+     * Эмулируем Photo API mask: возвращаем masked_url/masked_key на каждый raw.
+     */
+    public function mask(array $photos, string $correlationId): array
     {
-        $this->inputs[] = ['raw_url' => $rawUrl, 'params' => $maskParams];
+        $results = [];
+        foreach ($photos as $p) {
+            $results[] = [
+                'order_no' => $p['order_no'],
+                'status' => 'masked',
+                'masked_url' => 'http://storage/masked/' . $p['order_no'] . '.jpg',
+                'masked_key' => 'masked/' . $p['order_no'] . '.jpg',
+            ];
+        }
 
         return [
-            'masked_url' => 'http://storage/masked/' . (count($this->inputs)),
-            'meta' => ['source' => 'fake'],
+            'correlation_id' => $correlationId,
+            'status' => 'ok',
+            'results' => $results
         ];
-    }
-
-    public function health(): array
-    {
-        return ['ok' => true];
     }
 }
 
-final class FakeS3AdapterPhotosInt implements StoragePort
+final class FakeS3AdapterPhotosInt
 {
     public array $puts = [];
 
-    public function putObject(string $key, string $binary, string $contentType = 'application/octet-stream'): void
+    public function putFromUrl(string $url, string $key, string $correlationId): array
     {
-        $this->puts[] = compact('key', 'binary', 'contentType');
-    }
-
-    public function publicUrl(string $key): string
-    {
-        return 'http://storage.local/' . $key;
-    }
-
-    public function presignGet(string $key, int $expiresSec = 3600): string
-    {
-        return 'http://signed/' . $key;
-    }
-
-    public function listPrefix(string $prefix): array
-    {
-        return array_column($this->puts, 'key');
-    }
-
-    public function getObject(string $key): string
-    {
-        return '';
+        $this->puts[] = compact('url','key','correlationId');
+        return [
+            'status' => 'ok',
+            'key' => $key,
+            'url' => 'http://storage.local/' . $key,
+        ];
     }
 }
 
@@ -165,12 +152,12 @@ final class FakeQueueRepoPhotosInt
     }
 
     public function markDone(int $id): void { $this->jobs[$id]->status = 'done'; }
-    public function markRetrying(int $id, int $attempts, \DateTimeImmutable|string $nextRetryAt, array $error): void
+    public function markRetrying(int $id, int $attempts, \DateTimeImmutable $nextRetryAt, array $error): void
     {
         $j = $this->jobs[$id];
         $j->status = 'retrying';
         $j->attempts = $attempts;
-        $j->nextRetryAt = is_string($nextRetryAt) ? $nextRetryAt : $nextRetryAt->format('c');
+        $j->nextRetryAt = $nextRetryAt;
         $j->lastError = $error;
     }
     public function markDead(int $id, int $attempts, array $error): void

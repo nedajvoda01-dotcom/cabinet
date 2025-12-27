@@ -8,11 +8,9 @@ use App\Workers\ExportWorker;
 use App\Queues\QueueTypes;
 use App\Queues\QueueJob;
 use App\Queues\QueueService;
-use App\Adapters\Ports\StoragePort;
 
 use Backend\Modules\Export\ExportService;
 use Backend\Modules\Cards\CardsService;
-use Backend\Modules\Publish\PublishService;
 use Backend\Modules\Export\ExportModel;
 
 final class ExportIntegrationTest extends TestCase
@@ -34,7 +32,6 @@ final class ExportIntegrationTest extends TestCase
 
         $builder   = new FakeAvitoXmlBuilderExportInt();
         $s3        = new FakeS3AdapterExportInt();
-        $publishSvc = $this->createMock(PublishService::class);
 
         // подготовка: две карточки готовы к экспорту
         $c1 = $cardsSvc->create(['title'=>'car1','source'=>'auto_ru'], 1);
@@ -54,9 +51,10 @@ final class ExportIntegrationTest extends TestCase
         $worker = new ExportWorker(
             $queue,
             'w-exp-1',
-            $s3,
             $exportSvc,
-            $publishSvc,
+            $cardsSvc,
+            $builder,
+            $s3,
             new NullWsEmitterExportInt()
         );
 
@@ -97,33 +95,18 @@ final class FakeAvitoXmlBuilderExportInt
     }
 }
 
-final class FakeS3AdapterExportInt implements StoragePort
+final class FakeS3AdapterExportInt
 {
     public array $puts = [];
 
-    public function putObject(string $key, string $binary, string $contentType = 'application/octet-stream'): void
+    public function putString(string $key, string $body, string $contentType, string $correlationId): array
     {
-        $this->puts[] = compact('key', 'binary', 'contentType');
-    }
-
-    public function publicUrl(string $key): string
-    {
-        return 'http://storage.local/' . $key;
-    }
-
-    public function presignGet(string $key, int $expiresSec = 3600): string
-    {
-        return 'http://signed/' . $key;
-    }
-
-    public function listPrefix(string $prefix): array
-    {
-        return array_column($this->puts, 'key');
-    }
-
-    public function getObject(string $key): string
-    {
-        return '';
+        $this->puts[] = compact('key','body','contentType','correlationId');
+        return [
+            'status' => 'ok',
+            'key' => $key,
+            'url' => 'http://storage.local/' . $key,
+        ];
     }
 }
 
@@ -160,12 +143,12 @@ final class FakeQueueRepoExportInt
     }
 
     public function markDone(int $id): void { $this->jobs[$id]->status = 'done'; }
-    public function markRetrying(int $id, int $attempts, \DateTimeImmutable|string $nextRetryAt, array $error): void
+    public function markRetrying(int $id, int $attempts, \DateTimeImmutable $nextRetryAt, array $error): void
     {
         $j = $this->jobs[$id];
         $j->status = 'retrying';
         $j->attempts = $attempts;
-        $j->nextRetryAt = is_string($nextRetryAt) ? $nextRetryAt : $nextRetryAt->format('c');
+        $j->nextRetryAt = $nextRetryAt;
         $j->lastError = $error;
     }
     public function markDead(int $id, int $attempts, array $error): void

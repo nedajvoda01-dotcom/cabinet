@@ -45,7 +45,7 @@ final class PhotosService
         $to = $this->sm->nextStatus('card', $cardStatus, 'photos', []);
         if ($to) $this->sm->applyStatus('card', $cardId, $to);
 
-        $this->jobs->dispatchPhotosRun($cardId, (int)$task['id'], $dto['correlation_id'] ?? null);
+        $this->jobs->dispatchPhotosRun((int)$task['id']);
         $this->model->writeAudit($actorUserId, 'photos_run', "Photo task #{$task['id']} for card #{$cardId} queued");
 
         return $task;
@@ -74,7 +74,7 @@ final class PhotosService
 
         $this->model->incrementAttempts($taskId);
         $updated = $this->model->updateTaskStatus($taskId, 'queued', null, null);
-        $this->jobs->dispatchPhotosRetry((int)$task['card_id'], $taskId, $dto['reason'], (bool)$dto['force'], $dto['correlation_id'] ?? null);
+        $this->jobs->dispatchPhotosRetry($taskId, $dto['reason'], (bool)$dto['force']);
         $this->model->writeAudit($actorUserId, 'photos_retry', "Photo task #{$taskId} retry requested ({$dto['reason']})");
 
         return $updated;

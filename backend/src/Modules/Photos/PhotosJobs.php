@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 namespace Backend\Modules\Photos;
 
-use App\Queues\QueueJob;
-use App\Queues\QueueService;
-
 /**
  * PhotosJobs
  *
@@ -14,30 +11,26 @@ use App\Queues\QueueService;
  */
 final class PhotosJobs
 {
-    public function __construct(private QueueService $queues) {}
+    public function __construct(
+        // TODO: инжект вашего QueueBus / PhotosAdapter
+        // private QueueBus $bus,
+        // private PhotosAdapter $adapter
+    ) {}
 
-    public function dispatchPhotosRun(int $cardId, int $taskId, ?string $correlationId = null): QueueJob
+    public function dispatchPhotosRun(int $taskId): void
     {
-        return $this->queues->enqueuePhotos($cardId, [
-            'task_id' => $taskId,
-            'correlation_id' => $this->correlationId($correlationId),
-            'action' => 'photos.run',
-        ]);
+        // TODO: enqueue в очередь или вызов адаптера
+        // $this->bus->push('photos.run', ['task_id' => $taskId]);
+        // или: $this->adapter->run($taskId);
     }
 
-    public function dispatchPhotosRetry(int $cardId, int $taskId, string $reason, bool $force, ?string $correlationId = null): QueueJob
+    public function dispatchPhotosRetry(int $taskId, string $reason, bool $force): void
     {
-        return $this->queues->enqueuePhotos($cardId, [
-            'task_id' => $taskId,
-            'reason' => $reason,
-            'force' => $force,
-            'correlation_id' => $this->correlationId($correlationId),
-            'action' => 'photos.retry',
-        ]);
-    }
-
-    private function correlationId(?string $corr): string
-    {
-        return $corr ?: bin2hex(random_bytes(8));
+        // TODO
+        // $this->bus->push('photos.retry', [
+        //     'task_id' => $taskId,
+        //     'reason' => $reason,
+        //     'force' => $force,
+        // ]);
     }
 }

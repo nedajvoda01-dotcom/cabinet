@@ -50,7 +50,7 @@ final class ParserService
             $this->sm->applyStatus('card', $cardId, $newStatus);
         }
 
-        $this->jobs->dispatchParseRun((int)$task['id'], $dto['correlation_id'] ?? null);
+        $this->jobs->dispatchParseRun((int)$task['id']);
         $this->model->writeAudit($actorUserId, 'parser_run', "Parser task #{$task['id']} for card #{$cardId} queued");
 
         return $task;
@@ -80,7 +80,7 @@ final class ParserService
         $this->model->incrementAttempts($taskId);
         $updated = $this->model->updateTaskStatus($taskId, 'queued', null, null, null);
 
-        $this->jobs->dispatchParseRetry($taskId, $dto['reason'], (bool)$dto['force'], $dto['correlation_id'] ?? null);
+        $this->jobs->dispatchParseRetry($taskId, $dto['reason'], (bool)$dto['force']);
         $this->model->writeAudit($actorUserId, 'parser_retry', "Parser task #{$taskId} retry requested ({$dto['reason']})");
 
         return $updated;
