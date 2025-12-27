@@ -1,28 +1,33 @@
 :root {
-  /* font */
-  --font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --font: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
   /* colors */
-  --c-text: #000000;
-  --c-muted: #8f8f8f;
-  --c-bg: #f3f3f3;      /* фон страницы вокруг карточки */
-  --c-card: #ffffff;
+  --page-bg: #f2f2f2;
+  --card-bg: #ffffff;
+  --text: #000000;
+  --muted: #8d8d8d;
 
-  --c-border: #bdbdbd;
-  --c-border-dark: #9d9d9d;
+  --border: #bdbdbd;
+  --error: #dd0000;
 
-  --c-error: #dd0000;
+  --btn-bg: #1b1c1e;
+  --btn-text: #ffffff;
 
-  --c-btn: #1b1c1e;
-  --c-btn-text: #ffffff;
+  /* geometry (твои данные) */
+  --radius: 10px;
 
-  /* radii */
-  --r-10: 10px;
-
-  /* sizes from figma */
   --card-w: 615px;
+  --pad-40: 40px;
+
   --control-w: 535px;
   --control-h: 48px;
 
-  --card-pad: 40px;
+  --gap-30: 30px;
+  --gap-20: 20px;
+  --gap-10: 10px;
+
+  /* typography (твои данные) */
+  --fs-18: 18px;
+  --fs-16: 16px;
+  --lh: 130%;
 }
