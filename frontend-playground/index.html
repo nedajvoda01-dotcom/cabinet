@@ -13,17 +13,20 @@
       rel="stylesheet"
     />
 
-    <!-- CSS (order is important) -->
+    <!-- CSS order -->
     <link rel="stylesheet" href="./styles/reset.css" />
     <link rel="stylesheet" href="./styles/variables.css" />
     <link rel="stylesheet" href="./styles/app.css" />
-    <link rel="stylesheet" href="./styles/auth.css" />
+
+    <!-- optional styles (можно ниже/выше, но auth.css ДОЛЖЕН быть последним) -->
     <link rel="stylesheet" href="./styles/search.css" />
     <link rel="stylesheet" href="./styles/viewer.css" />
+
+    <!-- AUTH MUST BE LAST -->
+    <link rel="stylesheet" href="./styles/auth.css" />
   </head>
   <body>
     <div id="app"></div>
-
     <script type="module" src="./js/app.js"></script>
   </body>
 </html>
