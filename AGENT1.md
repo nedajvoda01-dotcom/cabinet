@@ -1,9 +1,13 @@
 # AGENT1.md
 ## Architecture & Engineering Principles (Execution Platform / Conveyor)
 
-> This document is written for Codex and engineers.
-> It defines **what this system is**, **what it must never become**, and **how to extend it safely**.
-> The goal is to keep the core **frozen**, while allowing unlimited growth of integrations (“executors”) at the edges.
+**Audience:** Codex + engineers  
+**Purpose:** define what this system is, what it must never become, and how to extend it safely.  
+**Primary goal:** keep the **core frozen**, while allowing **unlimited growth of integrations (“executors”)** at the edges.
+
+> **Dogma level:** High.  
+> Anything marked **MUST / MUST NOT** is **merge‑blocking** if violated.  
+> Anything marked **SHOULD** is default behavior; deviations require written justification in the PR.
 
 ---
 
@@ -11,13 +15,13 @@
 
 - **System / Platform / Conveyor / Machine** — this backend. It orchestrates execution but does not “do the work”.
 - **Executor** — an external service that performs real work (robot, parser, photo processor, browser context, storage, etc.).
-- **Integration** — the plug-in boundary that connects the platform to an executor.
+- **Integration** — the plug‑in boundary that connects the platform to an executor.
 - **Port** — an interface (contract) for an integration; the platform depends only on ports.
-- **Adapter** — a concrete implementation of a port (`Real` or `Fake`).
+- **Adapter** — a concrete implementation of a port (**Real** or **Fake**).
 - **Fallback** — wrapper that decides whether to use Real or Fake at runtime based on health/config/policy.
 - **Driver** — “integration language”: a protocol layer describing what to provide to executors and what to expect back, so orchestrator/worker stays thin.
 - **Pipeline** — execution lifecycle inside the platform (jobs, retries, DLQ, locks, idempotency).
-- **Read Model** — query-side response assembly using `include/fields` to avoid heavy calls unless explicitly requested.
+- **Read Model** — query‑side response assembly using include/fields to avoid heavy calls unless explicitly requested.
 
 ---
 
@@ -27,87 +31,112 @@
 
 This system exists to:
 
-1) **accept and store neutral input data**  
-2) **orchestrate execution** (jobs, ordering, retries, DLQ, timeouts)  
-3) **provide favorable conditions for executors** (context, storage, observability, safety)  
-4) **produce a normalized result** (internal status/error/result format)
+- accept and store **neutral input data**
+- orchestrate execution (jobs, ordering, retries, DLQ, timeouts)
+- provide favorable conditions for executors (context, storage, observability, safety)
+- produce a **normalized result** (internal status/error/result format)
 
-> The platform does **not** know *how* the work is done. It only guarantees it is done **reliably** or fails **explainably**.
+**The platform does not know how the work is done.**  
+It only guarantees it is done **reliably** or fails **explainably**.
+
+**Non‑negotiable:** the platform is an *executor orchestrator*, not an executor.
+
+---
 
 ### 1.2 The system is NOT business logic, and knows nothing about “external world meaning”
 
-Forbidden inside the platform (above adapters):
-- naming external platforms, websites, marketplaces, vendor-specific rules
-- vendor-specific statuses or domain terms
-- “how-to” logic for completing tasks in an external world
-- “formatting payloads” for specific external targets (unless it is purely internal-neutral and not target-specific)
+**Forbidden inside the platform (above adapters):**
+
+- naming external platforms, websites, marketplaces, vendor‑specific rules
+- vendor‑specific statuses or domain terms
+- “how‑to” logic for completing tasks in an external world
+- “formatting payloads” for specific external targets  
+  (unless it is purely internal‑neutral and not target‑specific)
 - making decisions based on external rules
 
-Allowed:
+**Allowed (above adapters):**
+
 - neutral data structures (snapshots, assets, hints)
 - normalized statuses and error kinds
 - reliability mechanics
 - safety and observability
-- *capability-based* behavior (“executor supports X”) without knowing “why”
+- capability‑based behavior (“executor supports X”) without knowing “why”
+
+**Hard boundary rule:** if a PR introduces external‑world meaning above adapters, it MUST be rejected.
 
 ---
 
 ## 2. Core architectural principle: Frozen core, flexible edges
 
 ### 2.1 What is frozen
+
+The following MUST remain stable. Any change requires an ADR + senior review.
+
 - Domain invariants (data correctness rules)
 - Pipeline mechanics (jobs, retry, DLQ, idempotency, locks)
 - Contract primitives (Status, Error, AssetRef, IntegrationHealth, Capabilities)
-- Layer boundaries and “who is allowed to depend on whom”
+- Layer boundaries and dependency direction (“who is allowed to depend on whom”)
 
 ### 2.2 What is flexible
-- Integrations: new ports can be added endlessly, without changing the core design.
-- Drivers: protocols can evolve as more executors appear.
-- UI / frontend can evolve independently; only API contract matters.
 
-> New executors are “plugged into the machine”. The machine’s internal mechanism remains stable.
+- **Integrations:** new ports can be added endlessly, without changing the core design.
+- **Drivers:** protocols can evolve as more executors appear.
+- **UI / frontend:** can evolve independently; only API contract matters.
+
+New executors are “plugged into the machine”.  
+**The machine’s internal mechanism remains stable.**
 
 ---
 
 ## 3. Layering and dependency direction (non-negotiable)
 
 ### 3.1 Layers
-HTTP
-↓
-Application (Commands / Queries / Pipeline)
-↓
-Domain (Invariants)
-↓
-Infrastructure (DB, Queue, Observability, Integrations)
 
-yaml
-Копировать код
+**HTTP**  
+↓  
+**Application** (Commands / Queries / Pipeline)  
+↓  
+**Domain** (Invariants)  
+↓  
+**Infrastructure** (DB, Queue, Observability, Integrations)
 
 ### 3.2 Dependency rules
-- **Domain** depends on nothing else.
-- **Application** depends on Domain and on *Port interfaces* (contracts), never on Real adapters.
-- **Infrastructure** provides implementations (PDO, queue, real adapters, fake adapters).
-- **HTTP** calls Application only; HTTP must not talk to Integrations directly.
+
+- **Domain depends on nothing else.**
+- **Application depends on Domain and on Port interfaces (contracts), never on Real adapters.**
+- **Infrastructure provides implementations** (PDO, queue, real adapters, fake adapters).
+- **HTTP calls Application only; HTTP MUST NOT talk to Integrations directly.**
 
 **Hard rule:** No file in Domain/Application imports concrete adapter classes (`Real/*Adapter.php`).
+
+**Enforcement (recommended tests):**
+- architecture boundary test: Domain must not import Infrastructure
+- architecture boundary test: Application must not import `Infrastructure/Integrations/**/Real/*`
+- controller test: controllers must not call integration ports directly (only services/commands)
 
 ---
 
 ## 4. Why we use Ports + Adapters + Registry (integrations as plugins)
 
 ### 4.1 Integrations are plugins
-The platform must support **unlimited** number of executors.
-Today we plan ~5 core integrations; later there can be more without redesign.
+
+The platform MUST support an unlimited number of executors.
+
+Today we plan ~5 core integrations; later there can be more **without redesign**.
 
 ### 4.2 Each integration is self-contained
+
 Each integration provides:
+
 - **Port interface**: contract
 - **Real adapter**: actual external calls
 - **Fake adapter**: internal fallback executor
 - **Descriptor**: registration + capabilities + version
 
 ### 4.3 Registry auto-wires integrations
+
 A registry is responsible for:
+
 - discovering integration descriptors
 - registering ports into DI
 - providing aggregated integration status
@@ -115,54 +144,74 @@ A registry is responsible for:
 
 This prevents container “spaghetti wiring” and makes integrations uniform.
 
+**Hard rule:** Core MUST NOT know the list of integrations.
+
 ---
 
 ## 5. Real / Fake / Fallback is the default model
 
 ### 5.1 Why Fake exists inside the platform
+
 Fake executors exist to:
+
 - keep pipeline stable when external services are absent
 - enable deterministic local/dev/test execution
 - allow gradual integration rollout without blocking core development
 - prevent “missing integration = crash”
 
-Fake is not a mock. Fake implements the same Port and returns normalized results.
+Fake is **not** a mock. Fake implements the same Port and returns normalized results.
 
 ### 5.2 Fallback rules
+
 Every port in DI is represented as:
 
+```
 Port = Fallback(Real, Fake)
-
-markdown
-Копировать код
+```
 
 Fallback chooses Real vs Fake based on:
-- **config presence** (no config => Fake)
-- **health** (cached TTL; unhealthy => Fake)
-- **circuit breaker** (open => Fake)
-- **policy** (some operations must not degrade to Fake in prod)
+
+- config presence (no config => Fake)
+- health (cached TTL; unhealthy => Fake)
+- circuit breaker (open => Fake)
+- policy (some operations must not degrade to Fake in prod)
+
+**Hard rule:** fallback decisions MUST be observable (metrics + logs + trace event).
 
 ### 5.3 Prod safety rule: “effectful commands”
-Some commands produce real-world effects (publish, delete, send, etc.).
-For such commands:
-- in production, silent fallback to Fake is forbidden
-- if Real is unavailable, return a normalized fatal error:
+
+Some commands produce real‑world effects (publish, delete, send, etc.). For such commands:
+
+- in production, **silent fallback to Fake is forbidden**
+- if Real is unavailable, return a normalized **fatal** error:
   - `ErrorKind = permanent` (or specific kind)
   - `code = INTEGRATION_UNAVAILABLE` (example)
-- the platform must remain explainable: no “pretend success”.
 
-This is controlled via `DegradePolicy`.
+The platform must remain explainable: **no “pretend success”.**
+
+This is controlled via **DegradePolicy**.
+
+#### 5.3.1 Dogmatic enforcement (risk‑hardening)
+
+- Effectful commands MUST declare `effect = true` in Port metadata (or equivalent).
+- Fallback MUST check `DegradePolicy` before switching to Fake.
+- In prod, for effectful commands:
+  - Fallback MUST return `permanent` error, never Fake success
+  - Circuit breaker open MUST be treated as `INTEGRATION_UNAVAILABLE`, not “try Fake”
 
 ---
 
 ## 6. Drivers: the integration protocol layer (“language”)
 
 ### 6.1 Why Drivers exist
+
 Without Drivers, workers/orchestrator grows forever:
+
 - each new executor adds new details in workers
-- workers become protocol-heavy and vendor-shaped
+- workers become protocol‑heavy and vendor‑shaped
 
 Drivers isolate protocol knowledge:
+
 - what inputs are required
 - what sequence of calls is required
 - how to prepare favorable conditions (e.g., context allocation)
@@ -170,79 +219,103 @@ Drivers isolate protocol knowledge:
 - how to cleanup resources
 
 ### 6.2 Control flow
-Worker → Driver → Ports → Adapters (Real/Fake)
 
-markdown
-Копировать код
+```
+Worker → Driver → Ports → Adapters (Real/Fake)
+```
 
 Workers stay thin and stable; Drivers evolve.
 
 ### 6.3 What Drivers may do
+
+Drivers MAY:
+
 - collect snapshot/data from core services
 - call multiple ports in a specific order
 - ensure cleanup in finally/compensation steps
-- enforce `DegradePolicy` and Guards
+- enforce DegradePolicy and Guards
 
-Drivers must not:
-- contain vendor-specific logic about “how work is done”
+Drivers MUST NOT:
+
+- contain vendor‑specific logic about “how work is done”
 - leak external status codes upward
 - bypass Ports and call Real adapters directly
+
+**Hard rule:** Drivers are protocol choreography, not business meaning.
 
 ---
 
 ## 7. Pipeline mechanics (machine reliability)
 
 ### 7.1 The pipeline is responsible for reliability, not meaning
+
 The pipeline does:
+
 - job scheduling and execution
 - retries and backoff
-- DLQ (dead-letter queue)
+- DLQ (dead‑letter queue)
 - idempotency
 - locks/leases
 - deadlines/time budgets
 - compensation/cleanup jobs
 
 The pipeline does not:
-- interpret external-world rules
+
+- interpret external‑world rules
 - encode “how to do the task”
 - depend on vendor concepts
 
 ### 7.2 Standard job model
-Each job must carry:
-- `type`
-- `subjectId` (e.g., cardId)
-- `attempt`
-- `idempotencyKey`
-- `traceId`
+
+Each job MUST carry:
+
+- type
+- subjectId (e.g., cardId)
+- attempt
+- idempotencyKey
+- traceId
 - payload (typed or validated)
 
+**Hard rule:** `traceId` and `idempotencyKey` MUST exist for all jobs (no exceptions).
+
 ### 7.3 Idempotency (mandatory for repeating operations)
+
 Idempotency ensures:
+
 - repeating the same command does not produce duplicate runs
 - crash/retry does not create duplicates
 - network timeouts do not cause double execution
 
-Idempotency belongs to pipeline/application, not to HTTP controllers.
+Idempotency belongs to **pipeline/application**, not to HTTP controllers.
+
+**Hard rule:** if a command is retried, it MUST be idempotent by design.
 
 ### 7.4 Locks / leases (mandatory for conflicting effects)
+
 For operations that must not run concurrently on the same subject:
-- use `LockService` / lease-based lock on subjectId
+
+- use LockService / lease‑based lock on subjectId
 - ensure lock has TTL and safe release
 - avoid deadlocks by consistent lock keys and timeouts
+
+**Hard rule:** lock failures MUST be observable and MUST not produce partial side effects.
 
 ---
 
 ## 8. Selective data flow: include/fields + Read Model
 
 ### 8.1 Goal
-“Data should flow easily through monolith *only when requested*”.
-The system must avoid:
+
+“Data should flow easily through monolith only when requested”. The system must avoid:
+
 - bloating internal layers with optional details
 - calling executors for every GET request
-- over-fetching by default
+- over‑fetching by default
 
 ### 8.2 include/fields contract
+
 Read endpoints:
+
 - return minimal data by default
 - accept `?include=` and/or `?fields=`
 - only when requested, read model builder adds:
@@ -251,8 +324,12 @@ Read endpoints:
   - history/audit
   - queue state, etc.
 
+**Hard rule:** include/fields MUST be validated (allowlist + limits).
+
 ### 8.3 Read Model Builder
+
 Query handlers assemble response:
+
 - from DB
 - optionally from integration health (cached TTL)
 - never call “effectful” port operations on read path
@@ -262,26 +339,34 @@ Query handlers assemble response:
 ## 9. Observability (the machine must explain itself)
 
 ### 9.1 TraceId is mandatory
+
 - Generated at HTTP entry if missing
 - Propagated into jobs
 - Added to integration calls headers
 - Included in error responses
 
+**Hard rule:** any error without traceId is a bug.
+
 ### 9.2 Unified error and status format
+
 External errors must be normalized into:
-- internal `ErrorKind` (`transient`, `permanent`, `auth`, `rate_limit`, `bad_input`, etc.)
-- stable error `code`
-- safe `message`
-- optional `details` (no secrets)
+
+- internal `ErrorKind` (transient, permanent, auth, rate_limit, bad_input, etc.)
+- stable error code
+- safe message
+- optional details (no secrets)
 
 No raw external stack traces or vendor payloads are exposed publicly.
 
 ### 9.3 Integration status endpoints
+
 Required endpoints:
+
 - `/api/integrations/status` — technical view: per integration health, mode, reason
 - `/api/capabilities` — product view: features/integrations/rbac (for UI)
 
 These endpoints are essential to answer:
+
 - what is connected?
 - what runs in real vs fake?
 - why fallback is active?
@@ -291,12 +376,15 @@ These endpoints are essential to answer:
 ## 10. Security rules
 
 Mandatory:
+
 - redact secrets in logs and errors
 - validate request sizes and schemas
 - validate webhook signatures (if used)
 - protect against SSRF if any URL input is accepted
 - never store or echo raw tokens externally
 - never let external executors shape internal domain (no vendor names above adapters)
+
+**Hard rule:** all URL inputs MUST go through UrlGuard allowlists (if any URL can reach executors).
 
 ---
 
@@ -305,6 +393,7 @@ Mandatory:
 Checks are categorized and belong to specific layers:
 
 ### 11.1 HTTP Validators (format-level)
+
 - JSON validity
 - body size limits
 - request schema
@@ -312,22 +401,26 @@ Checks are categorized and belong to specific layers:
 - auth parsing and RBAC gating
 
 ### 11.2 Domain invariants (data-level)
+
 - impossible states are forbidden
 - stage transitions are validated
 - internal entities remain consistent
 
 ### 11.3 Application Guards (action-level)
+
 - can the stage be started now?
 - are assets references valid?
 - payload size limits before sending to executor
 - URL allowlists if applicable
 
 ### 11.4 Policies (behavior-level)
+
 - degrade policy (prod vs dev)
 - access policy (RBAC at domain action level)
 - limits policy (max include depth, max assets count, etc.)
 
 ### 11.5 Integration boundary checks (network/contract-level)
+
 - config presence
 - health cache TTL
 - circuit breaker
@@ -335,28 +428,27 @@ Checks are categorized and belong to specific layers:
 - contract validation for executor responses
 - error normalization to internal ErrorKind
 
+**Hard rule:** checks MUST NOT be scattered. Each check category has a home.
+
 ---
 
 ## 12. Frontend independence
 
-Frontend and backend are independent.
-They are connected only through:
+Frontend and backend are independent. They are connected only through:
+
 - stable API endpoints
-- backward-compatible schema evolution
-- `include/fields` for optional data
+- backward‑compatible schema evolution
+- include/fields for optional data
 - `/capabilities` for feature availability
 
-Frontend can be reorganized and made more complex without backend changes,
-unless new data or new operations are required.
+Frontend can be reorganized and made more complex without backend changes, unless new data or new operations are required.
 
 ---
 
 ## 13. Target Folder Tree (full)
 
-This is the **target** structure (migrate gradually).
-It includes layered checks, drivers, pipeline mechanics, and plugin integrations.
+This is the target structure (migrate gradually). It includes layered checks, drivers, pipeline mechanics, and plugin integrations.
 
-```text
 backend/
 ├─ public/
 │  └─ index.php
@@ -625,94 +717,109 @@ backend/
          └─ Robot/
             ├─ RobotService.php
             └─ README.md
-14. How to add a new executor (unlimited ports)
-The platform supports unlimited executors. Adding a new one must be uniform.
 
-Step-by-step
-Create a new integration folder:
+---
 
-swift
-Копировать код
+## 14. How to add a new executor (unlimited ports)
+
+The platform supports unlimited executors. Adding a new one MUST be uniform.
+
+### Step-by-step
+
+1) Create a new integration folder:
+
+```
 src/Infrastructure/Integrations/NewThing/
-Define the port contract:
+```
 
-Копировать код
+2) Define the port contract:
+
+```
 NewThingPort.php
-Implement integration descriptor:
+```
 
-Копировать код
+3) Implement integration descriptor:
+
+```
 NewThingIntegration.php
-Descriptor must provide:
+```
 
-id (integration name)
+Descriptor MUST provide:
 
-contractVersion
+- `id` (integration name)
+- `contractVersion`
+- `capabilities` (string list)
+- `buildReal(config)` and `buildFake()`
+- wiring through `_shared/FallbackPort` with health/breaker rules
 
-capabilities (string list)
+4) Implement adapters:
 
-buildReal(config) and buildFake()
-
-wiring through _shared/FallbackPort with health/breaker rules
-
-Implement adapters:
-
-sql
-Копировать код
+```
 Real/NewThingHttpAdapter.php
 Fake/FakeNewThingAdapter.php
-If the executor requires protocol choreography, create a Driver:
+```
 
-swift
-Копировать код
+5) If the executor requires protocol choreography, create a Driver:
+
+```
 src/Application/Pipeline/Drivers/NewThingDriver.php
-Register the descriptor in Config/integrations.php (or rely on autoload scanning if used).
+```
 
-No changes in Domain are required.
-No changes in Pipeline mechanics are required.
-Only new integration and (optionally) a driver are added.
+6) Register the descriptor in `Config/integrations.php`  
+(or rely on autoload scanning if used).
 
-15. Practical “DO / DON’T” quick list
-DO:
+**Rules:**
+- No changes in Domain are required.
+- No changes in Pipeline mechanics are required.
+- Only a new integration and (optionally) a driver are added.
 
-keep all external meaning inside adapters
+---
 
-normalize all statuses/errors to internal contracts
+## 15. Practical “DO / DON’T” quick list
 
-keep workers thin; push protocol into drivers
+### DO
 
-use fallback by default
+- keep all external meaning inside adapters
+- normalize all statuses/errors to internal contracts
+- keep workers thin; push protocol into drivers
+- use fallback by default (with DegradePolicy)
+- use include/fields to avoid expensive reads
 
-use include/fields to avoid expensive reads
+### DON’T
 
-DON’T:
+- do vendor‑specific mapping in Domain/Application
+- call Real adapters directly
+- let controllers talk to integrations
+- add checks “where convenient” (checks must be layered)
+- silently succeed in production when effectful operations degraded to fake
 
-do vendor-specific mapping in Domain/Application
+---
 
-call Real adapters directly
+## 16. Final definition
 
-let controllers talk to integrations
-
-add checks “where convenient” (checks must be layered)
-
-silently succeed in production when effectful operations degraded to fake
-
-16. Final definition
 The system is an isolated execution conveyor.
-It does not know external-world goals, rules, or formats.
+
+It does not know external‑world goals, rules, or formats.
+
 It guarantees reliability, safety, and reproducibility of execution.
+
 All real actions are performed outside the system via adapters.
+
+---
 
 ## 17. Migration strategy (how to get here safely)
 
-This architecture is **a target state**, not a big-bang rewrite.
+This architecture is a **target state**, not a big‑bang rewrite.
 
-### 17.1. Migration principles
-- Do **not** stop feature work.
-- Do **not** refactor everything at once.
-- Do **not** introduce parallel architectures for long.
+### 17.1 Migration principles
 
-### 17.2. Recommended order
-1) **Freeze rules**  
+- Do not stop feature work.
+- Do not refactor everything at once.
+- Do not introduce parallel architectures for long.
+
+### 17.2 Recommended order
+
+1) **Freeze rules**
    - Introduce this document (`AGENT1.md`) as a hard reference.
    - Add architecture boundary tests if possible.
 
@@ -734,58 +841,68 @@ This architecture is **a target state**, not a big-bang rewrite.
    - Move response assembly to ReadModel builders.
 
 6) **Move legacy code**
-   - Any old-style integration logic goes into `_legacy/`.
+   - Any old‑style integration logic goes into `_legacy/`.
    - No two approaches should coexist in active code.
 
 ---
 
 ## 18. Testing strategy (what must be tested and where)
 
-### 18.1. Unit tests (mandatory)
+### 18.1 Unit tests (mandatory)
+
 - Domain invariants (pure logic)
 - Guards and Policies
 - RetryPolicy and ErrorClassifier
 - IdempotencyService
 - LockService
 
-### 18.2. Contract parity tests (mandatory)
-For every integration:
-- Real and Fake adapters must conform to the same Port contract.
-- Same input → same shape of output (status/error), even if behavior differs.
+### 18.2 Contract parity tests (mandatory)
 
-### 18.3. Architecture boundary tests (strongly recommended)
+For every integration:
+
+- Real and Fake adapters must conform to the same Port contract.
+- Same input → same **shape** of output (status/error), even if behavior differs.
+
+**Hard rule:** no Real adapter merges without parity tests.
+
+### 18.3 Architecture boundary tests (strongly recommended)
+
 Tests that assert:
+
 - Domain does not depend on Infrastructure.
 - Application does not import Real adapters.
 - Controllers do not call integrations directly.
 
-### 18.4. Smoke tests
+### 18.4 Smoke tests
+
 - API boots
 - Worker daemon boots
-- Pipeline can enqueue and process a fake job end-to-end
+- Pipeline can enqueue and process a fake job end‑to‑end
 
 ---
 
 ## 19. Versioning and evolution rules
 
-### 19.1. API evolution
+### 19.1 API evolution
+
 - Existing fields must never be removed or changed.
 - New fields must be optional.
 - Breaking changes require a new API version.
 
-### 19.2. Integration contract evolution
+### 19.2 Integration contract evolution
+
 - Each integration exposes `contractVersion`.
 - Breaking changes in executor contracts require:
   - new adapter version, or
   - new integration ID.
 
-The core must remain backward-compatible.
+**Hard rule:** Core must remain backward‑compatible.
 
 ---
 
 ## 20. Failure philosophy
 
-Failures are **first-class citizens**.
+Failures are first‑class citizens.
 
 Rules:
 - Every failure must be classified.
@@ -802,6 +919,7 @@ No:
 ## 21. Performance and cost discipline
 
 The platform must:
+
 - avoid calling integrations on read paths unless explicitly requested
 - cache health and capability checks with TTL
 - avoid repeated retries when circuit is open
@@ -814,6 +932,7 @@ Reliability must not turn into waste.
 ## 22. What success looks like
 
 You know the architecture is working when:
+
 - new executors are added without touching Domain or Pipeline core
 - frontend evolves without backend changes
 - failures are boring and explainable
@@ -827,8 +946,7 @@ You know the architecture is working when:
 > If the system starts to “understand” the external world,  
 > the architecture is already broken.
 
-Everything that understands **how** work is done  
-must live **outside the core**, at the edges, behind adapters.
+Everything that understands **how** work is done must live **outside the core**, at the edges, behind adapters.
 
 The core is a machine.  
 Machines must be boring, predictable, and hard to break.
