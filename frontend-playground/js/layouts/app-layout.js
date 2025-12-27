@@ -1,4 +1,5 @@
 import { createSidebar } from "../components/sidebar.js";
+import { PhotoViewer } from "../components/photo-viewer.js";
 
 export function createAppLayout({ activeNav = "search" } = {}) {
   const root = document.createElement("div");
@@ -14,10 +15,13 @@ export function createAppLayout({ activeNav = "search" } = {}) {
   overlay.className = "layout-app__overlay";
   overlay.id = "overlay-root";
 
-  // sidebar создадим как компонент
   const sidebar = createSidebar({ active: activeNav });
-
   sidebarHost.appendChild(sidebar);
+
+  // Viewer монтируем в overlay
+  const viewer = PhotoViewer();
+  overlay.appendChild(viewer.el);
+
   root.appendChild(sidebarHost);
   root.appendChild(main);
   root.appendChild(overlay);
@@ -26,6 +30,8 @@ export function createAppLayout({ activeNav = "search" } = {}) {
     el: root,
     outlet: main,
     overlay,
-    unmount() {},
+    unmount() {
+      try { viewer.unmount(); } catch {}
+    },
   };
 }
