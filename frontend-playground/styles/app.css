@@ -1,19 +1,23 @@
+* { box-sizing: border-box; }
+
 html, body {
   height: 100%;
 }
 
 body {
   margin: 0;
-  font-family: var(--font);
-  background: var(--page-bg);
+  font-family: var(--font-family);
+  background: var(--bg); /* серый фон как в фигме */
   color: var(--text);
+}
 
-  /* desktop only, без адаптива */
-  min-width: 1200px;
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
 #app {
-  min-height: 100vh;
+  height: 100%;
   display: grid;
   place-items: center;
 }
