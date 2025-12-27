@@ -1,86 +1,136 @@
 import { store } from "../store.js";
 import { router } from "../router.js";
+import { Input } from "../ui/input.js";
+import { Button } from "../ui/button.js";
 
 export function renderAuthPage(outlet, { mode }) {
-  // синхронизируем mode со store (на будущее)
   store.actions.setAuthMode(mode);
 
-  outlet.innerHTML = `
-    <div class="card">
-      <div class="auth-tabs">
-        <a href="javascript:void(0)" data-go="login" class="${mode === "login" ? "active" : ""}">Вход</a>
-        <a href="javascript:void(0)" data-go="register" class="${mode === "register" ? "active" : ""}">Регистрация</a>
-      </div>
+  // Чистим outlet (мы рендерим только внутрь layout)
+  outlet.innerHTML = "";
 
-      ${
-        mode === "login"
-          ? `
-        <div class="row">
-          <input id="email" class="field" placeholder="Почта" value="ned">
-          <div id="emailErr" class="err" style="display:none;">Аккаунт не найден</div>
-        </div>
+  // Карточка
+  const card = document.createElement("div");
+  card.className = "card";
 
-        <div class="row">
-          <input id="pass" class="field" placeholder="Пароль" type="password">
-          <div class="right"><span class="link">Забыли пароль?</span></div>
-        </div>
-
-        <button class="btn" id="submitBtn">Войти</button>
-      `
-          : `
-        <div class="row"><input class="field" placeholder="Имя"></div>
-        <div class="row"><input class="field" placeholder="Фамилия"></div>
-        <div class="row"><input class="field" placeholder="Почта"></div>
-        <div class="row"><input class="field" placeholder="Пароль" type="password"></div>
-        <div class="row"><input class="field" placeholder="Повторите пароль" type="password"></div>
-
-        <button class="btn" id="submitBtn">Зарегистрироваться</button>
-      `
-      }
-
-      <div class="row" style="margin-top:16px">
-        <a class="link" href="javascript:void(0)" id="toSearch">Перейти в поиск (временно)</a>
-      </div>
-    </div>
+  // Tabs (пока простые ссылки — позже сделаем ui/tabs.js)
+  const tabs = document.createElement("div");
+  tabs.className = "auth-tabs";
+  tabs.innerHTML = `
+    <a href="javascript:void(0)" data-go="login" class="${mode === "login" ? "active" : ""}">Вход</a>
+    <a href="javascript:void(0)" data-go="register" class="${mode === "register" ? "active" : ""}">Регистрация</a>
   `;
 
-  const onClickTabs = (e) => {
+  // Контент формы
+  const form = document.createElement("div");
+
+  // Общие хэндлеры, чтобы корректно снять в unmount
+  const cleanups = [];
+
+  const onTabsClick = (e) => {
     const go = e.target?.getAttribute?.("data-go");
     if (go === "login") router.navigate("login");
     if (go === "register") router.navigate("register");
   };
+  tabs.addEventListener("click", onTabsClick);
+  cleanups.push(() => tabs.removeEventListener("click", onTabsClick));
 
-  outlet.querySelector(".auth-tabs").addEventListener("click", onClickTabs);
-
-  // логика ошибки для login
-  let onEmailInput = null;
+  // --- UI elements ---
   if (mode === "login") {
-    const email = outlet.querySelector("#email");
-    const emailErr = outlet.querySelector("#emailErr");
+    // email
+    const emailField = Input({
+      value: "ned",
+      placeholder: "Почта",
+      type: "text",
+      onInput: (v) => {
+        // как в макете: показываем ошибку, если не "test@test.com"
+        const bad = v.trim().length > 0 && v.trim() !== "test@test.com";
+        emailField.setError(bad ? "Аккаунт не найден" : "");
+      },
+    });
 
-    onEmailInput = () => {
-      const v = email.value.trim();
-      const bad = v.length > 0 && v !== "test@test.com";
-      email.classList.toggle("error", bad);
-      emailErr.style.display = bad ? "block" : "none";
-    };
+    // password (без логики пока)
+    const passField = Input({
+      value: "",
+      placeholder: "Пароль",
+      type: "password",
+      onInput: () => {},
+    });
 
-    email.addEventListener("input", onEmailInput);
+    // "Забыли пароль?" справа
+    const forgotRow = document.createElement("div");
+    forgotRow.className = "right";
+    forgotRow.innerHTML = `<span class="link">Забыли пароль?</span>`;
+
+    // submit
+    const submit = Button({
+      text: "Войти",
+      variant: "primary",
+      fullWidth: true,
+      onClick: () => router.navigate("search"),
+    });
+
+    // mount to form
+    form.appendChild(emailField.el);
+    form.appendChild(passField.el);
+    form.appendChild(forgotRow);
+    form.appendChild(submit.el);
+
+    // cleanup
+    cleanups.push(() => emailField.unmount());
+    cleanups.push(() => passField.unmount());
+    cleanups.push(() => submit.unmount());
+  } else {
+    const firstName = Input({ placeholder: "Имя" });
+    const lastName = Input({ placeholder: "Фамилия" });
+    const email = Input({ placeholder: "Почта" });
+    const pass = Input({ placeholder: "Пароль", type: "password" });
+    const pass2 = Input({ placeholder: "Повторите пароль", type: "password" });
+
+    const submit = Button({
+      text: "Зарегистрироваться",
+      variant: "primary",
+      fullWidth: true,
+      onClick: () => router.navigate("search"),
+    });
+
+    form.appendChild(firstName.el);
+    form.appendChild(lastName.el);
+    form.appendChild(email.el);
+    form.appendChild(pass.el);
+    form.appendChild(pass2.el);
+    form.appendChild(submit.el);
+
+    cleanups.push(() => firstName.unmount());
+    cleanups.push(() => lastName.unmount());
+    cleanups.push(() => email.unmount());
+    cleanups.push(() => pass.unmount());
+    cleanups.push(() => pass2.unmount());
+    cleanups.push(() => submit.unmount());
   }
 
-  const toSearch = () => router.navigate("search");
-  outlet.querySelector("#toSearch").addEventListener("click", toSearch);
-  outlet.querySelector("#submitBtn").addEventListener("click", toSearch);
+  // временная ссылка внизу (удобно тестить)
+  const toSearch = document.createElement("div");
+  toSearch.style.marginTop = "16px";
+  toSearch.innerHTML = `<a class="link" href="javascript:void(0)">Перейти в поиск (временно)</a>`;
+
+  const onToSearch = () => router.navigate("search");
+  toSearch.addEventListener("click", onToSearch);
+  cleanups.push(() => toSearch.removeEventListener("click", onToSearch));
+
+  // Собираем карточку
+  card.appendChild(tabs);
+  card.appendChild(form);
+  card.appendChild(toSearch);
+
+  outlet.appendChild(card);
 
   return {
     unmount() {
-      outlet.querySelector(".auth-tabs")?.removeEventListener?.("click", onClickTabs);
-      if (mode === "login") {
-        const email = outlet.querySelector("#email");
-        if (email && onEmailInput) email.removeEventListener("input", onEmailInput);
-      }
-      outlet.querySelector("#toSearch")?.removeEventListener?.("click", toSearch);
-      outlet.querySelector("#submitBtn")?.removeEventListener?.("click", toSearch);
+      // снимаем всё, что повесили
+      cleanups.forEach((fn) => {
+        try { fn(); } catch {}
+      });
     },
   };
 }
