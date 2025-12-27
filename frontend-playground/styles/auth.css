@@ -1,101 +1,114 @@
 /* =========================================================
-   Auth (Login / Register) — pixel-oriented, desktop-only
-   Radius everywhere = 10px (утверждено)
+   Auth (Login / Register) — desktop only
+   RULE: radius everywhere = 10px
 ========================================================= */
 
 .auth-screen {
   min-height: 100vh;
+  background: #f5f5f5;
   display: grid;
   place-items: center;
 }
 
-/* карточка */
+/* белая карточка как в референсе */
 .auth-card {
-  width: 615px;                       /* по скрину */
-  background: var(--card);
-  border-radius: var(--radius-10);
-  box-shadow: var(--shadow);
-
-  /* внутренние отступы по скрину: большие слева/справа */
+  width: 615px; /* близко к референсу на 1920x1080 */
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
   padding: 34px 46px 34px 46px;
   box-sizing: border-box;
 }
 
-/* tabs вверху справа */
+/* табы внутри карточки справа */
 .auth-tabs {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 26px;
   margin-bottom: 18px;
   user-select: none;
 }
 
+/* чтобы не было "синих ссылок" — всё выглядит как текст в макете */
 .auth-tab {
   border: none;
   background: transparent;
-  cursor: pointer;
   padding: 0;
+  cursor: pointer;
 
-  font-size: var(--fs-14);
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--muted);
+  color: #9a9a9a;
   line-height: 1.2;
+  text-decoration: none;
 }
 
 .auth-tab.is-active {
-  color: var(--text);
-  font-weight: 700;
+  color: #111111;
   text-decoration: underline;
   text-underline-offset: 6px;
   text-decoration-thickness: 2px;
 }
 
-/* form */
+/* форма: равномерные расстояния как в референсе */
 .auth-form {
   display: grid;
   gap: 14px;
 }
 
-/* поля */
+/* поле + ошибка под ним */
 .auth-field {
   display: grid;
   gap: 6px;
 }
 
+/* инпуты */
 .auth-input {
-  height: 48px;                       /* по скрину */
-  width: 523px;                       /* 615 - 46*2 = 523 */
-  border-radius: var(--radius-10);
-  border: 1px solid var(--line);
+  width: 523px;          /* 615 - 46*2 */
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.28);
   padding: 0 16px;
   box-sizing: border-box;
 
-  font-size: var(--fs-14);
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 14px;
   font-weight: 500;
+  color: #111111;
+
+  background: #ffffff;
   outline: none;
-  background: #fff;
 }
 
 .auth-input::placeholder {
   color: #b5b5b5;
 }
 
-/* error state */
+/* focus — без “синего” браузерного стиля */
+.auth-input:focus {
+  border-color: rgba(0,0,0,0.45);
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.06);
+}
+
+/* error */
 .auth-input.is-error {
-  border-color: var(--danger);
+  border-color: #ff3b30;
+  box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.10);
 }
 
 .auth-error {
-  color: var(--danger);
-  font-size: var(--fs-14);
+  color: #ff3b30;
+  font-size: 14px;
   line-height: 1.2;
 }
 
 .auth-spacer {
-  height: 16px;
+  height: 16px; /* чтобы сетка не прыгала когда нет ошибки */
 }
 
-/* forgot */
+/* "Забыли пароль?" справа под паролем */
 .auth-row {
   display: flex;
   justify-content: flex-end;
@@ -103,29 +116,38 @@
 }
 
 .auth-link {
-  font-size: var(--fs-14);
+  font-size: 14px;
   font-weight: 500;
-  color: var(--muted);
+  color: #9a9a9a;
   text-decoration: underline;
   text-underline-offset: 4px;
   cursor: pointer;
 }
 
-/* submit button */
+/* кнопка */
 .auth-submit {
-  height: 48px;
   width: 523px;
-  border-radius: var(--radius-10);
+  height: 48px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
 
-  background: var(--btn);
-  color: #fff;
+  background: #151618;
+  color: #ffffff;
+  font-size: 16px;
   font-weight: 700;
-  font-size: var(--fs-16);
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-.auth-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+/* если у тебя где-то есть "временная ссылка" — чтобы она не была синей */
+.auth-card a {
+  color: #9a9a9a;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.auth-card a:visited {
+  color: #9a9a9a;
 }
