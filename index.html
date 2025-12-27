@@ -1,16 +1,14 @@
 <!doctype html>
 <html lang="ru">
   <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0; url=./frontend-playground/" />
+    <meta charset="utf-8" />
     <title>Redirecting…</title>
-    <script>
-      // на случай если meta refresh не сработает
-      location.replace("./frontend-playground/");
-    </script>
+    <meta http-equiv="refresh" content="0; url=./frontend-playground/" />
+    <link rel="canonical" href="./frontend-playground/" />
   </head>
   <body>
-    Переходим в прототип…
-    <a href="./frontend-playground/">Нажми сюда, если не перекинуло</a>
+    <script>
+      window.location.replace('./frontend-playground/');
+    </script>
   </body>
 </html>
