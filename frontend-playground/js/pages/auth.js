@@ -2,26 +2,29 @@ const app = document.getElementById("app");
 
 const state = {
   mode: "login", // login | register
-  login: {
-    email: "",
-    password: "",
-    emailError: "", // "Аккаунт не найден"
-  },
-  register: {
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    password2: "",
-    emailError: "",
-  },
+  login: { email: "", password: "", emailError: "" },
+  register: { firstName: "", lastName: "", email: "", password: "", password2: "", emailError: "" },
 };
 
-function setMode(mode) {
+function getModeFromHash() {
+  const h = (location.hash || "").toLowerCase();
+  if (h === "#register") return "register";
+  return "login"; // default
+}
+
+function setHashForMode(mode) {
+  const next = mode === "register" ? "#register" : "#login";
+  if (location.hash !== next) location.hash = next;
+}
+
+function setMode(mode, { syncHash = true } = {}) {
   state.mode = mode;
+
   // сброс ошибок при переключении
   state.login.emailError = "";
   state.register.emailError = "";
+
+  if (syncHash) setHashForMode(mode);
   render();
 }
 
@@ -117,9 +120,7 @@ function bindLogin() {
 
     const emailVal = (state.login.email || "").trim().toLowerCase();
 
-    // Заглушка поведения как на макете:
-    // если ввели что-то и оно не совпало с demo — показываем “Аккаунт не найден”
-    // demo: test@test.ru
+    // Заглушка поведения: если ввели что-то и оно не demo — “Аккаунт не найден”
     if (emailVal && emailVal !== "test@test.ru") {
       state.login.emailError = "Аккаунт не найден";
       render();
@@ -206,7 +207,6 @@ function bindRegister() {
     }
 
     if (state.register.password && state.register.password2 && state.register.password !== state.register.password2) {
-      // пока не плодим ещё один блок ошибки — используем общий
       state.register.emailError = "Пароли не совпадают";
       render();
       return;
@@ -220,7 +220,7 @@ function bindRegister() {
 
 function bindTabs() {
   app.querySelectorAll(".auth-tab").forEach((el) => {
-    el.addEventListener("click", () => setMode(el.dataset.tab));
+    el.addEventListener("click", () => setMode(el.dataset.tab, { syncHash: true }));
   });
 }
 
@@ -235,4 +235,12 @@ function esc(v) {
     .replaceAll("'", "&#039;");
 }
 
+/* init: read hash + listen */
+state.mode = getModeFromHash();
+window.addEventListener("hashchange", () => {
+  const next = getModeFromHash();
+  if (next !== state.mode) setMode(next, { syncHash: false });
+});
+
+if (!location.hash) setHashForMode(state.mode);
 render();
