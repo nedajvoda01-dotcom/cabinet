@@ -1,41 +1,55 @@
+import { listings as mockListings } from "./mocks/listings.js";
+
 const STORAGE_KEY = "fp_state_v1";
 
 const defaultState = {
   ui: {
     sidebarCollapsed: false,
-    viewer: { open: false, images: [], index: 0 },
+    viewer: {
+      open: false,
+      images: [],
+      index: 0,
+    },
   },
+
   auth: {
-    mode: "login", // "login" | "register"
+    mode: "login",
   },
+
   search: {
     filters: {
-      status: "active",      // "active" | "archived"
-      condition: "all",      // "all" | "used" | "new"
-      seller: "all",         // "all" | "owner" | "dealer"
+      status: "active",      // active | archived
+      condition: "all",      // all | used | new
+      seller: "all",         // all | owner | dealer
       brand: "",
       model: "",
       generation: "",
       color: "",
       region: "",
     },
+    all: [],        // все объявления (моки)
+    results: [],    // отфильтрованные
   },
 };
+
+/* =========================================================
+   Helpers
+========================================================= */
 
 function loadPersisted() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw);
+    return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
   }
 }
 
 function savePersisted(state) {
-  // сохраняем только то, что надо помнить между перезагрузками
   const persisted = {
-    ui: { sidebarCollapsed: state.ui.sidebarCollapsed },
+    ui: {
+      sidebarCollapsed: state.ui.sidebarCollapsed,
+    },
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
 }
@@ -54,8 +68,44 @@ function deepMerge(base, patch) {
   return out;
 }
 
+/* =========================================================
+   Filtering logic (ядро поиска)
+========================================================= */
+
+function normalize(v) {
+  return String(v || "").toLowerCase();
+}
+
+function applyFilters(list, f) {
+  return list.filter((it) => {
+    if (f.status !== it.status) return false;
+
+    if (f.condition !== "all" && it.condition !== f.condition) return false;
+    if (f.seller !== "all" && it.seller !== f.seller) return false;
+
+    if (f.brand && !normalize(it.brand).includes(normalize(f.brand))) return false;
+    if (f.model && !normalize(it.model).includes(normalize(f.model))) return false;
+    if (f.generation && !normalize(it.generation).includes(normalize(f.generation))) return false;
+    if (f.color && !normalize(it.color).includes(normalize(f.color))) return false;
+    if (f.region && !normalize(it.region).includes(normalize(f.region))) return false;
+
+    return true;
+  });
+}
+
+/* =========================================================
+   Store core
+========================================================= */
+
 let state = deepMerge(defaultState, loadPersisted());
 const listeners = new Set();
+
+function recomputeSearch(nextState) {
+  nextState.search.results = applyFilters(
+    nextState.search.all,
+    nextState.search.filters
+  );
+}
 
 export const store = {
   getState() {
@@ -64,6 +114,15 @@ export const store = {
 
   setState(patch, meta = {}) {
     const next = deepMerge(state, patch);
+
+    // если меняются фильтры или список — пересчитываем результаты
+    if (
+      meta.type === "search/filters" ||
+      meta.type === "search/init"
+    ) {
+      recomputeSearch(next);
+    }
+
     state = next;
     savePersisted(state);
     listeners.forEach((fn) => fn(state, meta));
@@ -74,40 +133,70 @@ export const store = {
     return () => listeners.delete(fn);
   },
 
-  // удобные экшены (чтобы не размазывать логику по коду)
   actions: {
+    /* ===== UI ===== */
+
     setSidebarCollapsed(value) {
-      store.setState({ ui: { sidebarCollapsed: !!value } }, { type: "ui/sidebar" });
+      store.setState(
+        { ui: { sidebarCollapsed: !!value } },
+        { type: "ui/sidebar" }
+      );
     },
 
     openViewer(images, index = 0) {
       store.setState(
-        { ui: { viewer: { open: true, images: images || [], index: index || 0 } } },
+        { ui: { viewer: { open: true, images, index } } },
         { type: "ui/viewer/open" }
       );
     },
 
     closeViewer() {
-      store.setState({ ui: { viewer: { open: false, images: [], index: 0 } } }, { type: "ui/viewer/close" });
+      store.setState(
+        { ui: { viewer: { open: false, images: [], index: 0 } } },
+        { type: "ui/viewer/close" }
+      );
     },
 
-    setViewerIndex(index) {
-      const s = store.getState();
-      const max = Math.max(0, (s.ui.viewer.images?.length || 0) - 1);
-      const clamped = Math.min(Math.max(0, index), max);
-      store.setState({ ui: { viewer: { ...s.ui.viewer, index: clamped } } }, { type: "ui/viewer/index" });
-    },
+    /* ===== Auth ===== */
 
     setAuthMode(mode) {
       store.setState({ auth: { mode } }, { type: "auth/mode" });
     },
 
-    setSearchFilters(patch) {
-      const s = store.getState();
+    /* ===== Search ===== */
+
+    initSearch() {
       store.setState(
-        { search: { filters: { ...s.search.filters, ...patch } } },
+        {
+          search: {
+            ...state.search,
+            all: mockListings.slice(),
+          },
+        },
+        { type: "search/init" }
+      );
+    },
+
+    setSearchFilters(patch) {
+      store.setState(
+        {
+          search: {
+            ...state.search,
+            filters: {
+              ...state.search.filters,
+              ...patch,
+            },
+          },
+        },
         { type: "search/filters" }
       );
     },
   },
 };
+
+/* =========================================================
+   Init
+========================================================= */
+
+// инициализируем поиск сразу
+store.actions.initSearch();
