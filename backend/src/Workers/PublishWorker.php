@@ -3,23 +3,25 @@
 
 namespace App\Workers;
 
+use App\Adapters\Ports\MarketplacePort;
+use App\Adapters\Ports\RobotPort;
+use App\Adapters\Ports\RobotProfilePort;
+use App\Modules\Cards\CardsService;
+use App\Modules\Publish\PublishService;
 use App\Queues\QueueJob;
 use App\Queues\QueueTypes;
-use App\Adapters\AvitoAdapter;
-use App\Adapters\RobotAdapter;
-use App\Adapters\DolphinAdapter;
-use App\Modules\Publish\PublishService;
-use App\Modules\Cards\CardsService;
 use App\WS\WsEmitter;
 
 final class PublishWorker extends BaseWorker
 {
+    private array $lastJobMeta = [];
+
     public function __construct(
         \App\Queues\QueueService $queues,
         string $workerId,
-        private AvitoAdapter $avitoAdapter,
-        private RobotAdapter $robot,
-        private DolphinAdapter $dolphin,
+        private MarketplacePort $avitoAdapter,
+        private RobotPort $robot,
+        private RobotProfilePort $dolphin,
         private PublishService $publishService,
         private CardsService $cardsService,
         private WsEmitter $ws
@@ -35,26 +37,37 @@ final class PublishWorker extends BaseWorker
     protected function handle(QueueJob $job): void
     {
         $cardId = $job->entityId;
+        $this->lastJobMeta = [
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'card_id' => $cardId,
+            'publish_task_id' => $job->payload['task_id'] ?? null,
+            'stage' => 'publish',
+            'idempotency_key' => $this->idempotencyKey($job),
+        ];
+
+        $this->emitStage($job, 'running');
 
         // 1) собрать snapshot карточки
-        // ожидаем: snapshotForPublish(cardId) -> array
         $snapshot = $this->cardsService->snapshotForPublish($cardId);
 
         // 2) Avito payload (pure mapping)
         $avitoPayload = $this->avitoAdapter->mapCard($snapshot);
 
         // 3) allocate Dolphin profile
-        $profile = $this->dolphin->allocateProfile($snapshot);
-        $this->dolphin->startProfile((string)$profile['profile_id']);
+        $profile = $this->dolphin->allocateProfile($snapshot, $this->idempotencyKey($job, 'dolphin_allocate'));
+        $this->dolphin->startProfile((string)$profile['profile_id'], $this->idempotencyKey($job, 'dolphin_start'));
 
         // 4) start robot session
-        $session = $this->robot->start($profile);
+        $session = $this->robot->start($profile, $this->idempotencyKey($job, 'robot_start'));
 
         // 5) publish via robot
-        $result = $this->robot->publish((string)$session['session_id'], $avitoPayload);
+        $result = $this->robot->publish(
+            (string)$session['session_id'],
+            $avitoPayload,
+            $this->idempotencyKey($job, 'robot_publish')
+        );
 
         // 6) сохранить publish job в модуле Publish
-        // ожидаем: createJob(cardId, sessionId, avitoItemId, meta) -> publishJobId
         $publishJobId = $this->publishService->createJob(
             $cardId,
             (string)$session['session_id'],
@@ -67,13 +80,34 @@ final class PublishWorker extends BaseWorker
             'avito_item_id' => $result['avito_item_id'],
             'session_id' => $session['session_id'],
             'profile_id' => $profile['profile_id'],
+            'correlation_id' => $this->lastJobMeta['correlation_id'],
+            'idempotency_key' => $this->idempotencyKey($job, 'robot_status'),
         ]);
+        $this->lastJobMeta['publish_job_id'] = $publishJobId;
 
-        $this->ws->emit("publish.progress", [
-            'card_id' => $cardId,
+        $this->emitStage($job, 'running', [
             'publish_job_id' => $publishJobId,
-            'status' => 'publish_processing',
             'avito_item_id' => $result['avito_item_id'],
         ]);
+    }
+
+    protected function afterFailure(QueueJob $job, array $error, string $outcome): void
+    {
+        $status = $outcome === 'retrying' ? 'retrying' : 'dlq';
+        $this->emitStage($job, $status, ['error' => $error]);
+    }
+
+    private function emitStage(QueueJob $job, string $status, array $extra = []): void
+    {
+        $payload = array_merge([
+            'correlation_id' => $this->lastJobMeta['correlation_id'] ?? ($job->payload['correlation_id'] ?? null),
+            'card_id' => $this->lastJobMeta['card_id'] ?? $job->entityId,
+            'publish_job_id' => $this->lastJobMeta['publish_job_id'] ?? null,
+            'stage' => 'publish',
+            'status' => $status,
+            'idempotency_key' => $this->lastJobMeta['idempotency_key'] ?? $this->idempotencyKey($job),
+        ], $extra);
+
+        $this->ws->emit('pipeline.stage', $payload);
     }
 }

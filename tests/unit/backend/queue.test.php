@@ -46,6 +46,14 @@ final class QueueServiceTest extends TestCase
         $this->assertCount(1, $this->repo->jobs);
     }
 
+    public function testIdempotencyKeyGenerated(): void
+    {
+        $job = $this->svc->enqueueParser(5, ['correlation_id' => 'cid-gen']);
+
+        $this->assertArrayHasKey('idempotency_key', $job->payload);
+        $this->assertSame('parser:parser_payload:5:cid-gen', $job->payload['idempotency_key']);
+    }
+
     public function testHandleSuccessMarksDone(): void
     {
         $job = $this->svc->enqueuePhotos(10);
@@ -73,6 +81,17 @@ final class QueueServiceTest extends TestCase
 
         $stored = $this->repo->jobs[$job->id];
         $this->assertSame('dead', $stored->status);
+        $this->assertCount(1, $this->dlq->jobs);
+    }
+
+    public function testHandleFailureMovesContractMismatchToDlqImmediately(): void
+    {
+        $job = $this->svc->enqueuePhotos(10, ['correlation_id' => 'cid-contract']);
+        $this->svc->handleFailure($job, ['message' => 'bad contract', 'code' => 'contract_mismatch']);
+
+        $stored = $this->repo->jobs[$job->id];
+        $this->assertSame('dead', $stored->status);
+        $this->assertSame(1, $stored->attempts);
         $this->assertCount(1, $this->dlq->jobs);
     }
 
@@ -134,12 +153,12 @@ final class FakeQueueRepo
         $this->jobs[$id]->status = 'done';
     }
 
-    public function markRetrying(int $id, int $attempts, \DateTimeImmutable $nextRetryAt, array $error): void
+    public function markRetrying(int $id, int $attempts, \DateTimeImmutable|string $nextRetryAt, array $error): void
     {
         $j = $this->jobs[$id];
         $j->status = 'retrying';
         $j->attempts = $attempts;
-        $j->nextRetryAt = $nextRetryAt;
+        $j->nextRetryAt = is_string($nextRetryAt) ? $nextRetryAt : $nextRetryAt->format('c');
         $j->lastError = $error;
     }
 

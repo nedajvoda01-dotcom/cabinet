@@ -11,6 +11,9 @@ interface RobotPort
 
     public function publish(string $sessionId, array $avitoPayload, ?string $idempotencyKey = null): array;
 
+    /**
+     * External robot API call.
+     */
     public function pollStatus(string $avitoItemId, ?string $idempotencyKey = null): array;
 
     public function stop(string $sessionId, ?string $idempotencyKey = null): void;

@@ -4,7 +4,6 @@
 namespace App\Adapters;
 
 use App\Adapters\Ports\PhotoProcessorPort;
-use App\Adapters\HttpClient;
 use App\Utils\ContractValidator;
 
 final class PhotoProcessorAdapter implements PhotoProcessorPort
@@ -24,11 +23,13 @@ final class PhotoProcessorAdapter implements PhotoProcessorPort
     public function maskPhoto(string $rawUrl, array $maskParams = [], ?string $idempotencyKey = null): array
     {
         $url = rtrim($this->baseUrl, '/') . "/process";
+
         $payload = [
             'raw_url' => $rawUrl,
             'mask_params' => $maskParams,
         ];
 
+        // Fail-fast request validation
         $this->contracts->validate($payload, $this->contractPath('mask_request.json'));
 
         $resp = $this->http->post($url, $payload, [
@@ -37,10 +38,16 @@ final class PhotoProcessorAdapter implements PhotoProcessorPort
 
         $this->http->assertOk($resp, "photo_api");
 
+        // Fail-fast response validation
         $this->contracts->validate((array)$resp['body'], $this->contractPath('mask_response.json'));
 
         if (!is_array($resp['body']) || empty($resp['body']['masked_url'])) {
-            throw new AdapterException("Photo API contract broken", "photo_api_contract", true, ['body'=>$resp['body']]);
+            throw new AdapterException(
+                "Photo API contract broken",
+                "photo_api_contract",
+                true,
+                ['body' => $resp['body']]
+            );
         }
 
         return [
@@ -55,7 +62,7 @@ final class PhotoProcessorAdapter implements PhotoProcessorPort
         $resp = $this->http->get($url);
         $this->http->assertOk($resp, "photo_api");
 
-        return is_array($resp['body']) ? $resp['body'] : ['ok'=>true];
+        return is_array($resp['body']) ? $resp['body'] : ['ok' => true];
     }
 
     private function contractPath(string $file): string

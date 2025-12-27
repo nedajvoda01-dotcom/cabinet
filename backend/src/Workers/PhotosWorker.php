@@ -3,21 +3,23 @@
 
 namespace App\Workers;
 
+use App\Adapters\Ports\PhotoProcessorPort;
+use App\Adapters\Ports\StoragePort;
+use App\Modules\Export\ExportService;
+use App\Modules\Photos\PhotosService;
 use App\Queues\QueueJob;
 use App\Queues\QueueTypes;
-use App\Adapters\PhotoApiAdapter;
-use App\Adapters\S3Adapter;
-use App\Modules\Photos\PhotosService;
-use App\Modules\Export\ExportService;
 use App\WS\WsEmitter;
 
 final class PhotosWorker extends BaseWorker
 {
+    private array $lastJobMeta = [];
+
     public function __construct(
         \App\Queues\QueueService $queues,
         string $workerId,
-        private PhotoApiAdapter $photoApi,
-        private S3Adapter $s3,
+        private PhotoProcessorPort $photoApi,
+        private StoragePort $s3,
         private PhotosService $photosService,
         private ExportService $exportService,
         private WsEmitter $ws
@@ -33,12 +35,22 @@ final class PhotosWorker extends BaseWorker
     protected function handle(QueueJob $job): void
     {
         $cardId = $job->entityId;
+        $this->lastJobMeta = [
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'card_id' => $cardId,
+            'task_id' => $job->payload['task_id'] ?? null,
+            'stage' => 'photos',
+            'idempotency_key' => $this->idempotencyKey($job),
+        ];
+
+        $this->emitStage($job, 'running');
 
         // ожидаем: getRawPhotos(cardId) -> [{order, raw_key, raw_url, mask_params?}]
         $rawPhotos = $this->photosService->getRawPhotos($cardId);
         if (!$rawPhotos) {
             // нечего обрабатывать — считаем stage done
             $this->photosService->markStageDone($cardId);
+            $this->emitStage($job, 'done', ['progress' => 100]);
             return;
         }
 
@@ -51,13 +63,17 @@ final class PhotosWorker extends BaseWorker
             if (!$rawUrl) continue;
 
             $maskParams = (array)($p['mask_params'] ?? []);
-            $res = $this->photoApi->maskPhoto($rawUrl, $maskParams);
+            $order = (int)($p['order'] ?? ($done + 1));
+
+            $res = $this->photoApi->maskPhoto(
+                $rawUrl,
+                $maskParams,
+                $this->idempotencyKey($job, 'mask_' . $order)
+            );
 
             // download masked from Photo API and upload to s3 masked/
             $bin = $this->downloadBinary($res['masked_url']);
             $ext = $this->guessExt($res['masked_url']) ?? 'jpg';
-            $order = (int)($p['order'] ?? (++$done));
-
             $key = "masked/{$cardId}/{$order}.{$ext}";
             $this->s3->putObject($key, $bin, "image/{$ext}");
 
@@ -69,35 +85,50 @@ final class PhotosWorker extends BaseWorker
             ];
 
             $done++;
-            $this->ws->emit("photos.progress", [
-                'card_id' => $cardId,
+            $this->emitStage($job, 'running', [
+                'progress' => $total ? (int)(($done / $total) * 100) : 100,
                 'done' => $done,
                 'total' => $total,
-                'percent' => $total ? (int)(($done / $total) * 100) : 100,
             ]);
         }
 
         // сохраняем masked в модуль Photos
-        // ожидаем: attachMaskedPhotos(cardId, masked[])
         $this->photosService->attachMaskedPhotos($cardId, $masked);
         $this->photosService->markStageDone($cardId);
 
         // создаём экспортный пакет и ставим export job
-        // ожидаем: createExport(cardId) -> exportId
         $exportId = $this->exportService->createExport($cardId);
-        $this->queues->enqueueExport($exportId, ['card_id' => $cardId]);
-
-        $this->ws->emit("card.status.updated", [
+        $this->queues->enqueueExport($exportId, [
             'card_id' => $cardId,
-            'stage' => 'photos',
-            'status' => 'ready',
+            'correlation_id' => $this->lastJobMeta['correlation_id'],
+            'idempotency_key' => $this->idempotencyKey($job, 'export'),
         ]);
+
+        $this->emitStage($job, 'done', ['progress' => 100]);
+    }
+
+    protected function afterFailure(QueueJob $job, array $error, string $outcome): void
+    {
+        $status = $outcome === 'retrying' ? 'retrying' : 'dlq';
+        $this->emitStage($job, $status, ['error' => $error]);
+    }
+
+    private function emitStage(QueueJob $job, string $status, array $extra = []): void
+    {
+        $payload = array_merge([
+            'correlation_id' => $this->lastJobMeta['correlation_id'] ?? ($job->payload['correlation_id'] ?? null),
+            'card_id' => $this->lastJobMeta['card_id'] ?? $job->entityId,
+            'task_id' => $this->lastJobMeta['task_id'] ?? ($job->payload['task_id'] ?? null),
+            'stage' => 'photos',
+            'status' => $status,
+            'idempotency_key' => $this->lastJobMeta['idempotency_key'] ?? $this->idempotencyKey($job),
+        ], $extra);
+
+        $this->ws->emit('pipeline.stage', $payload);
     }
 
     private function downloadBinary(string $url): string
     {
-        // простой бинарный fetch через file_get_contents.
-        // сетевые ошибки → retryable (кидаем AdapterException)
         $bin = @file_get_contents($url);
         if ($bin === false) {
             throw new \App\Adapters\AdapterException(

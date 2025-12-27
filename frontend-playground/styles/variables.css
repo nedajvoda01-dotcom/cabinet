@@ -1,0 +1,17 @@
+:root {
+  --font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+  --bg: #f2f2f2;
+  --card-bg: #ffffff;
+
+  --text: #000000;
+  --muted: #8c8c8c;
+
+  --border: #bdbdbd;
+  --error: #dd0000;
+
+  --btn: #1b1c1e;
+  --btn-text: #ffffff;
+
+  --radius: 10px; /* как ты сказал: все скругления 10 */
+}

@@ -1,8 +1,14 @@
 <?php
-// backend/src/Server/Container.php
+// cabinet/backend/src/Server/Container.php
 
 namespace Backend\Server;
 
+use App\Adapters\Fakes\FakeMarketplaceAdapter;
+use App\Adapters\Fakes\FakeParserAdapter;
+use App\Adapters\Fakes\FakePhotoProcessorAdapter;
+use App\Adapters\Fakes\FakeRobotApiAdapter;
+use App\Adapters\Fakes\FakeRobotProfileAdapter;
+use App\Adapters\Fakes\FakeStorageAdapter;
 use RuntimeException;
 
 final class Container
@@ -41,6 +47,9 @@ final class Container
 
     private function bootstrapDefaults(): void
     {
+        $integrationsMode = strtolower((string)($this->config['integrations_mode'] ?? 'real'));
+        $useFakeIntegrations = $integrationsMode === 'fake';
+
         // ----------------------------------------------------
         // DB PDO
         // ----------------------------------------------------
@@ -73,7 +82,6 @@ final class Container
             fn(Container $c) => new \App\Queues\DlqRepository($c->get(\PDO::class))
         );
 
-        // ВАЖНО: QueueService теперь получает LoggerInterface
         $this->set(\App\Queues\QueueService::class,
             fn(Container $c) => new \App\Queues\QueueService(
                 $c->get(\App\Queues\QueueRepository::class),
@@ -84,13 +92,35 @@ final class Container
         );
 
         // ----------------------------------------------------
-        // HttpClient
+        // HttpClient + ContractValidator
         // ----------------------------------------------------
-        $this->set(\App\Adapters\HttpClient::class, fn() => new \App\Adapters\HttpClient());
+        $this->set(\App\Adapters\HttpClient::class, function(Container $c) {
+            $http = $c->config()['http'] ?? [];
+            return new \App\Adapters\HttpClient(
+                (int)($http['timeout_sec'] ?? 30),
+                (int)($http['connect_timeout_sec'] ?? 5)
+            );
+        });
+
+        $this->set(\App\Utils\ContractValidator::class, fn() => new \App\Utils\ContractValidator());
 
         // ----------------------------------------------------
-        // Storage adapter
+        // Storage adapters (real + fake)
         // ----------------------------------------------------
+        $this->set(\App\Adapters\S3StorageAdapter::class, function(Container $c) {
+            $s = $c->config()['integrations']['storage'];
+            return new \App\Adapters\S3StorageAdapter(
+                $s['bucket'],
+                $s['endpoint'],
+                $s['access_key'],
+                $s['secret_key'],
+                $s['region'],
+                $s['fs_root'],
+                $s['path_style']
+            );
+        });
+
+        // если где-то в коде ещё используется старое имя S3Adapter — оставляем биндинг
         $this->set(\App\Adapters\S3Adapter::class, function(Container $c) {
             $s = $c->config()['integrations']['storage'];
             return new \App\Adapters\S3Adapter(
@@ -104,53 +134,110 @@ final class Container
             );
         });
 
+        $this->set(FakeStorageAdapter::class, fn() => new FakeStorageAdapter());
+
+        $this->set(\App\Adapters\Ports\StoragePort::class, fn(Container $c) =>
+            $useFakeIntegrations
+                ? $c->get(FakeStorageAdapter::class)
+                : $c->get(\App\Adapters\S3StorageAdapter::class)
+        );
+
         // ----------------------------------------------------
-        // ParserAdapter
+        // Parser adapters (real + fake)
         // ----------------------------------------------------
         $this->set(\App\Adapters\ParserAdapter::class, function(Container $c) {
             $p = $c->config()['integrations']['parser'];
             return new \App\Adapters\ParserAdapter(
                 $c->get(\App\Adapters\HttpClient::class),
                 $c->get(\App\Adapters\S3Adapter::class),
+                $c->get(\App\Utils\ContractValidator::class),
                 $p['base_url'],
                 $p['api_key']
             );
         });
 
+        $this->set(FakeParserAdapter::class, fn() => new FakeParserAdapter());
+
+        $this->set(\App\Adapters\Ports\ParserPort::class, fn(Container $c) =>
+            $useFakeIntegrations
+                ? $c->get(FakeParserAdapter::class)
+                : $c->get(\App\Adapters\ParserAdapter::class)
+        );
+
         // ----------------------------------------------------
-        // PhotoApiAdapter
+        // Photo processor adapters (real + fake)
         // ----------------------------------------------------
-        $this->set(\App\Adapters\PhotoApiAdapter::class, function(Container $c) {
+        $this->set(\App\Adapters\PhotoProcessorAdapter::class, function(Container $c) {
             $p = $c->config()['integrations']['photo_api'];
-            return new \App\Adapters\PhotoApiAdapter(
+            return new \App\Adapters\PhotoProcessorAdapter(
                 $c->get(\App\Adapters\HttpClient::class),
+                $c->get(\App\Utils\ContractValidator::class),
                 $p['base_url'],
                 $p['api_key']
             );
         });
 
+        $this->set(FakePhotoProcessorAdapter::class, fn() => new FakePhotoProcessorAdapter());
+
+        $this->set(\App\Adapters\Ports\PhotoProcessorPort::class, fn(Container $c) =>
+            $useFakeIntegrations
+                ? $c->get(FakePhotoProcessorAdapter::class)
+                : $c->get(\App\Adapters\PhotoProcessorAdapter::class)
+        );
+
         // ----------------------------------------------------
-        // Dolphin / Robot / Avito
+        // Dolphin Profile (RobotProfilePort) real + fake
         // ----------------------------------------------------
-        $this->set(\App\Adapters\DolphinAdapter::class, function(Container $c) {
+        $this->set(\App\Adapters\DolphinProfileAdapter::class, function(Container $c) {
             $d = $c->config()['integrations']['dolphin'];
-            return new \App\Adapters\DolphinAdapter(
+            return new \App\Adapters\DolphinProfileAdapter(
                 $c->get(\App\Adapters\HttpClient::class),
+                $c->get(\App\Utils\ContractValidator::class),
                 $d['base_url'],
                 $d['api_key']
             );
         });
 
-        $this->set(\App\Adapters\RobotAdapter::class, function(Container $c) {
+        $this->set(FakeRobotProfileAdapter::class, fn() => new FakeRobotProfileAdapter());
+
+        $this->set(\App\Adapters\Ports\RobotProfilePort::class, fn(Container $c) =>
+            $useFakeIntegrations
+                ? $c->get(FakeRobotProfileAdapter::class)
+                : $c->get(\App\Adapters\DolphinProfileAdapter::class)
+        );
+
+        // ----------------------------------------------------
+        // Robot API (RobotPort) real + fake
+        // ----------------------------------------------------
+        $this->set(\App\Adapters\RobotApiAdapter::class, function(Container $c) {
             $r = $c->config()['integrations']['robot'];
-            return new \App\Adapters\RobotAdapter(
+            return new \App\Adapters\RobotApiAdapter(
                 $c->get(\App\Adapters\HttpClient::class),
+                $c->get(\App\Utils\ContractValidator::class),
                 $r['base_url'],
                 $r['api_key']
             );
         });
 
-        $this->set(\App\Adapters\AvitoAdapter::class, fn() => new \App\Adapters\AvitoAdapter());
+        $this->set(FakeRobotApiAdapter::class, fn() => new FakeRobotApiAdapter());
+
+        $this->set(\App\Adapters\Ports\RobotPort::class, fn(Container $c) =>
+            $useFakeIntegrations
+                ? $c->get(FakeRobotApiAdapter::class)
+                : $c->get(\App\Adapters\RobotApiAdapter::class)
+        );
+
+        // ----------------------------------------------------
+        // Marketplace (Avito) real + fake
+        // ----------------------------------------------------
+        $this->set(\App\Adapters\AvitoMarketplaceAdapter::class, fn() => new \App\Adapters\AvitoMarketplaceAdapter());
+        $this->set(FakeMarketplaceAdapter::class, fn() => new FakeMarketplaceAdapter());
+
+        $this->set(\App\Adapters\Ports\MarketplacePort::class, fn(Container $c) =>
+            $useFakeIntegrations
+                ? $c->get(FakeMarketplaceAdapter::class)
+                : $c->get(\App\Adapters\AvitoMarketplaceAdapter::class)
+        );
 
         // ----------------------------------------------------
         // WS
@@ -161,14 +248,14 @@ final class Container
         );
 
         // ----------------------------------------------------
-        // HealthAdapter
+        // HealthAdapter — через порты
         // ----------------------------------------------------
         $this->set(\App\Adapters\HealthAdapter::class, fn(Container $c) => new \App\Adapters\HealthAdapter(
-            $c->get(\App\Adapters\ParserAdapter::class),
-            $c->get(\App\Adapters\PhotoApiAdapter::class),
-            $c->get(\App\Adapters\S3Adapter::class),
-            $c->get(\App\Adapters\RobotAdapter::class),
-            $c->get(\App\Adapters\DolphinAdapter::class),
+            $c->get(\App\Adapters\Ports\ParserPort::class),
+            $c->get(\App\Adapters\Ports\PhotoProcessorPort::class),
+            $c->get(\App\Adapters\Ports\StoragePort::class),
+            $c->get(\App\Adapters\Ports\RobotPort::class),
+            $c->get(\App\Adapters\Ports\RobotProfilePort::class),
         ));
 
         // ----------------------------------------------------
