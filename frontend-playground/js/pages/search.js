@@ -94,8 +94,6 @@ export function renderSearchPage(outlet) {
     variant: "primary",
     size: "sm",
     onClick: () => {
-      // в нашей архитектуре результаты всегда живые,
-      // поэтому кнопка "показать" сейчас просто скроллит к списку.
       resultsCard.scrollIntoView({ behavior: "smooth", block: "start" });
     },
   });
@@ -147,7 +145,7 @@ export function renderSearchPage(outlet) {
     variant: "ghost",
     size: "md",
     fullWidth: true,
-    onClick: () => alert("Панель всех параметров — следующий шаг (после viewer)"),
+    onClick: () => alert("Панель всех параметров — следующий шаг (после дизайна)"),
   });
 
   filtersGrid.appendChild(brand.el);
@@ -195,7 +193,6 @@ export function renderSearchPage(outlet) {
   let mountedCards = [];
 
   function renderResults() {
-    // unmount previous cards
     mountedCards.forEach((c) => {
       try { c.unmount?.(); } catch {}
     });
@@ -221,10 +218,7 @@ export function renderSearchPage(outlet) {
       const card = ListingCard({
         listing: it,
         onOpenPhotos: (listing) => {
-          // viewer будет в следующем шаге.
-          // сейчас просто пишем в store viewer state.
           store.actions.openViewer(listing.photos || [], 0);
-          alert("Viewer следующий шаг: state уже открывается через store.actions.openViewer()");
         },
       });
       mountedCards.push(card);
@@ -245,10 +239,8 @@ export function renderSearchPage(outlet) {
     });
   }
 
-  // subscribe to filters recompute
   const unsub = store.subscribe((st, meta) => {
     if (meta?.type === "search/filters" || meta?.type === "search/init") {
-      // sync UI values (важно для reset)
       tabs.setValue(st.search.filters.status);
       condSeg.setValue(st.search.filters.condition);
       sellerSeg.setValue(st.search.filters.seller);
@@ -263,7 +255,6 @@ export function renderSearchPage(outlet) {
     }
   });
 
-  // first paint
   renderResults();
 
   return {
