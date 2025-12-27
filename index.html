@@ -7,8 +7,13 @@
     <link rel="canonical" href="./frontend-playground/" />
   </head>
   <body>
+    <noscript>
+      <meta http-equiv="refresh" content="0; url=./frontend-playground/" />
+      <a href="./frontend-playground/">Continue</a>
+    </noscript>
     <script>
-      window.location.replace('./frontend-playground/');
+      const target = './frontend-playground/' + window.location.search + window.location.hash;
+      window.location.replace(target);
     </script>
   </body>
 </html>
