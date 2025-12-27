@@ -1,9 +1,8 @@
-// cabinet/frontend/src/features/auth/schemas.ts
 import { z } from "zod";
 
 export const IdSchema = z.union([z.number(), z.string()]);
 
-export const RoleSchema = z.enum(["operator", "admin", "viewer", "unknown"]).default("unknown");
+export const RoleSchema = z.enum(["superadmin", "admin", "member", "guest"]).default("guest");
 export type Role = z.infer<typeof RoleSchema>;
 
 export const UserSchema = z.object({
@@ -11,7 +10,7 @@ export const UserSchema = z.object({
   email: z.string().email(),
   name: z.string().optional(),
   role: RoleSchema.optional(),
-  is_active: z.boolean().optional(),
+  status: z.enum(["pending", "approved", "rejected"]).optional(),
 });
 
 export type User = z.infer<typeof UserSchema>;

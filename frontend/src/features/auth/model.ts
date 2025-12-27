@@ -1,5 +1,10 @@
-// cabinet/frontend/src/features/auth/model.ts
 import type { User, Role, LoginRequest, LoginResponse } from "./schemas";
+import {
+  getAccessToken as loadAccess,
+  getRefreshToken as loadRefresh,
+  setAccessToken as saveAccess,
+  setRefreshToken as saveRefresh,
+} from "../../shared/session/tokens";
 
 export type { User, Role, LoginRequest, LoginResponse };
 
@@ -7,29 +12,22 @@ export const ACCESS_TOKEN_KEY = "autocontent.access_token";
 export const REFRESH_TOKEN_KEY = "autocontent.refresh_token";
 
 export function getAccessToken(): string | null {
-  try { return localStorage.getItem(ACCESS_TOKEN_KEY); } catch { return null; }
+  return loadAccess();
 }
 export function setAccessToken(token: string | null) {
-  try {
-    if (token) localStorage.setItem(ACCESS_TOKEN_KEY, token);
-    else localStorage.removeItem(ACCESS_TOKEN_KEY);
-  } catch {}
+  saveAccess(token);
 }
-
 export function getRefreshToken(): string | null {
-  try { return localStorage.getItem(REFRESH_TOKEN_KEY); } catch { return null; }
+  return loadRefresh();
 }
 export function setRefreshToken(token: string | null) {
-  try {
-    if (token) localStorage.setItem(REFRESH_TOKEN_KEY, token);
-    else localStorage.removeItem(REFRESH_TOKEN_KEY);
-  } catch {}
+  saveRefresh(token);
 }
 
 export function isAdmin(user: User | null | undefined) {
-  return (user?.role ?? "unknown") === "admin";
+  return (user?.role ?? "guest") === "admin" || (user?.role ?? "guest") === "superadmin";
 }
 
-export function isOperator(user: User | null | undefined) {
-  return (user?.role ?? "unknown") === "operator";
+export function isMember(user: User | null | undefined) {
+  return (user?.role ?? "guest") === "member";
 }

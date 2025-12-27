@@ -1,1 +1,2 @@
-# RouteGuard / RoleGuard (структурно, без логики пока)
+import { Guard } from "../../shared/rbac/Guard";
+export default Guard;

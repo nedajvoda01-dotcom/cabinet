@@ -1,5 +1,8 @@
-// cabinet/frontend/src/features/auth/index.ts
-export * from "./schemas";
-export * from "./model";
 export * from "./api";
-export * as AuthUI from "./ui";
+export * from "./model";
+export * from "./schemas";
+export * from "./ui/AuthProvider";
+export * from "./ui/LoginForm";
+export * from "./ui/RequestAccessForm";
+export * from "./ui/RequestStatus";
+export * from "./ui/LogoutButton";
