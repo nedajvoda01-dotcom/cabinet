@@ -1,4 +1,36 @@
-/* ===== Sidebar ===== */
+/* ===== Layouts ===== */
+.layout-auth {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.layout-auth__outlet {
+  width: 520px;
+}
+
+.layout-app {
+  min-height: 100vh;
+  display: flex;
+}
+
+.layout-app__sidebar {
+  min-height: 100vh;
+}
+
+.layout-app__main {
+  flex: 1;
+  padding: 24px;
+}
+
+.layout-app__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none; /* включим, когда появятся модалки */
+}
+
+/* ===== Sidebar (base) ===== */
 .sidebar {
   width: 280px;
   background: #1f1f1f;
@@ -6,8 +38,7 @@
   padding: 20px 16px;
   box-sizing: border-box;
   position: relative;
-  transition: width 200ms ease;
-  min-height: 100vh;
+  transition: width 200ms ease, padding 200ms ease;
 }
 
 .sidebar[data-collapsed="1"] {
