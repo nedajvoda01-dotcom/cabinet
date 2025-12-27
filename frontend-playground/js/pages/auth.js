@@ -1,9 +1,6 @@
-import { store } from "../store.js";
 import { router } from "../router.js";
 
 export function renderAuthPage(outlet, { mode }) {
-  store.actions.setAuthMode(mode);
-
   outlet.innerHTML = "";
 
   const screen = document.createElement("div");
@@ -37,26 +34,13 @@ export function renderAuthPage(outlet, { mode }) {
   screen.appendChild(card);
   outlet.appendChild(screen);
 
-  // local states
   let currentMode = mode;
 
-  const loginState = {
-    email: "",
-    password: "",
-    emailError: "", // "Аккаунт не найден"
-    passwordError: "",
+  const state = {
+    login: { email: "", password: "", emailError: "", passwordError: "" },
+    register: { firstName: "", lastName: "", email: "", password: "", password2: "", errors: {} },
   };
 
-  const regState = {
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    password2: "",
-    errors: {},
-  };
-
-  // helpers
   function setActiveTabs() {
     tabLogin.classList.toggle("is-active", currentMode === "login");
     tabReg.classList.toggle("is-active", currentMode === "register");
@@ -67,7 +51,7 @@ export function renderAuthPage(outlet, { mode }) {
     return v.includes("@") && v.includes(".") && v.length >= 6;
   }
 
-  function field({ placeholder, value, type = "text", error = "", onInput }) {
+  function renderField({ placeholder, value, type = "text", error = "", onInput }) {
     const wrap = document.createElement("div");
     wrap.className = "auth-field";
 
@@ -87,238 +71,192 @@ export function renderAuthPage(outlet, { mode }) {
       err.className = "auth-spacer";
     }
 
-    const onInputHandler = () => onInput(input.value);
-    input.addEventListener("input", onInputHandler);
+    input.addEventListener("input", () => onInput(input.value));
 
     wrap.appendChild(input);
     wrap.appendChild(err);
-
-    return {
-      wrap,
-      input,
-      unmount() {
-        input.removeEventListener("input", onInputHandler);
-      },
-    };
-  }
-
-  // render
-  let mounted = [];
-
-  function clearMounted() {
-    mounted.forEach((m) => {
-      try { m.unmount?.(); } catch {}
-    });
-    mounted = [];
-    form.innerHTML = "";
+    return wrap;
   }
 
   function render() {
     setActiveTabs();
-    clearMounted();
+    form.innerHTML = "";
 
     if (currentMode === "login") {
-      const email = field({
-        placeholder: "Почта",
-        value: loginState.email,
-        type: "text",
-        error: loginState.emailError,
-        onInput: (v) => {
-          loginState.email = v;
-          if (loginState.emailError) {
-            loginState.emailError = "";
-            render();
-          }
-        },
-      });
+      const s = state.login;
 
-      const pass = field({
-        placeholder: "Пароль",
-        value: loginState.password,
-        type: "password",
-        error: loginState.passwordError,
-        onInput: (v) => {
-          loginState.password = v;
-          if (loginState.passwordError) {
-            loginState.passwordError = "";
+      form.appendChild(
+        renderField({
+          placeholder: "Почта",
+          value: s.email,
+          error: s.emailError,
+          onInput: (v) => {
+            s.email = v;
+            if (s.emailError) s.emailError = "";
             render();
-          }
-        },
-      });
+          },
+        })
+      );
 
-      const forgotRow = document.createElement("div");
-      forgotRow.className = "auth-row";
+      form.appendChild(
+        renderField({
+          placeholder: "Пароль",
+          type: "password",
+          value: s.password,
+          error: s.passwordError,
+          onInput: (v) => {
+            s.password = v;
+            if (s.passwordError) s.passwordError = "";
+            render();
+          },
+        })
+      );
+
+      const row = document.createElement("div");
+      row.className = "auth-row";
 
       const forgot = document.createElement("span");
       forgot.className = "auth-link";
       forgot.textContent = "Забыли пароль?";
-      forgotRow.appendChild(forgot);
+      row.appendChild(forgot);
 
       const submit = document.createElement("button");
       submit.type = "submit";
       submit.className = "auth-submit";
       submit.textContent = "Войти";
 
-      form.appendChild(email.wrap);
-      form.appendChild(pass.wrap);
-      form.appendChild(forgotRow);
+      form.appendChild(row);
       form.appendChild(submit);
-
-      mounted.push(email, pass);
       return;
     }
 
-    // register
-    const firstName = field({
-      placeholder: "Имя",
-      value: regState.firstName,
-      error: regState.errors.firstName || "",
-      onInput: (v) => {
-        regState.firstName = v;
-        if (regState.errors.firstName) {
-          delete regState.errors.firstName;
-          render();
-        }
-      },
-    });
+    const s = state.register;
 
-    const lastName = field({
-      placeholder: "Фамилия",
-      value: regState.lastName,
-      error: regState.errors.lastName || "",
-      onInput: (v) => {
-        regState.lastName = v;
-        if (regState.errors.lastName) {
-          delete regState.errors.lastName;
+    form.appendChild(
+      renderField({
+        placeholder: "Имя",
+        value: s.firstName,
+        error: s.errors.firstName || "",
+        onInput: (v) => {
+          s.firstName = v;
+          delete s.errors.firstName;
           render();
-        }
-      },
-    });
+        },
+      })
+    );
 
-    const email = field({
-      placeholder: "Почта",
-      value: regState.email,
-      error: regState.errors.email || "",
-      onInput: (v) => {
-        regState.email = v;
-        if (regState.errors.email) {
-          delete regState.errors.email;
+    form.appendChild(
+      renderField({
+        placeholder: "Фамилия",
+        value: s.lastName,
+        error: s.errors.lastName || "",
+        onInput: (v) => {
+          s.lastName = v;
+          delete s.errors.lastName;
           render();
-        }
-      },
-    });
+        },
+      })
+    );
 
-    const pass = field({
-      placeholder: "Пароль",
-      value: regState.password,
-      type: "password",
-      error: regState.errors.password || "",
-      onInput: (v) => {
-        regState.password = v;
-        if (regState.errors.password) {
-          delete regState.errors.password;
+    form.appendChild(
+      renderField({
+        placeholder: "Почта",
+        value: s.email,
+        error: s.errors.email || "",
+        onInput: (v) => {
+          s.email = v;
+          delete s.errors.email;
           render();
-        }
-      },
-    });
+        },
+      })
+    );
 
-    const pass2 = field({
-      placeholder: "Повторите пароль",
-      value: regState.password2,
-      type: "password",
-      error: regState.errors.password2 || "",
-      onInput: (v) => {
-        regState.password2 = v;
-        if (regState.errors.password2) {
-          delete regState.errors.password2;
+    form.appendChild(
+      renderField({
+        placeholder: "Пароль",
+        type: "password",
+        value: s.password,
+        error: s.errors.password || "",
+        onInput: (v) => {
+          s.password = v;
+          delete s.errors.password;
           render();
-        }
-      },
-    });
+        },
+      })
+    );
+
+    form.appendChild(
+      renderField({
+        placeholder: "Повторите пароль",
+        type: "password",
+        value: s.password2,
+        error: s.errors.password2 || "",
+        onInput: (v) => {
+          s.password2 = v;
+          delete s.errors.password2;
+          render();
+        },
+      })
+    );
 
     const submit = document.createElement("button");
     submit.type = "submit";
     submit.className = "auth-submit";
     submit.textContent = "Зарегистрироваться";
-
-    form.appendChild(firstName.wrap);
-    form.appendChild(lastName.wrap);
-    form.appendChild(email.wrap);
-    form.appendChild(pass.wrap);
-    form.appendChild(pass2.wrap);
     form.appendChild(submit);
-
-    mounted.push(firstName, lastName, email, pass, pass2);
   }
 
-  // events
-  const onTabs = (e) => {
+  tabs.addEventListener("click", (e) => {
     if (e.target === tabLogin) router.navigate("login");
     if (e.target === tabReg) router.navigate("register");
-  };
-  tabs.addEventListener("click", onTabs);
+  });
 
-  const onSubmit = (e) => {
+  form.addEventListener("submit", (e) => {
     e.preventDefault();
 
     if (currentMode === "login") {
-      loginState.emailError = "";
-      loginState.passwordError = "";
+      const s = state.login;
+      s.emailError = "";
+      s.passwordError = "";
 
-      const email = loginState.email.trim();
-      const pass = loginState.password;
+      const email = s.email.trim();
+      const pass = s.password;
 
-      if (!email) loginState.emailError = "Введите почту";
-      else if (!isValidEmail(email)) loginState.emailError = "Некорректная почта";
-
-      if (!pass) loginState.passwordError = "Введите пароль";
-
-      // без бэка: просто показываем заглушку.
-      // При желании можно имитировать "аккаунт не найден" по условию.
-      if (!loginState.emailError && !loginState.passwordError) {
-        alert("Вход (заглушка). Пока без бэка.");
-        router.navigate("search");
-      }
+      if (!email) s.emailError = "Введите почту";
+      else if (!isValidEmail(email)) s.emailError = "Некорректная почта";
+      if (!pass) s.passwordError = "Введите пароль";
 
       render();
+      if (!s.emailError && !s.passwordError) {
+        alert("Вход (заглушка).");
+      }
       return;
     }
 
-    // register validation (минимально)
-    regState.errors = {};
-    const fn = regState.firstName.trim();
-    const ln = regState.lastName.trim();
-    const email = regState.email.trim();
-    const p1 = regState.password;
-    const p2 = regState.password2;
+    const s = state.register;
+    s.errors = {};
 
-    if (!fn) regState.errors.firstName = "Введите имя";
-    if (!ln) regState.errors.lastName = "Введите фамилию";
+    if (!s.firstName.trim()) s.errors.firstName = "Введите имя";
+    if (!s.lastName.trim()) s.errors.lastName = "Введите фамилию";
 
-    if (!email) regState.errors.email = "Введите почту";
-    else if (!isValidEmail(email)) regState.errors.email = "Некорректная почта";
+    const email = s.email.trim();
+    if (!email) s.errors.email = "Введите почту";
+    else if (!isValidEmail(email)) s.errors.email = "Некорректная почта";
 
-    if (!p1) regState.errors.password = "Введите пароль";
-    if (!p2) regState.errors.password2 = "Повторите пароль";
-    if (p1 && p2 && p1 !== p2) regState.errors.password2 = "Пароли не совпадают";
-
-    if (Object.keys(regState.errors).length === 0) {
-      alert("Регистрация (заглушка). Пока без бэка.");
-      router.navigate("login");
-    }
+    if (!s.password) s.errors.password = "Введите пароль";
+    if (!s.password2) s.errors.password2 = "Повторите пароль";
+    if (s.password && s.password2 && s.password !== s.password2) s.errors.password2 = "Пароли не совпадают";
 
     render();
-  };
-  form.addEventListener("submit", onSubmit);
+    if (Object.keys(s.errors).length === 0) {
+      alert("Регистрация (заглушка).");
+    }
+  });
 
   // initial
   render();
 
   return {
-    unmount() {
-      try { tabs.removeEventListener("click", onTabs); } catch {}
-      try { form.removeEventListener("submit", onSubmit); } catch {}
-      clearMounted();
-    },
+    unmount() {},
   };
 }
