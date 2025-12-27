@@ -1,0 +1,77 @@
+/* =========================================================
+   Search page base (design will be refined later)
+========================================================= */
+
+.search-page {
+  display: grid;
+  gap: 16px;
+}
+
+.search-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+}
+
+.search-title {
+  font-weight: 800;
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+/* =========================================================
+   UI Tabs
+========================================================= */
+
+.ui-tabs {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.ui-tabs__tab {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 6px 2px;
+  text-decoration: none;
+}
+
+.ui-tabs__tab.is-active {
+  color: var(--text);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+/* =========================================================
+   UI Segmented
+========================================================= */
+
+.ui-seg {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.06);
+}
+
+.ui-seg__item {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.ui-seg__item.is-active {
+  background: #fff;
+  color: var(--text);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.10);
+}
