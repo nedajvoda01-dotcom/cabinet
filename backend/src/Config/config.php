@@ -6,6 +6,12 @@ declare(strict_types=1);
 return [
     'env' => getenv('APP_ENV') ?: 'dev',
     'debug' => (getenv('APP_DEBUG') ?: '0') === '1',
+    'integrations_mode' => getenv('INTEGRATIONS_MODE') ?: 'real',
+
+    'http' => [
+        'timeout_sec' => (int)(getenv('HTTP_TIMEOUT_SEC') ?: 30),
+        'connect_timeout_sec' => (int)(getenv('HTTP_CONNECT_TIMEOUT_SEC') ?: 5),
+    ],
 
     'db' => [
         'dsn'  => getenv('DB_DSN')  ?: 'pgsql:host=localhost;port=5432;dbname=autocontent',

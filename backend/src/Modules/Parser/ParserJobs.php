@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace Backend\Modules\Parser;
 
+use App\Queues\QueueJob;
+use App\Queues\QueueService;
+
 /**
  * ParserJobs
  *
@@ -11,26 +14,30 @@ namespace Backend\Modules\Parser;
  */
 final class ParserJobs
 {
-    public function __construct(
-        // TODO: инжект вашего QueueBus или Adapter клиента парсера
-        // private QueueBus $bus,
-        // private ParserAdapter $adapter
-    ) {}
+    public function __construct(private QueueService $queues) {}
 
-    public function dispatchParseRun(int $taskId): void
+    public function dispatchParseRun(int $taskId, ?string $correlationId = null): QueueJob
     {
-        // TODO: заменить на реальный enqueue/вызов внешнего сервиса
-        // $this->bus->push('parser.run', ['task_id' => $taskId]);
-        // или: $this->adapter->run($taskId);
+        return $this->queues->enqueueParser($taskId, [
+            'task_id' => $taskId,
+            'correlation_id' => $this->correlationId($correlationId),
+            'action' => 'parse.run',
+        ]);
     }
 
-    public function dispatchParseRetry(int $taskId, string $reason, bool $force): void
+    public function dispatchParseRetry(int $taskId, string $reason, bool $force, ?string $correlationId = null): QueueJob
     {
-        // TODO
-        // $this->bus->push('parser.retry', [
-        //     'task_id' => $taskId,
-        //     'reason' => $reason,
-        //     'force' => $force,
-        // ]);
+        return $this->queues->enqueueParser($taskId, [
+            'task_id' => $taskId,
+            'reason' => $reason,
+            'force' => $force,
+            'correlation_id' => $this->correlationId($correlationId),
+            'action' => 'parse.retry',
+        ]);
+    }
+
+    private function correlationId(?string $corr): string
+    {
+        return $corr ?: bin2hex(random_bytes(8));
     }
 }

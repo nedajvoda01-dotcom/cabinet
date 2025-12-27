@@ -1,11 +1,10 @@
-// cabinet/frontend/src/shared/hooks/useApi.ts
 import { useMemo } from "react";
 import { http, HttpClient } from "../api/http";
+import { getAccessToken } from "../session/tokens";
 
-/**
- * Хук возвращает singleton http.
- * Если app подменит http.getToken — всё features получат токен.
- */
-export function useHttp(): HttpClient {
-  return useMemo(() => http, []);
+export function useApi(): HttpClient {
+  return useMemo(() => {
+    http.getToken = getAccessToken;
+    return http;
+  }, []);
 }
