@@ -1,153 +1,146 @@
-/* =========================================================
-   Auth (Login / Register) — desktop only
-   RULE: radius everywhere = 10px
-========================================================= */
+/* ===== Auth page layout ===== */
 
-.auth-screen {
-  min-height: 100vh;
-  background: #f5f5f5;
-  display: grid;
-  place-items: center;
+.auth-page {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* белая карточка как в референсе */
+/* Карточка (filter) */
 .auth-card {
-  width: 615px; /* близко к референсу на 1920x1080 */
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-  padding: 34px 46px 34px 46px;
+  width: var(--card-w);
+  background: var(--c-card);
+  border-radius: var(--r-10);
+  padding: var(--card-pad);
   box-sizing: border-box;
 }
 
-/* табы внутри карточки справа */
+/* Верхние табы справа */
 .auth-tabs {
+  width: var(--control-w);
   display: flex;
   justify-content: flex-end;
-  align-items: center;
-  gap: 26px;
-  margin-bottom: 18px;
-  user-select: none;
-}
-
-/* чтобы не было "синих ссылок" — всё выглядит как текст в макете */
-.auth-tab {
-  border: none;
-  background: transparent;
+  gap: 24px;
+  margin: 0 0 20px 0;
   padding: 0;
-  cursor: pointer;
+  list-style: none;
+}
 
-  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: #9a9a9a;
-  line-height: 1.2;
+/* Тексты табов = как в Figma */
+.auth-tab {
+  font-family: var(--font-family);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 130%;
+  letter-spacing: 0;
+  color: var(--c-muted);
   text-decoration: none;
+  cursor: pointer;
 }
 
+/* active: #000 + underline (solid) */
 .auth-tab.is-active {
-  color: #111111;
+  color: var(--c-text);
   text-decoration: underline;
-  text-underline-offset: 6px;
-  text-decoration-thickness: 2px;
+  text-decoration-style: solid;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px; /* визуально ближе к фигме */
 }
 
-/* форма: равномерные расстояния как в референсе */
+/* ===== Form controls ===== */
+
 .auth-form {
-  display: grid;
-  gap: 14px;
+  width: var(--control-w);
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* в login у тебя gap 20 */
 }
 
-/* поле + ошибка под ним */
-.auth-field {
-  display: grid;
-  gap: 6px;
+/* Инпут-обертка (если используешь) */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-/* инпуты */
-.auth-input {
-  width: 523px;          /* 615 - 46*2 */
-  height: 48px;
-  border-radius: 10px;
-  border: 1px solid rgba(0,0,0,0.28);
-  padding: 0 16px;
+.input {
+  width: var(--control-w);
+  height: var(--control-h);
   box-sizing: border-box;
 
-  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #111111;
+  border-radius: var(--r-10);
+  border: 1px solid var(--c-border);
+  background: #fff;
 
-  background: #ffffff;
+  padding: 12px 20px 14px 20px;
+
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 130%;
+  color: var(--c-text);
+
   outline: none;
 }
 
-.auth-input::placeholder {
-  color: #b5b5b5;
+.input::placeholder {
+  color: var(--c-muted);
 }
 
-/* focus — без “синего” браузерного стиля */
-.auth-input:focus {
-  border-color: rgba(0,0,0,0.45);
-  box-shadow: 0 0 0 2px rgba(0,0,0,0.06);
+/* Ошибка: красная рамка и текст */
+.input.is-error {
+  border-color: var(--c-error);
 }
 
-/* error */
-.auth-input.is-error {
-  border-color: #ff3b30;
-  box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.10);
-}
-
-.auth-error {
-  color: #ff3b30;
+.field-error {
+  font-family: var(--font-family);
   font-size: 14px;
-  line-height: 1.2;
+  font-weight: 400;
+  line-height: 130%;
+  color: var(--c-error);
+  margin: 0;
 }
 
-.auth-spacer {
-  height: 16px; /* чтобы сетка не прыгала когда нет ошибки */
-}
-
-/* "Забыли пароль?" справа под паролем */
+/* "Забыли пароль?" справа */
 .auth-row {
+  width: var(--control-w);
   display: flex;
   justify-content: flex-end;
-  margin-top: -6px;
+  margin-top: -8px; /* чуть подтягиваем как на фигме */
 }
 
 .auth-link {
+  font-family: var(--font-family);
   font-size: 14px;
-  font-weight: 500;
-  color: #9a9a9a;
+  font-weight: 400;
+  line-height: 130%;
+  color: var(--c-muted);
   text-decoration: underline;
-  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
   cursor: pointer;
 }
 
-/* кнопка */
-.auth-submit {
-  width: 523px;
-  height: 48px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
+/* Кнопка */
+.auth-btn {
+  width: var(--control-w);
+  height: var(--control-h);
+  box-sizing: border-box;
 
-  background: #151618;
-  color: #ffffff;
+  border: 0;
+  border-radius: var(--r-10);
+  background: var(--c-btn);
+  color: var(--c-btn-text);
+
+  padding: 12px 40px 14px 40px;
+
+  font-family: var(--font-family);
   font-size: 16px;
-  font-weight: 700;
-  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 600;
+  line-height: 130%;
+
+  cursor: pointer;
 }
 
-/* если у тебя где-то есть "временная ссылка" — чтобы она не была синей */
-.auth-card a {
-  color: #9a9a9a;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.auth-card a:visited {
-  color: #9a9a9a;
-}
+/* без излишеств: только pointer (как ты сказал) */
