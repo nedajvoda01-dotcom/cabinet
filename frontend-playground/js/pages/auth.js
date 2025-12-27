@@ -1,246 +1,113 @@
-const app = document.getElementById("app");
+function tabsHtml(active) {
+  const isLogin = active === "login";
+  const isReg = active === "register";
 
-const state = {
-  mode: "login", // login | register
-  login: { email: "", password: "", emailError: "" },
-  register: { firstName: "", lastName: "", email: "", password: "", password2: "", emailError: "" },
-};
-
-function getModeFromHash() {
-  const h = (location.hash || "").toLowerCase();
-  if (h === "#register") return "register";
-  return "login"; // default
+  return `
+    <div class="auth-tabs">
+      <a class="auth-tab ${isLogin ? "is-active" : ""}" href="#login">Вход</a>
+      <a class="auth-tab ${isReg ? "is-active" : ""}" href="#register">Регистрация</a>
+    </div>
+  `;
 }
 
-function setHashForMode(mode) {
-  const next = mode === "register" ? "#register" : "#login";
-  if (location.hash !== next) location.hash = next;
-}
+function loginHtml() {
+  return `
+    <div class="auth-card">
+      ${tabsHtml("login")}
 
-function setMode(mode, { syncHash = true } = {}) {
-  state.mode = mode;
-
-  // сброс ошибок при переключении
-  state.login.emailError = "";
-  state.register.emailError = "";
-
-  if (syncHash) setHashForMode(mode);
-  render();
-}
-
-function render() {
-  app.innerHTML = `
-    <main class="auth-page">
-      <section class="auth-card">
-        <div class="auth-inner">
-          ${renderTabs()}
-          ${state.mode === "login" ? renderLogin() : renderRegister()}
+      <form class="auth-form" id="loginForm" autocomplete="on">
+        <div>
+          <input class="auth-input" id="loginEmail" type="text" placeholder="" value="ned" />
+          <div class="auth-error" id="loginEmailError" style="display:none;">Аккаунт не найден</div>
         </div>
-      </section>
-    </main>
-  `;
 
-  bindTabs();
-  if (state.mode === "login") bindLogin();
-  else bindRegister();
-}
+        <input class="auth-input" id="loginPassword" type="password" placeholder="Пароль" />
 
-function renderTabs() {
-  const loginActive = state.mode === "login";
-  return `
-    <ul class="auth-tabs">
-      <li><span class="auth-tab ${loginActive ? "is-active" : ""}" data-tab="login">Вход</span></li>
-      <li><span class="auth-tab ${!loginActive ? "is-active" : ""}" data-tab="register">Регистрация</span></li>
-    </ul>
+        <div class="auth-forgot">
+          <a href="#login" id="forgotLink">Забыли пароль?</a>
+        </div>
+
+        <button class="auth-submit" type="submit">Войти</button>
+      </form>
+    </div>
   `;
 }
 
-/* ---------------- LOGIN ---------------- */
-
-function renderLogin() {
-  const s = state.login;
-  const hasErr = Boolean(s.emailError);
-
+function registerHtml() {
   return `
-    <form class="auth-form" id="login-form" autocomplete="off" novalidate>
-      <div class="field ${hasErr ? "has-error" : ""}" id="login-email-field">
-        <input
-          class="input ${hasErr ? "is-error" : ""}"
-          type="text"
-          name="email"
-          placeholder="Почта"
-          value="${esc(s.email)}"
-        />
-        ${hasErr ? `<div class="field-error">${esc(s.emailError)}</div>` : ``}
-      </div>
+    <div class="auth-card">
+      ${tabsHtml("register")}
 
-      <div class="field">
-        <input
-          class="input"
-          type="password"
-          name="password"
-          placeholder="Пароль"
-          value="${esc(s.password)}"
-        />
-      </div>
+      <form class="auth-form" id="registerForm" autocomplete="on">
+        <input class="auth-input" id="regFirstName" type="text" placeholder="Имя" />
+        <input class="auth-input" id="regLastName" type="text" placeholder="Фамилия" />
+        <input class="auth-input" id="regEmail" type="text" placeholder="Почта" />
+        <input class="auth-input" id="regPassword" type="password" placeholder="Пароль" />
+        <input class="auth-input" id="regPassword2" type="password" placeholder="Повторите пароль" />
 
-      <div class="forgot-row">
-        <span class="forgot-link" id="forgot-link">Забыли пароль?</span>
-      </div>
-
-      <button class="auth-btn" type="submit">Войти</button>
-    </form>
+        <button class="auth-submit" type="submit">Зарегистрироваться</button>
+      </form>
+    </div>
   `;
+}
+
+/**
+ * Единая точка рендера страницы авторизации
+ * @param {"login"|"register"} mode
+ */
+export function renderAuthPage(mode) {
+  const html = mode === "register" ? registerHtml() : loginHtml();
+
+  // бинды делаем после того как html вставился в DOM
+  queueMicrotask(() => {
+    if (mode === "login") bindLogin();
+    else bindRegister();
+  });
+
+  return html;
 }
 
 function bindLogin() {
-  const form = app.querySelector("#login-form");
-  const email = app.querySelector('input[name="email"]');
-  const password = app.querySelector('input[name="password"]');
-  const forgot = app.querySelector("#forgot-link");
+  const form = document.getElementById("loginForm");
+  const email = document.getElementById("loginEmail");
+  const pass = document.getElementById("loginPassword");
+  const err = document.getElementById("loginEmailError");
 
-  email.addEventListener("input", (e) => {
-    state.login.email = e.target.value;
-    if (state.login.emailError) {
-      state.login.emailError = "";
-      render();
-    }
-  });
+  if (!form || !email || !pass || !err) return;
 
-  password.addEventListener("input", (e) => {
-    state.login.password = e.target.value;
-  });
+  // демо-валидация: если в email меньше 4 символов — считаем "не найден"
+  function validateEmailDemo() {
+    const v = String(email.value || "").trim();
+    const show = v.length > 0 && v.length < 4;
 
-  forgot.addEventListener("click", () => {
-    alert("Забыли пароль? (заглушка)");
-  });
+    email.classList.toggle("is-error", show);
+    err.style.display = show ? "block" : "none";
+  }
+
+  email.addEventListener("input", validateEmailDemo);
+  validateEmailDemo();
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const emailVal = (state.login.email || "").trim().toLowerCase();
+    // пока без “излишеств”: просто проверим, что что-то введено
+    const emailV = String(email.value || "").trim();
+    const passV = String(pass.value || "").trim();
 
-    // Заглушка поведения: если ввели что-то и оно не demo — “Аккаунт не найден”
-    if (emailVal && emailVal !== "test@test.ru") {
-      state.login.emailError = "Аккаунт не найден";
-      render();
-      return;
-    }
+    if (!emailV || !passV) return;
 
-    alert("Вход (заглушка).");
+    // временно: успешный вход перекинет на поиск (позже заменим)
+    window.location.hash = "#login";
   });
-}
-
-/* ---------------- REGISTER ---------------- */
-
-function renderRegister() {
-  const s = state.register;
-  const hasErr = Boolean(s.emailError);
-
-  return `
-    <form class="auth-form" id="register-form" autocomplete="off" novalidate>
-      <div class="field">
-        <input class="input" type="text" name="firstName" placeholder="Имя" value="${esc(s.firstName)}" />
-      </div>
-
-      <div class="field">
-        <input class="input" type="text" name="lastName" placeholder="Фамилия" value="${esc(s.lastName)}" />
-      </div>
-
-      <div class="field ${hasErr ? "has-error" : ""}">
-        <input
-          class="input ${hasErr ? "is-error" : ""}"
-          type="text"
-          name="email"
-          placeholder="Почта"
-          value="${esc(s.email)}"
-        />
-        ${hasErr ? `<div class="field-error">${esc(s.emailError)}</div>` : ``}
-      </div>
-
-      <div class="field">
-        <input class="input" type="password" name="password" placeholder="Пароль" value="${esc(s.password)}" />
-      </div>
-
-      <div class="field">
-        <input class="input" type="password" name="password2" placeholder="Повторите пароль" value="${esc(s.password2)}" />
-      </div>
-
-      <button class="auth-btn" type="submit">Зарегистрироваться</button>
-    </form>
-  `;
 }
 
 function bindRegister() {
-  const form = app.querySelector("#register-form");
-
-  const firstName = app.querySelector('input[name="firstName"]');
-  const lastName = app.querySelector('input[name="lastName"]');
-  const email = app.querySelector('input[name="email"]');
-  const password = app.querySelector('input[name="password"]');
-  const password2 = app.querySelector('input[name="password2"]');
-
-  firstName.addEventListener("input", (e) => (state.register.firstName = e.target.value));
-  lastName.addEventListener("input", (e) => (state.register.lastName = e.target.value));
-
-  email.addEventListener("input", (e) => {
-    state.register.email = e.target.value;
-    if (state.register.emailError) {
-      state.register.emailError = "";
-      render();
-    }
-  });
-
-  password.addEventListener("input", (e) => (state.register.password = e.target.value));
-  password2.addEventListener("input", (e) => (state.register.password2 = e.target.value));
+  const form = document.getElementById("registerForm");
+  if (!form) return;
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-
-    const em = (state.register.email || "").trim();
-    const emOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
-
-    if (em && !emOk) {
-      state.register.emailError = "Некорректная почта";
-      render();
-      return;
-    }
-
-    if (state.register.password && state.register.password2 && state.register.password !== state.register.password2) {
-      state.register.emailError = "Пароли не совпадают";
-      render();
-      return;
-    }
-
-    alert("Регистрация (заглушка).");
+    // пока просто “есть форма и кнопка”
+    window.location.hash = "#login";
   });
 }
-
-/* ---------------- Tabs binding ---------------- */
-
-function bindTabs() {
-  app.querySelectorAll(".auth-tab").forEach((el) => {
-    el.addEventListener("click", () => setMode(el.dataset.tab, { syncHash: true }));
-  });
-}
-
-/* ---------------- helpers ---------------- */
-
-function esc(v) {
-  return String(v ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-/* init: read hash + listen */
-state.mode = getModeFromHash();
-window.addEventListener("hashchange", () => {
-  const next = getModeFromHash();
-  if (next !== state.mode) setMode(next, { syncHash: false });
-});
-
-if (!location.hash) setHashForMode(state.mode);
-render();
