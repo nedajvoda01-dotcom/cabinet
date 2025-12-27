@@ -1,146 +1,158 @@
-/* ===== Auth page layout ===== */
+/* ===== Layout ===== */
 
 .auth-page {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
 }
 
-/* Карточка (filter) */
 .auth-card {
   width: var(--card-w);
-  background: var(--c-card);
-  border-radius: var(--r-10);
-  padding: var(--card-pad);
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: var(--pad-40);
   box-sizing: border-box;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
 }
 
-/* Верхние табы справа */
+/* Внутренний контейнер = 535px (615 - 40 - 40) */
+.auth-inner {
+  width: var(--control-w);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ===== Tabs ===== */
+/* Отступы 40 от верха/права обеспечены padding карточки */
 .auth-tabs {
   width: var(--control-w);
   display: flex;
   justify-content: flex-end;
-  gap: 24px;
-  margin: 0 0 20px 0;
+  gap: 30px;                 /* между “Вход” и “Регистрация” */
+  margin: 0 0 var(--gap-30) 0; /* от табов до инпута Почта: 30 */
   padding: 0;
   list-style: none;
 }
 
-/* Тексты табов = как в Figma */
 .auth-tab {
-  font-family: var(--font-family);
-  font-size: 18px;
-  font-weight: 400;
-  line-height: 130%;
-  letter-spacing: 0;
-  color: var(--c-muted);
-  text-decoration: none;
+  font-size: var(--fs-18);
+  font-weight: 400;         /* regular */
+  line-height: var(--lh);
+  color: var(--muted);
   cursor: pointer;
+  text-decoration: none;
+  user-select: none;
 }
 
-/* active: #000 + underline (solid) */
 .auth-tab.is-active {
-  color: var(--c-text);
+  color: var(--text);
   text-decoration: underline;
-  text-decoration-style: solid;
   text-decoration-thickness: 1px;
-  text-underline-offset: 4px; /* визуально ближе к фигме */
+  text-underline-offset: 2px;  /* как в фигме выглядит ближе */
 }
 
-/* ===== Form controls ===== */
+/* ===== Form ===== */
 
 .auth-form {
   width: var(--control-w);
-  display: flex;
-  flex-direction: column;
-  gap: 20px; /* в login у тебя gap 20 */
 }
 
-/* Инпут-обертка (если используешь) */
+/* поле */
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  width: var(--control-w);
 }
 
+/* Инпут */
 .input {
   width: var(--control-w);
   height: var(--control-h);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 20px 14px 20px; /* твои паддинги */
   box-sizing: border-box;
 
-  border-radius: var(--r-10);
-  border: 1px solid var(--c-border);
-  background: #fff;
-
-  padding: 12px 20px 14px 20px;
-
-  font-family: var(--font-family);
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 130%;
-  color: var(--c-text);
+  font-size: var(--fs-18);   /* ввод 18 */
+  font-weight: 400;          /* regular */
+  line-height: var(--lh);
+  color: var(--text);
 
   outline: none;
+  background: #fff;
 }
 
 .input::placeholder {
-  color: var(--c-muted);
+  color: var(--muted);
 }
 
-/* Ошибка: красная рамка и текст */
-.input.is-error {
-  border-color: var(--c-error);
+/* Между инпутами по умолчанию 20 */
+.field + .field {
+  margin-top: var(--gap-20);
 }
 
+/* Ошибка */
 .field-error {
-  font-family: var(--font-family);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 130%;
-  color: var(--c-error);
-  margin: 0;
+  margin-top: var(--gap-10); /* от инпута до текста: 10 */
+  font-size: var(--fs-16);   /* ошибка 16 */
+  font-weight: 400;          /* regular */
+  line-height: var(--lh);
+  color: var(--error);
 }
 
-/* "Забыли пароль?" справа */
-.auth-row {
+/* Когда есть ошибка под Почтой:
+   после текста ошибки до следующего инпута должно быть 20.
+   Мы даём следующему .field margin-top: 20,
+   а у ошибочного поля убираем стандартный стык, чтобы не удвоить. */
+.field.has-error {
+  margin-bottom: 0;
+}
+
+.field.has-error + .field {
+  margin-top: var(--gap-20); /* от ошибки до следующего инпута: 20 */
+}
+
+.input.is-error {
+  border-color: var(--error);
+}
+
+/* Forgot password:
+   - от password до forgot: 20
+   - от forgot до кнопки: 20
+*/
+.forgot-row {
   width: var(--control-w);
   display: flex;
   justify-content: flex-end;
-  margin-top: -8px; /* чуть подтягиваем как на фигме */
+  margin-top: var(--gap-20);
+  margin-bottom: var(--gap-20);
 }
 
-.auth-link {
-  font-family: var(--font-family);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 130%;
-  color: var(--c-muted);
+.forgot-link {
+  font-size: var(--fs-16);
+  font-weight: 400; /* regular */
+  line-height: var(--lh);
+  color: var(--muted);
   text-decoration: underline;
   text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
+  text-underline-offset: 2px;
   cursor: pointer;
 }
 
-/* Кнопка */
+/* Button */
 .auth-btn {
   width: var(--control-w);
   height: var(--control-h);
-  box-sizing: border-box;
+  border-radius: var(--radius);
+  border: none;
+  background: var(--btn-bg);
+  color: var(--btn-text);
 
-  border: 0;
-  border-radius: var(--r-10);
-  background: var(--c-btn);
-  color: var(--c-btn-text);
-
-  padding: 12px 40px 14px 40px;
-
-  font-family: var(--font-family);
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 130%;
+  font-size: var(--fs-16); /* 16 */
+  font-weight: 700;        /* bold */
+  line-height: var(--lh);
 
   cursor: pointer;
 }
 
-/* без излишеств: только pointer (как ты сказал) */
+/* util */
+.hidden { display: none !important; }
