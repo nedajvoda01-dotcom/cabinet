@@ -1,0 +1,131 @@
+/* =========================================================
+   Auth (Login / Register) — pixel-oriented, desktop-only
+   Radius everywhere = 10px (утверждено)
+========================================================= */
+
+.auth-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+/* карточка */
+.auth-card {
+  width: 615px;                       /* по скрину */
+  background: var(--card);
+  border-radius: var(--radius-10);
+  box-shadow: var(--shadow);
+
+  /* внутренние отступы по скрину: большие слева/справа */
+  padding: 34px 46px 34px 46px;
+  box-sizing: border-box;
+}
+
+/* tabs вверху справа */
+.auth-tabs {
+  display: flex;
+  justify-content: flex-end;
+  gap: 26px;
+  margin-bottom: 18px;
+  user-select: none;
+}
+
+.auth-tab {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+
+  font-size: var(--fs-14);
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+.auth-tab.is-active {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
+}
+
+/* form */
+.auth-form {
+  display: grid;
+  gap: 14px;
+}
+
+/* поля */
+.auth-field {
+  display: grid;
+  gap: 6px;
+}
+
+.auth-input {
+  height: 48px;                       /* по скрину */
+  width: 523px;                       /* 615 - 46*2 = 523 */
+  border-radius: var(--radius-10);
+  border: 1px solid var(--line);
+  padding: 0 16px;
+  box-sizing: border-box;
+
+  font-size: var(--fs-14);
+  font-weight: 500;
+  outline: none;
+  background: #fff;
+}
+
+.auth-input::placeholder {
+  color: #b5b5b5;
+}
+
+/* error state */
+.auth-input.is-error {
+  border-color: var(--danger);
+}
+
+.auth-error {
+  color: var(--danger);
+  font-size: var(--fs-14);
+  line-height: 1.2;
+}
+
+.auth-spacer {
+  height: 16px;
+}
+
+/* forgot */
+.auth-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -6px;
+}
+
+.auth-link {
+  font-size: var(--fs-14);
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+/* submit button */
+.auth-submit {
+  height: 48px;
+  width: 523px;
+  border-radius: var(--radius-10);
+  border: none;
+  cursor: pointer;
+
+  background: var(--btn);
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--fs-16);
+}
+
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
