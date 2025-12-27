@@ -3,11 +3,11 @@
 
 **Audience:** Codex + engineers  
 **Purpose:** define what this system is, what it must never become, and how to extend it safely.  
-**Primary goal:** keep the **core frozen**, while allowing **unlimited growth of integrations (“executors”)** at the edges.
+**Primary goal:** keep the core frozen, while allowing unlimited growth of integrations (“executors”) at the edges.
 
-> **Dogma level:** High.  
-> Anything marked **MUST / MUST NOT** is **merge‑blocking** if violated.  
-> Anything marked **SHOULD** is default behavior; deviations require written justification in the PR.
+**Dogma level:** High.  
+Anything marked **MUST / MUST NOT** is **merge‑blocking** if violated.  
+Anything marked **SHOULD** is default behavior; deviations require written justification in the PR.
 
 ---
 
@@ -36,10 +36,10 @@ This system exists to:
 - provide favorable conditions for executors (context, storage, observability, safety)
 - produce a **normalized result** (internal status/error/result format)
 
-**The platform does not know how the work is done.**  
-It only guarantees it is done **reliably** or fails **explainably**.
+The platform does not know how the work is done.  
+It only guarantees it is done reliably or fails explainably.
 
-**Non‑negotiable:** the platform is an *executor orchestrator*, not an executor.
+**Non‑negotiable:** the platform is an executor orchestrator, not an executor.
 
 ---
 
@@ -79,16 +79,83 @@ The following MUST remain stable. Any change requires an ADR + senior review.
 
 ### 2.2 What is flexible
 
-- **Integrations:** new ports can be added endlessly, without changing the core design.
-- **Drivers:** protocols can evolve as more executors appear.
-- **UI / frontend:** can evolve independently; only API contract matters.
+- Integrations: new ports can be added endlessly, without changing the core design.
+- Drivers: protocols can evolve as more executors appear.
+- UI / frontend: can evolve independently; only API contract matters.
 
 New executors are “plugged into the machine”.  
-**The machine’s internal mechanism remains stable.**
+The machine’s internal mechanism remains stable.
+
+### 2.3 Risk‑hardening invariants (merge‑blocking)
+
+This section defines **existential failure modes** for execution platforms.  
+Violations are **merge‑blocking**.
+
+#### R1 — Frozen core leakage (vendor semantics leak)
+
+**Above the Adapter layer, strictly forbidden:**
+- vendor enums
+- vendor error codes
+- vendor retry semantics
+- vendor‑specific state machines / statuses
+- vendor‑specific guarantees, assumptions, or branching
+
+**Hard rule:** Any PR that introduces vendor‑specific types above adapters MUST be rejected.
+
+**Enforcement (recommended):**
+- boundary test: Application must not import `Infrastructure/Integrations/**/Real/*`
+- boundary test: Domain must not import Infrastructure at all
+- review rule: “vendor shape above adapters” == critical architectural violation
+
+#### R2 — Fake / Fallback in production (silent degradation)
+
+**Hard rules:**
+- Fake/Fallback MUST NOT be used for **effectful commands** in production in a way that can pretend success.
+- Degrade behavior MUST be enforced **in code** (policy), not by convention.
+- Every fallback decision MUST be observable (metric + log + trace event).
+
+**Absolute rule:** Silent success in production is a critical bug.
+
+**Mandatory:**
+- explicit `DegradePolicy` checked by Fallback before switching to Fake
+- “effectful commands” MUST declare `effect = true` (metadata/contract flag)
+- in prod, effectful command + Real unavailable ⇒ normalized **fatal** error (`INTEGRATION_UNAVAILABLE` or equivalent), never Fake success
+
+#### R3 — Integration contract drift (Real vs Fake divergence)
+
+**Hard rules:**
+- No Real adapter may be merged without:
+  - contract tests
+  - Fake parity tests (same contract, same output shape)
+- Behavior may differ; **shape + meaning** (status/error semantics) MUST NOT diverge.
+
+**Versioning is mandatory:**
+- integration contracts MUST be versioned
+- breaking change ⇒ new version (never “edit in place”)
+
+#### R4 — Orchestrator intelligence creep (“smart core”)
+
+**Core MUST NOT:**
+- do branching by vendor
+- make decisions based on vendor response semantics
+- encode executor‑specific behavior
+- grow “how-to” logic
+
+Core operates only on **normalized outcomes** and **capabilities** (not vendors).
+
+**Hard rule:** If Core logic changes to accommodate a specific integration, the architecture is broken.
+
+#### R5 — Observability is not optional
+
+**Hard rules:**
+- `traceId` MUST exist for any execution path.
+- Any error without `traceId` is a bug.
+- Any retry MUST emit an observable event.
+- Any fallback MUST emit an observable event.
 
 ---
 
-## 3. Layering and dependency direction (non-negotiable)
+## 3. Layering and dependency direction (non‑negotiable)
 
 ### 3.1 Layers
 
@@ -102,12 +169,11 @@ New executors are “plugged into the machine”.
 
 ### 3.2 Dependency rules
 
-- **Domain depends on nothing else.**
-- **Application depends on Domain and on Port interfaces (contracts), never on Real adapters.**
-- **Infrastructure provides implementations** (PDO, queue, real adapters, fake adapters).
-- **HTTP calls Application only; HTTP MUST NOT talk to Integrations directly.**
-
-**Hard rule:** No file in Domain/Application imports concrete adapter classes (`Real/*Adapter.php`).
+- Domain depends on nothing else.
+- Application depends on Domain and on Port interfaces (contracts), never on Real adapters.
+- Infrastructure provides implementations (PDO, queue, real adapters, fake adapters).
+- HTTP calls Application only; HTTP MUST NOT talk to Integrations directly.
+- **Hard rule:** No file in Domain/Application imports concrete adapter classes (`Real/*Adapter.php`).
 
 **Enforcement (recommended tests):**
 - architecture boundary test: Domain must not import Infrastructure
@@ -120,20 +186,19 @@ New executors are “plugged into the machine”.
 
 ### 4.1 Integrations are plugins
 
-The platform MUST support an unlimited number of executors.
+The platform MUST support an unlimited number of executors.  
+Today we plan ~5 core integrations; later there can be more without redesign.
 
-Today we plan ~5 core integrations; later there can be more **without redesign**.
-
-### 4.2 Each integration is self-contained
+### 4.2 Each integration is self‑contained
 
 Each integration provides:
 
-- **Port interface**: contract
-- **Real adapter**: actual external calls
-- **Fake adapter**: internal fallback executor
-- **Descriptor**: registration + capabilities + version
+- Port interface: contract
+- Real adapter: actual external calls
+- Fake adapter: internal fallback executor
+- Descriptor: registration + capabilities + version
 
-### 4.3 Registry auto-wires integrations
+### 4.3 Registry auto‑wires integrations
 
 A registry is responsible for:
 
@@ -159,7 +224,7 @@ Fake executors exist to:
 - allow gradual integration rollout without blocking core development
 - prevent “missing integration = crash”
 
-Fake is **not** a mock. Fake implements the same Port and returns normalized results.
+Fake is not a mock. Fake implements the same Port and returns normalized results.
 
 ### 5.2 Fallback rules
 
@@ -182,22 +247,22 @@ Fallback chooses Real vs Fake based on:
 
 Some commands produce real‑world effects (publish, delete, send, etc.). For such commands:
 
-- in production, **silent fallback to Fake is forbidden**
-- if Real is unavailable, return a normalized **fatal** error:
+- in production, silent fallback to Fake is forbidden
+- if Real is unavailable, return a normalized fatal error:
   - `ErrorKind = permanent` (or specific kind)
   - `code = INTEGRATION_UNAVAILABLE` (example)
 
-The platform must remain explainable: **no “pretend success”.**
+The platform must remain explainable: no “pretend success”.
 
-This is controlled via **DegradePolicy**.
+This is controlled via DegradePolicy.
 
 #### 5.3.1 Dogmatic enforcement (risk‑hardening)
 
 - Effectful commands MUST declare `effect = true` in Port metadata (or equivalent).
-- Fallback MUST check `DegradePolicy` before switching to Fake.
+- Fallback MUST check DegradePolicy before switching to Fake.
 - In prod, for effectful commands:
-  - Fallback MUST return `permanent` error, never Fake success
-  - Circuit breaker open MUST be treated as `INTEGRATION_UNAVAILABLE`, not “try Fake”
+  - Fallback MUST return permanent error, never Fake success
+  - Circuit breaker open MUST be treated as INTEGRATION_UNAVAILABLE, not “try Fake”
 
 ---
 
@@ -286,7 +351,7 @@ Idempotency ensures:
 - crash/retry does not create duplicates
 - network timeouts do not cause double execution
 
-Idempotency belongs to **pipeline/application**, not to HTTP controllers.
+Idempotency belongs to pipeline/application, not to HTTP controllers.
 
 **Hard rule:** if a command is retried, it MUST be idempotent by design.
 
@@ -351,7 +416,7 @@ Query handlers assemble response:
 
 External errors must be normalized into:
 
-- internal `ErrorKind` (transient, permanent, auth, rate_limit, bad_input, etc.)
+- internal ErrorKind (transient, permanent, auth, rate_limit, bad_input, etc.)
 - stable error code
 - safe message
 - optional details (no secrets)
@@ -392,7 +457,7 @@ Mandatory:
 
 Checks are categorized and belong to specific layers:
 
-### 11.1 HTTP Validators (format-level)
+### 11.1 HTTP Validators (format‑level)
 
 - JSON validity
 - body size limits
@@ -400,26 +465,26 @@ Checks are categorized and belong to specific layers:
 - include/fields limits and allowlists
 - auth parsing and RBAC gating
 
-### 11.2 Domain invariants (data-level)
+### 11.2 Domain invariants (data‑level)
 
 - impossible states are forbidden
 - stage transitions are validated
 - internal entities remain consistent
 
-### 11.3 Application Guards (action-level)
+### 11.3 Application Guards (action‑level)
 
 - can the stage be started now?
 - are assets references valid?
 - payload size limits before sending to executor
 - URL allowlists if applicable
 
-### 11.4 Policies (behavior-level)
+### 11.4 Policies (behavior‑level)
 
 - degrade policy (prod vs dev)
 - access policy (RBAC at domain action level)
 - limits policy (max include depth, max assets count, etc.)
 
-### 11.5 Integration boundary checks (network/contract-level)
+### 11.5 Integration boundary checks (network/contract‑level)
 
 - config presence
 - health cache TTL
@@ -449,6 +514,7 @@ Frontend can be reorganized and made more complex without backend changes, unles
 
 This is the target structure (migrate gradually). It includes layered checks, drivers, pipeline mechanics, and plugin integrations.
 
+```text
 backend/
 ├─ public/
 │  └─ index.php
@@ -667,28 +733,32 @@ backend/
 │        ├─ BrowserContext/
 │        │  ├─ BrowserContextPort.php
 │        │  ├─ BrowserContextIntegration.php
-│        │  ├─ Real/BrowserContextHttpAdapter.php
+│        │  ├─ Real/
+│        │  │  └─ BrowserContextHttpAdapter.php
 │        │  └─ Fake/
 │        │     ├─ FakeBrowserContextAdapter.php
 │        │     └─ FakeBrowserContextPool.php
 │        ├─ Parser/
 │        │  ├─ ParserPort.php
 │        │  ├─ ParserIntegration.php
-│        │  ├─ Real/ParserHttpAdapter.php
+│        │  ├─ Real/
+│        │  │  └─ ParserHttpAdapter.php
 │        │  └─ Fake/
 │        │     ├─ FakeParserAdapter.php
 │        │     └─ FakeParserFixtures.php
 │        ├─ PhotoProcessor/
 │        │  ├─ PhotoProcessorPort.php
 │        │  ├─ PhotoProcessorIntegration.php
-│        │  ├─ Real/PhotoProcessorHttpAdapter.php
+│        │  ├─ Real/
+│        │  │  └─ PhotoProcessorHttpAdapter.php
 │        │  └─ Fake/
 │        │     ├─ FakePhotoProcessorAdapter.php
 │        │     └─ FakePhotoPipeline.php
 │        └─ Storage/
 │           ├─ StoragePort.php
 │           ├─ StorageIntegration.php
-│           ├─ Real/S3StorageAdapter.php
+│           ├─ Real/
+│           │  └─ S3StorageAdapter.php
 │           └─ Fake/
 │              ├─ FakeStorageAdapter.php
 │              └─ FakeStorageFs.php
@@ -717,6 +787,7 @@ backend/
          └─ Robot/
             ├─ RobotService.php
             └─ README.md
+```
 
 ---
 
@@ -724,7 +795,7 @@ backend/
 
 The platform supports unlimited executors. Adding a new one MUST be uniform.
 
-### Step-by-step
+### Step‑by‑step
 
 1) Create a new integration folder:
 
@@ -746,10 +817,10 @@ NewThingIntegration.php
 
 Descriptor MUST provide:
 
-- `id` (integration name)
-- `contractVersion`
-- `capabilities` (string list)
-- `buildReal(config)` and `buildFake()`
+- id (integration name)
+- contractVersion
+- capabilities (string list)
+- buildReal(config) and buildFake()
 - wiring through `_shared/FallbackPort` with health/breaker rules
 
 4) Implement adapters:
@@ -765,7 +836,7 @@ Fake/FakeNewThingAdapter.php
 src/Application/Pipeline/Drivers/NewThingDriver.php
 ```
 
-6) Register the descriptor in `Config/integrations.php`  
+6) Register the descriptor in Config/integrations.php  
 (or rely on autoload scanning if used).
 
 **Rules:**
@@ -809,7 +880,7 @@ All real actions are performed outside the system via adapters.
 
 ## 17. Migration strategy (how to get here safely)
 
-This architecture is a **target state**, not a big‑bang rewrite.
+This architecture is a target state, not a big‑bang rewrite.
 
 ### 17.1 Migration principles
 
@@ -819,29 +890,29 @@ This architecture is a **target state**, not a big‑bang rewrite.
 
 ### 17.2 Recommended order
 
-1) **Freeze rules**
-   - Introduce this document (`AGENT1.md`) as a hard reference.
+1) Freeze rules  
+   - Introduce this document (AGENT1.md) as a hard reference.  
    - Add architecture boundary tests if possible.
 
-2) **Isolate integrations**
-   - Move all external calls behind Ports.
-   - Introduce Fake adapters for every integration.
+2) Isolate integrations  
+   - Move all external calls behind Ports.  
+   - Introduce Fake adapters for every integration.  
    - Introduce Fallback as default wiring.
 
-3) **Extract Drivers**
-   - Move protocol logic out of workers into Drivers.
+3) Extract Drivers  
+   - Move protocol logic out of workers into Drivers.  
    - Workers become thin delegates.
 
-4) **Normalize pipeline**
-   - Introduce idempotency, retry policy, error classification.
+4) Normalize pipeline  
+   - Introduce idempotency, retry policy, error classification.  
    - Add DLQ and lock/lease where needed.
 
-5) **Clean reads**
-   - Introduce `include/fields`.
+5) Clean reads  
+   - Introduce include/fields.  
    - Move response assembly to ReadModel builders.
 
-6) **Move legacy code**
-   - Any old‑style integration logic goes into `_legacy/`.
+6) Move legacy code  
+   - Any old‑style integration logic goes into _legacy/.  
    - No two approaches should coexist in active code.
 
 ---
@@ -861,7 +932,7 @@ This architecture is a **target state**, not a big‑bang rewrite.
 For every integration:
 
 - Real and Fake adapters must conform to the same Port contract.
-- Same input → same **shape** of output (status/error), even if behavior differs.
+- Same input → same shape of output (status/error), even if behavior differs.
 
 **Hard rule:** no Real adapter merges without parity tests.
 
@@ -891,7 +962,7 @@ Tests that assert:
 
 ### 19.2 Integration contract evolution
 
-- Each integration exposes `contractVersion`.
+- Each integration exposes contractVersion.
 - Breaking changes in executor contracts require:
   - new adapter version, or
   - new integration ID.
@@ -905,11 +976,13 @@ Tests that assert:
 Failures are first‑class citizens.
 
 Rules:
+
 - Every failure must be classified.
 - Every failure must be observable.
 - Every failure must be explainable.
 
 No:
+
 - silent retries without trace
 - silent fallback in production for effectful commands
 - raw external errors exposed to clients
@@ -941,12 +1014,11 @@ You know the architecture is working when:
 
 ---
 
-## 23. Final reminder (non-negotiable)
+## 23. Final reminder (non‑negotiable)
 
-> If the system starts to “understand” the external world,  
-> the architecture is already broken.
+If the system starts to “understand” the external world, the architecture is already broken.
 
-Everything that understands **how** work is done must live **outside the core**, at the edges, behind adapters.
+Everything that understands how work is done must live outside the core, at the edges, behind adapters.
 
 The core is a machine.  
 Machines must be boring, predictable, and hard to break.
