@@ -1,136 +1,324 @@
 import { store } from "../store.js";
 import { router } from "../router.js";
-import { Input } from "../ui/input.js";
-import { Button } from "../ui/button.js";
 
 export function renderAuthPage(outlet, { mode }) {
   store.actions.setAuthMode(mode);
 
-  // Чистим outlet (мы рендерим только внутрь layout)
   outlet.innerHTML = "";
 
-  // Карточка
-  const card = document.createElement("div");
-  card.className = "card";
+  const screen = document.createElement("div");
+  screen.className = "auth-screen";
 
-  // Tabs (пока простые ссылки — позже сделаем ui/tabs.js)
+  const card = document.createElement("div");
+  card.className = "auth-card";
+
   const tabs = document.createElement("div");
   tabs.className = "auth-tabs";
-  tabs.innerHTML = `
-    <a href="javascript:void(0)" data-go="login" class="${mode === "login" ? "active" : ""}">Вход</a>
-    <a href="javascript:void(0)" data-go="register" class="${mode === "register" ? "active" : ""}">Регистрация</a>
-  `;
 
-  // Контент формы
-  const form = document.createElement("div");
+  const tabLogin = document.createElement("button");
+  tabLogin.type = "button";
+  tabLogin.className = "auth-tab";
+  tabLogin.textContent = "Вход";
 
-  // Общие хэндлеры, чтобы корректно снять в unmount
-  const cleanups = [];
+  const tabReg = document.createElement("button");
+  tabReg.type = "button";
+  tabReg.className = "auth-tab";
+  tabReg.textContent = "Регистрация";
 
-  const onTabsClick = (e) => {
-    const go = e.target?.getAttribute?.("data-go");
-    if (go === "login") router.navigate("login");
-    if (go === "register") router.navigate("register");
+  tabs.appendChild(tabLogin);
+  tabs.appendChild(tabReg);
+
+  const form = document.createElement("form");
+  form.className = "auth-form";
+  form.autocomplete = "off";
+
+  card.appendChild(tabs);
+  card.appendChild(form);
+  screen.appendChild(card);
+  outlet.appendChild(screen);
+
+  // local states
+  let currentMode = mode;
+
+  const loginState = {
+    email: "",
+    password: "",
+    emailError: "", // "Аккаунт не найден"
+    passwordError: "",
   };
-  tabs.addEventListener("click", onTabsClick);
-  cleanups.push(() => tabs.removeEventListener("click", onTabsClick));
 
-  // --- UI elements ---
-  if (mode === "login") {
-    // email
-    const emailField = Input({
-      value: "ned",
-      placeholder: "Почта",
-      type: "text",
+  const regState = {
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    password2: "",
+    errors: {},
+  };
+
+  // helpers
+  function setActiveTabs() {
+    tabLogin.classList.toggle("is-active", currentMode === "login");
+    tabReg.classList.toggle("is-active", currentMode === "register");
+  }
+
+  function isValidEmail(s) {
+    const v = String(s || "").trim();
+    return v.includes("@") && v.includes(".") && v.length >= 6;
+  }
+
+  function field({ placeholder, value, type = "text", error = "", onInput }) {
+    const wrap = document.createElement("div");
+    wrap.className = "auth-field";
+
+    const input = document.createElement("input");
+    input.className = "auth-input";
+    input.type = type;
+    input.placeholder = placeholder;
+    input.value = value;
+
+    if (error) input.classList.add("is-error");
+
+    const err = document.createElement("div");
+    if (error) {
+      err.className = "auth-error";
+      err.textContent = error;
+    } else {
+      err.className = "auth-spacer";
+    }
+
+    const onInputHandler = () => onInput(input.value);
+    input.addEventListener("input", onInputHandler);
+
+    wrap.appendChild(input);
+    wrap.appendChild(err);
+
+    return {
+      wrap,
+      input,
+      unmount() {
+        input.removeEventListener("input", onInputHandler);
+      },
+    };
+  }
+
+  // render
+  let mounted = [];
+
+  function clearMounted() {
+    mounted.forEach((m) => {
+      try { m.unmount?.(); } catch {}
+    });
+    mounted = [];
+    form.innerHTML = "";
+  }
+
+  function render() {
+    setActiveTabs();
+    clearMounted();
+
+    if (currentMode === "login") {
+      const email = field({
+        placeholder: "Почта",
+        value: loginState.email,
+        type: "text",
+        error: loginState.emailError,
+        onInput: (v) => {
+          loginState.email = v;
+          if (loginState.emailError) {
+            loginState.emailError = "";
+            render();
+          }
+        },
+      });
+
+      const pass = field({
+        placeholder: "Пароль",
+        value: loginState.password,
+        type: "password",
+        error: loginState.passwordError,
+        onInput: (v) => {
+          loginState.password = v;
+          if (loginState.passwordError) {
+            loginState.passwordError = "";
+            render();
+          }
+        },
+      });
+
+      const forgotRow = document.createElement("div");
+      forgotRow.className = "auth-row";
+
+      const forgot = document.createElement("span");
+      forgot.className = "auth-link";
+      forgot.textContent = "Забыли пароль?";
+      forgotRow.appendChild(forgot);
+
+      const submit = document.createElement("button");
+      submit.type = "submit";
+      submit.className = "auth-submit";
+      submit.textContent = "Войти";
+
+      form.appendChild(email.wrap);
+      form.appendChild(pass.wrap);
+      form.appendChild(forgotRow);
+      form.appendChild(submit);
+
+      mounted.push(email, pass);
+      return;
+    }
+
+    // register
+    const firstName = field({
+      placeholder: "Имя",
+      value: regState.firstName,
+      error: regState.errors.firstName || "",
       onInput: (v) => {
-        // как в макете: показываем ошибку, если не "test@test.com"
-        const bad = v.trim().length > 0 && v.trim() !== "test@test.com";
-        emailField.setError(bad ? "Аккаунт не найден" : "");
+        regState.firstName = v;
+        if (regState.errors.firstName) {
+          delete regState.errors.firstName;
+          render();
+        }
       },
     });
 
-    // password (без логики пока)
-    const passField = Input({
-      value: "",
+    const lastName = field({
+      placeholder: "Фамилия",
+      value: regState.lastName,
+      error: regState.errors.lastName || "",
+      onInput: (v) => {
+        regState.lastName = v;
+        if (regState.errors.lastName) {
+          delete regState.errors.lastName;
+          render();
+        }
+      },
+    });
+
+    const email = field({
+      placeholder: "Почта",
+      value: regState.email,
+      error: regState.errors.email || "",
+      onInput: (v) => {
+        regState.email = v;
+        if (regState.errors.email) {
+          delete regState.errors.email;
+          render();
+        }
+      },
+    });
+
+    const pass = field({
       placeholder: "Пароль",
+      value: regState.password,
       type: "password",
-      onInput: () => {},
+      error: regState.errors.password || "",
+      onInput: (v) => {
+        regState.password = v;
+        if (regState.errors.password) {
+          delete regState.errors.password;
+          render();
+        }
+      },
     });
 
-    // "Забыли пароль?" справа
-    const forgotRow = document.createElement("div");
-    forgotRow.className = "right";
-    forgotRow.innerHTML = `<span class="link">Забыли пароль?</span>`;
-
-    // submit
-    const submit = Button({
-      text: "Войти",
-      variant: "primary",
-      fullWidth: true,
-      onClick: () => router.navigate("search"),
+    const pass2 = field({
+      placeholder: "Повторите пароль",
+      value: regState.password2,
+      type: "password",
+      error: regState.errors.password2 || "",
+      onInput: (v) => {
+        regState.password2 = v;
+        if (regState.errors.password2) {
+          delete regState.errors.password2;
+          render();
+        }
+      },
     });
 
-    // mount to form
-    form.appendChild(emailField.el);
-    form.appendChild(passField.el);
-    form.appendChild(forgotRow);
-    form.appendChild(submit.el);
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.className = "auth-submit";
+    submit.textContent = "Зарегистрироваться";
 
-    // cleanup
-    cleanups.push(() => emailField.unmount());
-    cleanups.push(() => passField.unmount());
-    cleanups.push(() => submit.unmount());
-  } else {
-    const firstName = Input({ placeholder: "Имя" });
-    const lastName = Input({ placeholder: "Фамилия" });
-    const email = Input({ placeholder: "Почта" });
-    const pass = Input({ placeholder: "Пароль", type: "password" });
-    const pass2 = Input({ placeholder: "Повторите пароль", type: "password" });
+    form.appendChild(firstName.wrap);
+    form.appendChild(lastName.wrap);
+    form.appendChild(email.wrap);
+    form.appendChild(pass.wrap);
+    form.appendChild(pass2.wrap);
+    form.appendChild(submit);
 
-    const submit = Button({
-      text: "Зарегистрироваться",
-      variant: "primary",
-      fullWidth: true,
-      onClick: () => router.navigate("search"),
-    });
-
-    form.appendChild(firstName.el);
-    form.appendChild(lastName.el);
-    form.appendChild(email.el);
-    form.appendChild(pass.el);
-    form.appendChild(pass2.el);
-    form.appendChild(submit.el);
-
-    cleanups.push(() => firstName.unmount());
-    cleanups.push(() => lastName.unmount());
-    cleanups.push(() => email.unmount());
-    cleanups.push(() => pass.unmount());
-    cleanups.push(() => pass2.unmount());
-    cleanups.push(() => submit.unmount());
+    mounted.push(firstName, lastName, email, pass, pass2);
   }
 
-  // временная ссылка внизу (удобно тестить)
-  const toSearch = document.createElement("div");
-  toSearch.style.marginTop = "16px";
-  toSearch.innerHTML = `<a class="link" href="javascript:void(0)">Перейти в поиск (временно)</a>`;
+  // events
+  const onTabs = (e) => {
+    if (e.target === tabLogin) router.navigate("login");
+    if (e.target === tabReg) router.navigate("register");
+  };
+  tabs.addEventListener("click", onTabs);
 
-  const onToSearch = () => router.navigate("search");
-  toSearch.addEventListener("click", onToSearch);
-  cleanups.push(() => toSearch.removeEventListener("click", onToSearch));
+  const onSubmit = (e) => {
+    e.preventDefault();
 
-  // Собираем карточку
-  card.appendChild(tabs);
-  card.appendChild(form);
-  card.appendChild(toSearch);
+    if (currentMode === "login") {
+      loginState.emailError = "";
+      loginState.passwordError = "";
 
-  outlet.appendChild(card);
+      const email = loginState.email.trim();
+      const pass = loginState.password;
+
+      if (!email) loginState.emailError = "Введите почту";
+      else if (!isValidEmail(email)) loginState.emailError = "Некорректная почта";
+
+      if (!pass) loginState.passwordError = "Введите пароль";
+
+      // без бэка: просто показываем заглушку.
+      // При желании можно имитировать "аккаунт не найден" по условию.
+      if (!loginState.emailError && !loginState.passwordError) {
+        alert("Вход (заглушка). Пока без бэка.");
+        router.navigate("search");
+      }
+
+      render();
+      return;
+    }
+
+    // register validation (минимально)
+    regState.errors = {};
+    const fn = regState.firstName.trim();
+    const ln = regState.lastName.trim();
+    const email = regState.email.trim();
+    const p1 = regState.password;
+    const p2 = regState.password2;
+
+    if (!fn) regState.errors.firstName = "Введите имя";
+    if (!ln) regState.errors.lastName = "Введите фамилию";
+
+    if (!email) regState.errors.email = "Введите почту";
+    else if (!isValidEmail(email)) regState.errors.email = "Некорректная почта";
+
+    if (!p1) regState.errors.password = "Введите пароль";
+    if (!p2) regState.errors.password2 = "Повторите пароль";
+    if (p1 && p2 && p1 !== p2) regState.errors.password2 = "Пароли не совпадают";
+
+    if (Object.keys(regState.errors).length === 0) {
+      alert("Регистрация (заглушка). Пока без бэка.");
+      router.navigate("login");
+    }
+
+    render();
+  };
+  form.addEventListener("submit", onSubmit);
+
+  // initial
+  render();
 
   return {
     unmount() {
-      // снимаем всё, что повесили
-      cleanups.forEach((fn) => {
-        try { fn(); } catch {}
-      });
+      try { tabs.removeEventListener("click", onTabs); } catch {}
+      try { form.removeEventListener("submit", onSubmit); } catch {}
+      clearMounted();
     },
   };
 }
