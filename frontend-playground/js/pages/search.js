@@ -1,8 +1,11 @@
 import { store } from "../store.js";
+
 import { Tabs } from "../ui/tabs.js";
 import { Segmented } from "../ui/segmented.js";
 import { Input } from "../ui/input.js";
 import { Button } from "../ui/button.js";
+
+import { ListingCard } from "../components/listing-card.js";
 
 export function renderSearchPage(outlet) {
   outlet.innerHTML = "";
@@ -10,7 +13,7 @@ export function renderSearchPage(outlet) {
   const root = document.createElement("div");
   root.className = "search-page";
 
-  // ===== header card (controls) =====
+  // ====== Controls card ======
   const controlsCard = document.createElement("div");
   controlsCard.className = "search-card";
 
@@ -24,8 +27,8 @@ export function renderSearchPage(outlet) {
   title.className = "search-title";
   title.textContent = "Поиск автомобиля";
 
-  // Tabs: active/archived
   const s0 = store.getState();
+
   const tabs = Tabs({
     items: [
       { key: "active", label: "Активные" },
@@ -38,7 +41,6 @@ export function renderSearchPage(outlet) {
   headerRow.appendChild(title);
   headerRow.appendChild(tabs.el);
 
-  // Row: segmented controls
   const segRow = document.createElement("div");
   segRow.style.display = "flex";
   segRow.style.alignItems = "center";
@@ -75,7 +77,6 @@ export function renderSearchPage(outlet) {
   leftSeg.appendChild(condSeg.el);
   leftSeg.appendChild(sellerSeg.el);
 
-  // Right buttons
   const rightBtns = document.createElement("div");
   rightBtns.style.display = "flex";
   rightBtns.style.gap = "10px";
@@ -93,9 +94,9 @@ export function renderSearchPage(outlet) {
     variant: "primary",
     size: "sm",
     onClick: () => {
-      // пока просто алерт — позже будет подгрузка/рендер списка
-      const n = calcResultsCount(store.getState().search.filters);
-      alert(`Показать ${n} объявлений (пока заглушка)`);
+      // в нашей архитектуре результаты всегда живые,
+      // поэтому кнопка "показать" сейчас просто скроллит к списку.
+      resultsCard.scrollIntoView({ behavior: "smooth", block: "start" });
     },
   });
 
@@ -105,7 +106,6 @@ export function renderSearchPage(outlet) {
   segRow.appendChild(leftSeg);
   segRow.appendChild(rightBtns);
 
-  // Filters grid (пока Input'ы вместо Select'ов — дизайн потом)
   const filtersGrid = document.createElement("div");
   filtersGrid.style.display = "grid";
   filtersGrid.style.gridTemplateColumns = "repeat(3, minmax(0, 1fr))";
@@ -147,7 +147,7 @@ export function renderSearchPage(outlet) {
     variant: "ghost",
     size: "md",
     fullWidth: true,
-    onClick: () => alert("Панель всех параметров — следующий шаг"),
+    onClick: () => alert("Панель всех параметров — следующий шаг (после viewer)"),
   });
 
   filtersGrid.appendChild(brand.el);
@@ -156,7 +156,6 @@ export function renderSearchPage(outlet) {
   filtersGrid.appendChild(color.el);
   filtersGrid.appendChild(region.el);
 
-  // чтобы сетка была ровно 3 колонки, а кнопка заняла 1 ячейку:
   const btnWrap = document.createElement("div");
   btnWrap.appendChild(allParamsBtn.el);
   filtersGrid.appendChild(btnWrap);
@@ -165,22 +164,72 @@ export function renderSearchPage(outlet) {
   controlsCard.appendChild(segRow);
   controlsCard.appendChild(filtersGrid);
 
-  // ===== results card (placeholder) =====
+  // ====== Results card ======
   const resultsCard = document.createElement("div");
   resultsCard.className = "search-card";
-  resultsCard.innerHTML = `
-    <div style="font-weight:800;margin-bottom:8px">Результаты</div>
-    <div style="color:var(--muted)">Пока заглушка. Следующий шаг — карточки объявлений и viewer фото.</div>
-  `;
+
+  const resultsHead = document.createElement("div");
+  resultsHead.className = "results-head";
+
+  const resultsTitle = document.createElement("div");
+  resultsTitle.style.fontWeight = "900";
+  resultsTitle.textContent = "Результаты";
+
+  const resultsCount = document.createElement("div");
+  resultsCount.className = "results-count";
+
+  resultsHead.appendChild(resultsTitle);
+  resultsHead.appendChild(resultsCount);
+
+  const listEl = document.createElement("div");
+  listEl.className = "results-list";
+
+  resultsCard.appendChild(resultsHead);
+  resultsCard.appendChild(listEl);
 
   root.appendChild(controlsCard);
   root.appendChild(resultsCard);
   outlet.appendChild(root);
 
-  // ===== derived updates =====
-  function updateDerived() {
-    const n = calcResultsCount(store.getState().search.filters);
-    showBtn.el.textContent = `Показать ${n}`;
+  // ===== rendering cards =====
+  let mountedCards = [];
+
+  function renderResults() {
+    // unmount previous cards
+    mountedCards.forEach((c) => {
+      try { c.unmount?.(); } catch {}
+    });
+    mountedCards = [];
+    listEl.innerHTML = "";
+
+    const st = store.getState();
+    const items = st.search.results || [];
+
+    resultsCount.textContent = `${items.length} найдено`;
+    showBtn.el.textContent = `Показать ${items.length}`;
+
+    if (items.length === 0) {
+      const empty = document.createElement("div");
+      empty.style.color = "var(--muted)";
+      empty.style.fontWeight = "600";
+      empty.textContent = "Ничего не найдено. Попробуйте изменить фильтры.";
+      listEl.appendChild(empty);
+      return;
+    }
+
+    for (const it of items) {
+      const card = ListingCard({
+        listing: it,
+        onOpenPhotos: (listing) => {
+          // viewer будет в следующем шаге.
+          // сейчас просто пишем в store viewer state.
+          store.actions.openViewer(listing.photos || [], 0);
+          alert("Viewer следующий шаг: state уже открывается через store.actions.openViewer()");
+        },
+      });
+      mountedCards.push(card);
+      listEl.appendChild(card.el);
+    }
   }
 
   function resetFilters() {
@@ -196,64 +245,49 @@ export function renderSearchPage(outlet) {
     });
   }
 
-  // подписки: обновляем только то, что нужно
+  // subscribe to filters recompute
   const unsub = store.subscribe((st, meta) => {
-    if (meta?.type === "search/filters") {
-      // синхронизируем UI контролы с состоянием (если сбросили)
+    if (meta?.type === "search/filters" || meta?.type === "search/init") {
+      // sync UI values (важно для reset)
       tabs.setValue(st.search.filters.status);
       condSeg.setValue(st.search.filters.condition);
       sellerSeg.setValue(st.search.filters.seller);
 
-      // синхроним input'ы
       brand.input.value = st.search.filters.brand;
       model.input.value = st.search.filters.model;
       generation.input.value = st.search.filters.generation;
       color.input.value = st.search.filters.color;
       region.input.value = st.search.filters.region;
 
-      updateDerived();
+      renderResults();
     }
   });
 
-  updateDerived();
+  // first paint
+  renderResults();
 
   return {
     unmount() {
       try { unsub(); } catch {}
+
       try { tabs.unmount(); } catch {}
       try { condSeg.unmount(); } catch {}
       try { sellerSeg.unmount(); } catch {}
+
       try { brand.unmount(); } catch {}
       try { model.unmount(); } catch {}
       try { generation.unmount(); } catch {}
       try { color.unmount(); } catch {}
       try { region.unmount(); } catch {}
+
       try { resetBtn.unmount(); } catch {}
       try { showBtn.unmount(); } catch {}
       try { allParamsBtn.unmount(); } catch {}
+
+      mountedCards.forEach((c) => {
+        try { c.unmount?.(); } catch {}
+      });
+      mountedCards = [];
     },
   };
-}
-
-/**
- * Пока простой “счётчик результатов” без моков:
- * чем больше заполнено фильтров — тем меньше результатов.
- * Потом заменим на реальные mocks/listings.
- */
-function calcResultsCount(filters) {
-  const base = 248;
-  let penalty = 0;
-
-  if (filters.status === "archived") penalty += 70;
-  if (filters.condition !== "all") penalty += 40;
-  if (filters.seller !== "all") penalty += 30;
-
-  const textFields = ["brand", "model", "generation", "color", "region"];
-  for (const k of textFields) {
-    const v = (filters[k] || "").trim();
-    if (!v) continue;
-    penalty += Math.min(35, 10 + v.length * 2);
-  }
-
-  return Math.max(0, base - penalty);
 }
