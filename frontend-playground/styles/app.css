@@ -4,11 +4,16 @@ html, body {
 
 body {
   margin: 0;
-  font-family: var(--font-family);
-  color: var(--c-text);
-  background: var(--c-bg);
+  font-family: var(--font);
+  background: var(--page-bg);
+  color: var(--text);
+
+  /* desktop only, без адаптива */
+  min-width: 1200px;
 }
 
-#root {
-  height: 100%;
+#app {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
 }
