@@ -1,146 +1,146 @@
-# AGENT.md  
+# AGENT.md
 ## Supreme Guardrail for Codex
 
 ⚠️ **ABSOLUTE PRIORITY FILE**  
-Этот файл имеет наивысший приоритет.  
-Любой код, сгенерированный или изменённый без соблюдения этого файла, считается **некорректным**, даже если он компилируется и “работает”.
+This file has the highest priority.  
+Any code generated or modified without complying with this file is considered **INVALID**, even if it compiles and appears to work.
 
 ---
 
 ## 1. Mandatory Reading Rules (NON-NEGOTIABLE)
 
 ### 🔒 Backend Rule
-Если ты **пишешь, изменяешь или анализируешь backend-код** (Domain / Application / Pipeline / Integrations):
+If you are **writing, modifying, or analyzing backend code** (Domain / Application / Pipeline / Integrations):
 
-> **ТЫ ОБЯЗАН СНАЧАЛА ПРОЧИТАТЬ `AGENT1.md`.**
+> **YOU MUST READ `AGENT1.md` FIRST.**
 
-- `AGENT1.md` — единственный источник архитектурной истины для backend.
-- Любое решение, противоречащее `AGENT1.md`, является **архитектурной ошибкой**.
-- Исключений не существует.
+- `AGENT1.md` is the single source of architectural truth for the backend.
+- Any decision that violates `AGENT1.md` is an **architectural error**.
+- There are **no exceptions**.
 
 ---
 
 ### 🔒 Frontend Rule
-Если ты **пишешь, изменяешь или анализируешь frontend-код** (UI / SPA / BFF / client):
+If you are **writing, modifying, or analyzing frontend code** (UI / SPA / BFF / client):
 
-> **ТЫ ОБЯЗАН СНАЧАЛА ПРОЧИТАТЬ `AGENT2.md`.**
+> **YOU MUST READ `AGENT2.md` FIRST.**
 
-- `AGENT2.md` — единственный источник архитектурной истины для frontend.
-- Любое UI-решение, нарушающее `AGENT2.md`, считается ошибкой, даже если функционально “удобно”.
+- `AGENT2.md` is the single source of architectural truth for the frontend.
+- Any UI decision that violates `AGENT2.md` is considered incorrect, even if it is functionally convenient.
 
 ---
 
 ### 🔒 Full-Stack Rule
-Если задача затрагивает **backend и frontend одновременно**:
+If a task involves **both backend and frontend**:
 
-> **СНАЧАЛА `AGENT1.md`, ЗАТЕМ `AGENT2.md`.**
+> **READ `AGENT1.md` FIRST, THEN `AGENT2.md`.**
 
-Backend определяет смысл и контракты.  
-Frontend только отражает и управляет.
+The backend defines meaning and contracts.  
+The frontend only reflects and controls them.
 
 ---
 
 ## 2. What System This Is (DO NOT MISUNDERSTAND)
 
-Эта система — **Execution Platform / Conveyor**.
+This system is an **Execution Platform / Conveyor**.
 
-- Backend — **безопасный, слепой конвейер**
-- Вся “логика” и “ум” находятся **снаружи** (executors, parsers, analytics)
-- Backend **НЕ понимает внешний мир**
-- Frontend **НЕ понимает источники**
-- Общение идёт только через **нормализованные контракты + capabilities**
+- Backend is a **safe, blind execution conveyor**
+- All “intelligence” and “logic” live **outside** the core (executors, parsers, analytics)
+- Backend **DOES NOT understand the external world**
+- Frontend **DOES NOT understand sources**
+- Communication happens only via **normalized contracts and capabilities**
 
-Если код начинает “знать”, **откуда пришли данные**, архитектура сломана.
+If the code starts to “know” where the data came from, the architecture is broken.
 
 ---
 
 ## 3. Core Invariants (MERGE-BLOCKING)
 
-### ❌ ЗАПРЕЩЕНО В BACKEND CORE
-- Любые vendor-имена (`autoRu`, `drom`, и т.п.) выше adapters
-- Vendor enums, vendor error codes, vendor branching
-- Импорт Real-адаптеров в Domain или Application
-- “Умная” логика в pipeline, workers или core services
-- Тихая деградация (pretend success)
-- Отсутствие `traceId`
+### ❌ FORBIDDEN IN BACKEND CORE
+- Any vendor names (`autoRu`, `drom`, etc.) above adapters
+- Vendor enums, vendor error codes, or vendor-specific branching
+- Importing Real adapters into Domain or Application
+- “Smart” logic inside pipeline, workers, or core services
+- Silent degradation or pretend success
+- Missing `traceId`
 
 ---
 
-### ❌ ЗАПРЕЩЕНО В FRONTEND
-- `if (source === ...)` или любые vendor-ветвления
-- Прямой `fetch/axios` вне общего API-клиента
-- Интерпретация executor-семантики
-- “Угадывание” успеха
-- Скрытие или игнорирование `traceId`
+### ❌ FORBIDDEN IN FRONTEND
+- `if (source === ...)` or any vendor-based branching
+- Direct `fetch` / `axios` usage outside the shared API client
+- Interpreting executor-specific semantics
+- Guessing or faking success
+- Hiding or ignoring `traceId`
 
 ---
 
 ## 4. Extension Model (ONLY THIS WAY)
 
-### ➕ Добавление нового парсера / источника
-- Только как **integration plugin**
+### ➕ Adding a New Parser / Source
+- Must be added strictly as an **integration plugin**
 - Port + Adapter (Real / Fake / Fallback)
-- Возвращает **нормализованный результат**
-- **НЕ требует изменений core**
+- Must return a **normalized result**
+- **Must NOT require core changes**
 
 ---
 
-### ➕ Добавление аналитики
-- Аналитика = executor
-- Вход: normalized data / assets
-- Выход: дополнительный нормализованный блок
-- UI получает данные только через `include / fields`
+### ➕ Adding Analytics
+- Analytics is an executor
+- Input: normalized data / assets
+- Output: an additional normalized block
+- UI receives it only via `include / fields`
 
 ---
 
 ## 5. Fake / Fallback Rule (CRITICAL)
 
-- При недоступности интеграции:
-  - **НЕ-effectful операции** → Fake разрешён
-  - **Effectful операции** → Fake запрещён, возвращается `INTEGRATION_UNAVAILABLE`
-- Каждое fallback-решение **обязано быть observable**
-- Любая ошибка **обязана содержать `traceId`**
+- When an integration is unavailable:
+  - **Non-effectful operations** → Fake is allowed
+  - **Effectful operations** → Fake is forbidden, return `INTEGRATION_UNAVAILABLE`
+- Every fallback decision **must be observable**
+- Every error **must include a `traceId`**
 
 ---
 
 ## 6. Contracts Over Code
 
-- Контракты важнее реализации
-- Новые поля — только optional
-- Смысл существующих полей менять запрещено
-- Backend и Frontend говорят **одним и тем же контрактным языком**
+- Contracts are more important than implementation
+- New fields must be optional
+- The meaning of existing fields must never change
+- Backend and frontend must speak the **same contract language**
 
 ---
 
 ## 7. Forbidden Patterns (INSTANT STOP)
 
-Если ты видишь или собираешься написать что-то из этого — **СТОП**:
+If you see or are about to write any of the following — **STOP**:
 
-- “Давайте тут просто проверим источник”
-- “UI сам разрулит”
-- “Backend знает, что для этого сайта надо вот так”
-- “Потом перепишем”
-- “Это edge case”
+- “Let’s just check the source here”
+- “The UI will handle it”
+- “The backend knows how this site works”
+- “We’ll refactor this later”
+- “This is just an edge case”
 
-Любой из этих паттернов = **архитектурная ошибка**.
+Any of these patterns is an **architectural violation**.
 
 ---
 
 ## 8. Codex Output Requirements
 
-Любой сгенерированный код **ОБЯЗАН**:
-- соответствовать `AGENT1.md` или `AGENT2.md`
-- соблюдать layering и dependency direction
-- использовать нормализованные контракты
-- прокидывать `traceId`
-- не вводить vendor-смысл
+Any generated code **MUST**:
+- comply with `AGENT1.md` or `AGENT2.md`
+- respect layering and dependency direction
+- use normalized contracts
+- propagate `traceId`
+- introduce no vendor-specific meaning
 
-Если соблюдение невозможно — **Codex ОБЯЗАН ОСТАНОВИТЬСЯ и сообщить об этом**.
+If compliance is not possible — **Codex MUST STOP and report the issue**.
 
 ---
 
 ## 9. Final Rule (NEVER FORGET)
 
-> Если система начинает понимать внешний мир —  
-> **архитектура уже сломана.**
+> If the system starts to understand the external world —  
+> **the architecture is already broken.**
 
