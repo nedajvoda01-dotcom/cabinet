@@ -16,6 +16,7 @@ use Cabinet\Backend\Domain\Pipeline\PipelineState;
 use Cabinet\Backend\Domain\Tasks\Task;
 use Cabinet\Backend\Domain\Tasks\TaskId;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryTaskRepository;
+use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\TasksRepository;
 
 /**
  * @implements CommandHandler<string>
@@ -51,7 +52,7 @@ final class CreateTaskHandler implements CommandHandler
         $this->taskRepository->save($task);
 
         // Store idempotency mapping
-        if ($this->taskRepository instanceof InMemoryTaskRepository) {
+        if ($this->taskRepository instanceof InMemoryTaskRepository || $this->taskRepository instanceof TasksRepository) {
             $this->taskRepository->storeIdempotencyKey(
                 $command->actorId(),
                 $command->idempotencyKey(),
