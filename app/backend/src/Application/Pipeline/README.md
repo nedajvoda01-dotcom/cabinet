@@ -1,179 +1,259 @@
-# Application Pipeline — Execution Orchestration
+# Pipeline Orchestration — Asynchronous Execution Engine
 
 ## Location
 
-app/backend/src/Application/Pipeline
+app/backend/src/Application/Pipeline/README.md
 
 ---
 
 ## Purpose
 
-The Application Pipeline is the **deterministic execution engine** of Cabinet.
+The Pipeline subsystem is the **asynchronous execution engine** of Cabinet.
 
-It is responsible for:
-- orchestrating asynchronous work
-- enforcing execution order
-- managing retries and failures
-- guaranteeing idempotency
-- coordinating workers and jobs
-- emitting execution events
+It exists to:
+- execute long-running operations
+- coordinate multi-stage workflows
+- isolate failures
+- guarantee determinism and recoverability
 
-The pipeline **does not implement business logic**.
-It executes **predefined stages** under strict rules.
+The pipeline does **not** contain business logic.
+It executes **pre-approved intent** defined by the Application layer.
 
 ---
 
-## Status
+## Core Philosophy
 
-**Status: Frozen**
+The pipeline answers the question:
 
-The pipeline execution model is considered **stable and sealed**.
+> “How do we execute this safely, asynchronously, and reliably?”
 
-Any change to:
-- stage ordering
-- retry semantics
-- locking behavior
-- idempotency guarantees
-
-requires **explicit architectural approval**.
-
----
-
-## Core Characteristics
-
-The pipeline is:
-
-- Deterministic  
-- Idempotent  
-- Lock-protected  
-- Retry-aware  
-- Event-driven  
-- Asynchronous  
-
-Execution is **state-based**, not condition-based.
-
----
-
-## Pipeline Model
-
-### Stages
-
-Work is executed as a sequence of **explicit stages**.
-
-Each stage:
-- has a single responsibility
-- is executed by a worker
-- produces a state transition
-- is repeatable without side effects
-
-Stage transitions are governed by:
-- `StageTransitionRules`
-- persisted pipeline state
-- idempotency constraints
-
----
-
-### Jobs
-
-A job represents a **unit of pipeline execution**.
-
-Jobs:
-- are persisted
-- are resumable
-- may be retried
-- may be force-cleaned by administrators
-
-A job never “disappears”.
-It always terminates in a **final state**.
-
----
-
-### Workers
-
-Workers:
-- poll jobs
-- execute exactly one stage at a time
-- report results back to the pipeline
-
-Workers are:
-- stateless
-- replaceable
-- horizontally scalable
-
----
-
-## Retry & Failure Model
-
-Retries are:
-- explicit
-- bounded
+Key properties:
 - deterministic
+- idempotent
+- stage-based
+- lock-protected
+- retry-aware
+- observable
 
-Failures:
-- do not corrupt state
-- do not skip stages
-- do not execute out of order
-
-Fallback behavior is handled **outside** the pipeline,
-via integration adapters.
-
----
-
-## Events & Observability
-
-The pipeline emits events for:
-- stage start
-- stage completion
-- failure
-- retry
-- cancellation
-
-Events exist for:
-- auditing
-- monitoring
-- debugging
-- replay analysis
+If execution is interrupted, the pipeline must be able to **resume**.
 
 ---
 
-## Non-Goals (Critical)
+## High-Level Structure
+
+Pipeline/
+├── Drivers/ → Stage execution logic
+├── Workers/ → Background executors
+├── Jobs/ → Job definitions
+├── Retry/ → Retry and backoff rules
+├── Locks/ → Concurrency protection
+├── Idempotency/ → Duplicate execution prevention
+├── Events/ → Pipeline events
+└── README.md → This document
+
+yaml
+Копировать код
+
+Each component has a single responsibility.
+
+---
+
+## Stages
+
+A pipeline is composed of **explicit stages**.
+
+Examples:
+- Parse
+- Photos
+- Publish
+- Export
+- Cleanup
+
+Rules:
+- stage order is predefined
+- transitions are explicit
+- skipping stages is forbidden unless defined
+- stages are not inferred dynamically
+
+Stage rules live in the Domain layer.
+Execution is coordinated here.
+
+---
+
+## Drivers
+
+Drivers implement **how a stage is executed**.
+
+Rules:
+- one driver per stage
+- drivers are stateless
+- drivers are deterministic
+- drivers call integrations via ports
+
+Drivers do not:
+- decide stage transitions
+- schedule jobs
+- manage retries
+
+Drivers only execute **one stage**.
+
+---
+
+## Workers
+
+Workers are background processes that:
+- fetch jobs from the queue
+- acquire locks
+- execute drivers
+- report results
+
+Rules:
+- workers are replaceable
+- workers are horizontally scalable
+- workers are crash-tolerant
+- workers never bypass locks or idempotency
+
+Workers do not know business context.
+
+---
+
+## Jobs
+
+Jobs represent **units of work**.
+
+A job includes:
+- task identifier
+- stage identifier
+- attempt number
+- metadata
+
+Rules:
+- jobs are immutable
+- jobs are idempotent
+- jobs can be retried
+- jobs can be dead-lettered
+
+Jobs are never executed inline.
+
+---
+
+## Idempotency
+
+Idempotency guarantees:
+- no stage executes twice
+- retries do not duplicate effects
+- partial failures are safe
+
+Rules:
+- idempotency keys are mandatory
+- idempotency storage is atomic
+- idempotency is enforced per stage
+
+If idempotency fails — execution stops.
+
+---
+
+## Locks
+
+Locks prevent:
+- parallel execution of the same stage
+- race conditions
+- double scheduling
+
+Rules:
+- locks are explicit
+- locks are scoped
+- locks have TTL
+- locks are released deterministically
+
+No implicit locking is allowed.
+
+---
+
+## Retry Strategy
+
+Retry logic is explicit and controlled.
+
+Includes:
+- retry limits
+- backoff strategy
+- error classification
+- DLQ routing
+
+Rules:
+- not all errors are retriable
+- retry decisions are deterministic
+- retries are observable
+
+Infinite retries are forbidden.
+
+---
+
+## Events
+
+Pipeline emits events for:
+- stage started
+- stage completed
+- stage failed
+- retries
+- pipeline completion
+
+Events are used for:
+- WebSocket updates
+- metrics
+- audit logs
+- projections
+
+Events do not alter execution flow.
+
+---
+
+## Failure Model
+
+Failures are expected.
+
+Pipeline guarantees:
+- failures are captured
+- failures are classified
+- failures are observable
+- system does not collapse
+
+Fallbacks may activate at integration level.
+Pipeline continuity must be preserved.
+
+---
+
+## Forbidden Practices
 
 The pipeline MUST NOT:
+- make authorization decisions
+- infer business intent
+- bypass security
+- mutate domain state arbitrarily
+- execute synchronous logic
 
-- interpret payload semantics
-- branch based on business meaning
-- apply heuristics or optimizations
-- embed domain rules
-- skip stages conditionally
-- modify execution order dynamically
-
-If logic requires interpretation — it **does not belong here**.
+If something must “decide” — it belongs to Application.
 
 ---
 
-## Enforcement
+## Audience
 
-Pipeline guarantees are enforced by:
-- idempotency storage
-- lock services
-- retry policies
-- architecture tests
-- invariants in code
-
-Violation of these rules is considered a **system defect**.
+This document is written for:
+- backend engineers
+- infrastructure engineers
+- SREs
+- auditors
+- AI agents
 
 ---
 
 ## Summary
 
-The Application Pipeline is a **pure orchestration mechanism**.
+The Pipeline is the **execution backbone** of Cabinet.
 
-It executes.
-It coordinates.
-It enforces order.
+It runs work safely.
+It recovers from failure.
+It never guesses.
+It never assumes.
 
-It does not decide.
-It does not interpret.
-It does not “optimize”.
-
-If behavior is unclear — execution stops.
+If work is running — it is controlled, tracked, and recoverable.
