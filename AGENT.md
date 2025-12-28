@@ -1,11 +1,16 @@
-Cabinet — Codex Agent Rules (STRICT)
-This repository is Cabinet: an internal orchestration system (secure command gateway + pipeline engine + integrations). The agent must operate under strict architectural and security constraints.
+# AGENT.md — CABINET INTERNAL SYSTEM GOVERNANCE
 
-0) ABSOLUTE RULE: STRUCTURE IS LAW
-You MUST follow the repository structure exactly. You MUST NOT invent new top-level folders, rename existing folders, or relocate modules unless explicitly instructed.
+This document defines **mandatory behavior, constraints, and understanding rules**
+for any AI agent, Codex-based system, automation, or developer interacting with
+the Cabinet repository.
 
-✅ STRUCTURE REFERENCE (PASTE HERE)
-Paste the authoritative tree here (from STRUCTURE.txt or your reference doc).
+This is an **internal system**.
+Creativity, assumptions, or architectural improvisation are **explicitly forbidden**.
+
+---
+
+### ✅ STRUCTURE REFERENCE (PASTE HERE)
+Paste the authoritative tree here (from STRUCTURE.txt or your reference doc).  
 Codex MUST treat it as the single source of truth.
 
 ```
@@ -491,74 +496,282 @@ cabinet/
 ├─ STRUCTURE.txt
 └─ stylelint.config.js
 ```
+---
 
-Enforcement:
+## 1. WHAT CABINET IS
 
-If a requested change does not fit the structure above, STOP and propose the closest compliant location.
+Cabinet is an **internal orchestration and control system**.
 
-If you need a new file, create it only inside the allowed directories.
+It is **NOT**:
+- a public SaaS
+- a self-service platform
+- a business-logic engine
+- a place where domain intelligence lives
 
-Empty directories must be tracked with .gitkeep (only where applicable).
+Cabinet exists to:
+- securely accept commands
+- validate and authorize them
+- orchestrate execution through pipelines
+- route data between external systems
+- enforce hierarchy, security, and invariants
+- observe, audit, and control execution
 
-What Cabinet is (do not redefine) Cabinet is a frozen orchestrator:
-It does not “understand business meaning” of payloads.
+Cabinet **does not care** what exact business logic is executed.
+It only ensures that execution is **safe, ordered, authorized, observable, and resilient**.
 
-It securely transports commands and coordinates pipeline stages.
+---
 
-Domain logic stays in external services/integrations. Cabinet coordinates them.
+## 2. USER & ACCESS MODEL
 
-Allowed actions You MAY:
-create/edit files strictly within the approved structure,
+### 2.1 Registration
 
-add documentation, tests, scripts, config consistent with the repo patterns,
+- Registration does **not** create an active account.
+- Registration creates a **request for access**.
+- All access requests require **manual approval** by a Super Admin.
 
-generate minimal stubs for ports/adapters/workers/commands,
+### 2.2 Roles
 
-keep PHP and TypeScript contract parity (shared/contracts).
+Roles are hierarchical and immutable unless changed by Super Admin:
 
-Forbidden actions You MUST NOT:
-weaken the security protocol (nonce/signature/encryption where required),
+- User
+- Admin
+- Super Admin
 
-add public/self-service signup flows (registration is request → super admin approval),
+Rules:
+- Admins **cannot** promote users to Admin or Super Admin.
+- Admins **can only invite** users.
+- Super Admin can promote, demote, or revoke any user.
+- Super Admin is **not special in code**, only in permissions and visibility.
 
-duplicate UI variants per role (one UI, gated by capabilities),
+### 2.3 Interface Principle
 
-move responsibilities across boundaries (Domain ↔ Application ↔ Infrastructure).
+- There is **ONE interface**.
+- UI is designed **once**, for Super Admin.
+- Lower roles see a **strictly reduced projection** of the same interface.
+- Nothing is duplicated per role.
+- Visibility is reduced by **permission filtering**, not separate screens.
 
-Non-negotiable invariants 4.1 Security-first Requests follow the security pipeline: Auth → Nonce → Signature → Encryption → Scope → Hierarchy → RateLimit (as required per endpoint).
-4.2 Pipeline reliability Idempotency keys for state-changing commands
+---
 
-Locks for concurrency
+## 3. CORE PHILOSOPHY
 
-Retry policy + classification
+### 3.1 Frozen Core
 
-DLQ for terminal failures
+Cabinet’s core orchestration logic is **frozen**.
 
-4.3 Integrations Each integration must have:
+This means:
+- Pipelines
+- Security model
+- Execution flow
+- Retry logic
+- Idempotency
+- Locking
 
-Port in Application/Integrations/*Port.php
+must remain stable.
 
-Real adapter in Infrastructure/Integrations/*/Real
+### 3.2 Extend via Integrations
 
-Fallback adapter/scenario in Infrastructure/Integrations/*/Fallback
+All extensibility happens via **integrations**:
+- Services
+- Adapters
+- External systems
+- Internal tools
 
-Fallback exists to avoid pipeline breakage when external services fail.
+Cabinet connects to them through **ports**.
+Cabinet does not embed their logic.
 
-4.4 One UI UI is one. Features are hidden/disabled by role/scope/hierarchy/capabilities. UI gating is not security — backend enforces permissions.
+---
 
-Decision process If uncertain:
-Find an existing similar pattern in the repo.
+## 4. INTEGRATIONS & FALLBACKS
 
-Follow naming conventions and folder boundaries.
+### 4.1 Integration Design
 
-Ask only if it is critical (e.g., endpoint security requirements).
+Each integration follows the pattern:
+- Port (Application layer)
+- Integration (Infrastructure layer)
+- Real adapter
+- Fallback (fake) adapter
+
+### 4.2 Fallback Philosophy
+
+Fallbacks are **not mocks**.
+Fallbacks are **minimal functional implementations** that:
+- preserve pipeline continuity
+- prevent total failure
+- allow degraded operation
+
+If an external service:
+- is unavailable
+- returns errors
+- violates expectations
+
+Cabinet must **not break**.
+The fallback must activate automatically.
+
+---
+
+## 5. PIPELINE EXECUTION MODEL
+
+Cabinet executes work via a **stage-based pipeline**.
+
+Pipeline characteristics:
+- Deterministic
+- Idempotent
+- Lock-protected
+- Retry-aware
+- Event-emitting
+- Worker-driven
+
+Stages are explicit.
+Transitions are governed by rules.
+Workers execute stages asynchronously.
+
+Cabinet orchestrates — it does not “think”.
+
+---
+
+## 6. SECURITY MODEL
+
+Security is **mandatory, layered, and non-optional**.
+
+### 6.1 Security Pipeline
+
+Every request passes through the security pipeline:
+
+1. Authentication
+2. Nonce validation
+3. Signature verification
+4. Payload encryption validation
+5. Scope validation
+6. Hierarchy validation
+7. Rate limiting
+
+Failure at any step **terminates the request immediately**.
+
+### 6.2 Nonce & Idempotency
+
+- Nonces prevent replay attacks.
+- Idempotency keys prevent duplicate execution.
+- Storage must enforce single-use semantics.
+
+### 6.3 Cryptography
+
+Cabinet enforces:
+- Encrypted payloads
+- Signed requests
+- Explicit key exchange
+- Rotation and versioning
+
+Keys are managed, rotated, and audited.
+
+---
+
+## 7. OBSERVABILITY
+
+Cabinet is observable by design.
+
+This includes:
+- Structured logging
+- Security auditing
+- Metrics
+- Tracing
+- Health checks
+
+Silent failure is forbidden.
+
+---
+
+## 8. FRONTEND RULES
+
+- Desktop-only by design.
+- No responsive or mobile layouts.
+- Frontend reflects backend permissions.
+- Frontend never bypasses backend security.
+
+Generated API clients must:
+- match shared contracts
+- be validated by parity tests
+- never be manually edited
+
+---
+
+## 9. CONTRACTS
+
+The term **“Contracts”** is **reserved exclusively** for:
+
+/shared/contracts
 
 yaml
+Копировать код
 
-Updated rule reminder (so you don’t have to repeat it)
-All further .md content I write for you will be English and Codex-ready (explicit, enforceable, not poetic).
-If you want, next I can:
+Rules:
+- Contracts define cross-language primitives.
+- Contracts are the source of truth.
+- No other code may redefine them.
+- Generated implementations must match exactly.
 
-Convert your existing HIERARCHY-GUIDE.md, ENCRYPTION-SCHEME.md, SECURITY-IMPLEMENTATION.md into a more Codex-enforceable style (with “MUST/SHOULD/MUST NOT”, checklists, and implementation hooks), OR
-Start filling the remaining .md files you have (you listed several at the repo root earlier).
-Say which file you want next and I’ll output the full contents in English.
+---
+
+## 10. STRUCTURE ENFORCEMENT (CRITICAL)
+
+The project structure is **authoritative**.
+
+### ABSOLUTE RULES:
+
+- Do NOT rename directories.
+- Do NOT move files between layers.
+- Do NOT invent new architectural layers.
+- Do NOT collapse folders.
+- Do NOT mix responsibilities.
+
+All code must live in its **designated layer**:
+- Domain
+- Application
+- Infrastructure
+- Http
+- Frontend
+- Shared
+
+---
+
+## 11. STRUCTURE SNAPSHOT (MANDATORY)
+
+The structure below **must be followed 1:1**.
+
+The agent must:
+- analyze it before acting
+- generate code only inside valid locations
+- refuse to act if a request violates it
+
+<< INSERT THE FULL PROJECT STRUCTURE HERE EXACTLY AS IN STRUCTURE.txt >>
+
+yaml
+Копировать код
+
+---
+
+## 12. AGENT BEHAVIOR RULES
+
+The agent must:
+- be deterministic
+- be conservative
+- avoid assumptions
+- stop instead of guessing
+- respect boundaries
+
+The agent must NOT:
+- redesign the system
+- “improve” architecture
+- simplify layers
+- merge concepts
+
+---
+
+## FINAL STATEMENT
+
+Cabinet is a **control plane**, not a playground.
+
+Any agent operating here must behave as a **strict internal system component**.
+
+If something is unclear — **stop and ask**.
+If something violates this document — **do not proceed**.
