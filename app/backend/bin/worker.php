@@ -8,8 +8,12 @@ use Cabinet\Backend\Bootstrap\AppKernel;
 use Cabinet\Backend\Bootstrap\Clock;
 use Cabinet\Backend\Bootstrap\Config;
 use Cabinet\Backend\Bootstrap\Container;
+use Cabinet\Contracts\ErrorKind;
 
 require __DIR__ . '/../../../vendor/autoload.php';
+
+// Worker configuration constants
+const POLLING_INTERVAL_SECONDS = 1;
 
 echo "Starting worker...\n";
 
@@ -46,7 +50,7 @@ while ($running) {
 
     if ($claimedJob === null) {
         // No jobs available, sleep for 1 second
-        sleep(1);
+        sleep(POLLING_INTERVAL_SECONDS);
         continue;
     }
 
@@ -77,7 +81,7 @@ while ($running) {
                 $errorCode = $error->code()->value;
                 
                 // Treat integration_unavailable as retryable, others as non-retryable
-                $retryable = $errorCode === 'integration_unavailable';
+                $retryable = $errorCode === ErrorKind::INTEGRATION_UNAVAILABLE->value;
                 
                 $jobQueue->markFailed(
                     $claimedJob->jobId(),
@@ -116,7 +120,7 @@ while ($running) {
         // Mark as failed, non-retryable for unexpected exceptions
         $jobQueue->markFailed(
             $claimedJob->jobId(),
-            \Cabinet\Contracts\ErrorKind::INTERNAL_ERROR,
+            ErrorKind::INTERNAL_ERROR,
             false
         );
     }

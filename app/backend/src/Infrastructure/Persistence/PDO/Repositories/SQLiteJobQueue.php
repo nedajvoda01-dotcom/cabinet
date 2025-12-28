@@ -15,6 +15,7 @@ final class SQLiteJobQueue implements JobQueue
 {
     private const MAX_ATTEMPTS = 3;
     private const KIND_ADVANCE_PIPELINE = 'advance_pipeline';
+    private const BACKOFF_BASE_SECONDS = 10;
 
     public function __construct(
         private readonly PDO $pdo
@@ -143,7 +144,7 @@ final class SQLiteJobQueue implements JobQueue
         }
 
         // Schedule for retry with exponential backoff
-        $backoffSeconds = 10 * $attempt;
+        $backoffSeconds = self::BACKOFF_BASE_SECONDS * $attempt;
         $availableAt = $this->addSeconds($this->now(), $backoffSeconds);
 
         $updateStmt = $this->pdo->prepare(
