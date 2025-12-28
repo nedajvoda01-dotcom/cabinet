@@ -6,7 +6,7 @@ namespace Cabinet\Backend\Domain\Users;
 
 use Cabinet\Backend\Domain\Shared\Exceptions\InvalidIdentifier;
 
-final class UserId
+final class AccessRequestId
 {
     private function __construct(private readonly string $value)
     {
@@ -26,7 +26,7 @@ final class UserId
         return $this->value;
     }
 
-    public function equals(UserId $other): bool
+    public function equals(AccessRequestId $other): bool
     {
         return $this->value === $other->value;
     }

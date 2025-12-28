@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Cabinet\Backend\Domain\Users;
+namespace Cabinet\Backend\Domain\Pipeline;
 
 use Cabinet\Backend\Domain\Shared\Exceptions\InvalidIdentifier;
 
-final class UserId
+final class JobId
 {
     private function __construct(private readonly string $value)
     {
@@ -26,7 +26,7 @@ final class UserId
         return $this->value;
     }
 
-    public function equals(UserId $other): bool
+    public function equals(JobId $other): bool
     {
         return $this->value === $other->value;
     }
