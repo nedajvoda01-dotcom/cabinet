@@ -1,187 +1,69 @@
-# cabinet/security/README.md — Security Governance & Non-Runtime Policy
+# Security Governance — Cabinet Security Domain
 
 ## Location
 
-cabinet/security/README.md
+security/
 
 ---
 
 ## Purpose
 
-This document defines **security governance** for the Cabinet platform.
+This directory defines **non-runtime security governance** for the Cabinet system.
 
-It covers:
-- non-runtime security rules
-- organizational and procedural constraints
-- security standards that exist outside application code
-- how security decisions are governed, approved, and reviewed
+It contains:
+- security rules
+- architectural constraints
+- enforcement policies
+- review standards
+- non-executable specifications
 
-This README is **authoritative** for security governance.
-
----
-
-## Scope of This Document
-
-This document describes:
-- **what must be true** about security
-- **who is allowed** to change security behavior
-- **how security changes are reviewed**
-- **where security rules live**
-
-It does **not** describe:
-- cryptographic algorithms
-- runtime enforcement logic
-- HTTP pipeline behavior
-
-Those are defined elsewhere.
+This directory does **not** contain application code.
+It defines **what must be true**, not how it is implemented.
 
 ---
 
-## Security Layers in Cabinet
+## Scope
 
-Security in Cabinet exists in multiple layers:
+Security governance applies to:
 
-1. Governance (this document)
-2. Runtime implementation (`Infrastructure/Security`)
-3. Execution model (`SECURITY-IMPLEMENTATION.md`)
-4. Cryptography (`ENCRYPTION-SCHEME.md`)
-5. Hierarchy & authority (`HIERARCHY-GUIDE.md`)
+- backend
+- frontend
+- integrations
+- infrastructure
+- CI/CD pipelines
+- AI agents interacting with the repository
 
-Each layer has a single source of truth.
-
----
-
-## Governance Principles
-
-### Security Is Structural
-
-Security is not configurable per environment.
-Security is not optional.
-Security is not feature-flagged.
-
-Any system variant that weakens security is invalid.
+All system components are subject to these rules.
 
 ---
 
-### Explicit Authority
+## What Lives Here
 
-Security behavior may only be changed by:
-- designated maintainers
-- approved security reviewers
-- formal change processes
+This directory is the **authoritative source** for:
 
-No individual developer may weaken security unilaterally.
+- security rulesets
+- compliance constraints
+- forbidden patterns
+- architectural security guarantees
+- review checklists
 
----
-
-## Change Management
-
-### Allowed Changes
-
-Security changes may include:
-- algorithm upgrades
-- key size increases
-- stricter validation rules
-- additional audit signals
-
-All such changes must be:
-- documented
-- reviewed
-- tested
-- backward-aware (where applicable)
+Examples:
+- mandatory encryption requirements
+- role and hierarchy invariants
+- audit and logging guarantees
+- forbidden bypass scenarios
 
 ---
 
-### Forbidden Changes
+## What Does NOT Live Here
 
-The following are strictly forbidden:
+This directory MUST NOT contain:
 
-- disabling security steps
-- environment-based weakening (e.g. “dev mode”)
-- bypassing encryption or signatures
-- trusting internal networks
-- trusting frontend enforcement
+- runtime security code
+- middleware
+- encryption implementations
+- request validation logic
+- authentication handlers
 
-If a change reduces security posture, it is invalid.
+Runtime security belongs exclusively to:
 
----
-
-## Review & Approval Process
-
-Security-related changes require:
-
-1. Clear problem statement
-2. Explicit threat model
-3. Documented impact analysis
-4. Review by authorized maintainers
-5. Audit trail
-
-Emergency changes must still be documented retroactively.
-
----
-
-## Ownership & Responsibility
-
-Security is owned collectively.
-
-Responsibilities include:
-- monitoring for regressions
-- responding to incidents
-- rotating keys
-- reviewing audit logs
-- enforcing policy compliance
-
-No single role owns security in isolation.
-
----
-
-## Audit & Compliance
-
-Security governance requires:
-- immutable audit trails
-- periodic reviews
-- verifiable compliance with defined rules
-
-Audit data must:
-- be retained appropriately
-- be protected from tampering
-- be accessible to authorized reviewers
-
----
-
-## Documentation Discipline
-
-Security documentation:
-- must be accurate
-- must be up to date
-- must not be ambiguous
-
-Outdated security documents are defects.
-
----
-
-## Relationship to Other Documents
-
-This README must be read together with:
-
-- `SECURITY-IMPLEMENTATION.md`
-- `ENCRYPTION-SCHEME.md`
-- `HIERARCHY-GUIDE.md`
-- `AGENT.md`
-
-Together, these documents define the **complete security posture** of Cabinet.
-
----
-
-## Final Statement
-
-Security governance defines **what is allowed to exist**.
-
-If a behavior is not allowed here —
-it must not be implemented.
-
-If security is unclear —
-**deny and escalate**.
-
-If enforcement and governance diverge —
-**treat it as a critical defect**.
