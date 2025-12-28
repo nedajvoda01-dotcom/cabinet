@@ -20,6 +20,7 @@ use Cabinet\Backend\Tests\Unit\Application\ApplicationInfrastructureTest;
 use Cabinet\Backend\Tests\Unit\Application\HandlersTest;
 use Cabinet\Backend\Tests\Unit\Application\PipelineHandlersTest;
 use Cabinet\Backend\Tests\ApplicationEndpointsTest;
+use Cabinet\Backend\Tests\Integration\SqlitePersistenceTest;
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
@@ -42,6 +43,7 @@ $tests = [
     new HandlersTest(),
     new PipelineHandlersTest(),
     new ApplicationEndpointsTest(),
+    new SqlitePersistenceTest(),
 ];
 
 $failures = 0;

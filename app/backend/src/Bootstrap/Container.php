@@ -44,11 +44,22 @@ use Cabinet\Backend\Application\Commands\Access\ApproveAccessCommand;
 use Cabinet\Backend\Application\Commands\Tasks\CreateTaskCommand;
 use Cabinet\Backend\Application\Commands\Pipeline\AdvancePipelineCommand;
 use Cabinet\Backend\Application\Commands\Admin\RetryJobCommand;
+use Cabinet\Backend\Application\Ports\UserRepository;
+use Cabinet\Backend\Application\Ports\AccessRequestRepository;
+use Cabinet\Backend\Application\Ports\TaskRepository;
+use Cabinet\Backend\Application\Ports\PipelineStateRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryUserRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAccessRequestRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryTaskRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryPipelineStateRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator;
+use Cabinet\Backend\Infrastructure\Persistence\PDO\ConnectionFactory;
+use Cabinet\Backend\Infrastructure\Persistence\PDO\MigrationsRunner;
+use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\UsersRepository;
+use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\AccessRequestsRepository;
+use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\TasksRepository;
+use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\PipelineStatesRepository;
+use PDO;
 
 final class Container
 {
@@ -76,20 +87,48 @@ final class Container
 
     private ?CommandBus $commandBus = null;
 
-    private ?InMemoryUserRepository $userRepository = null;
+    private ?UserRepository $userRepository = null;
 
-    private ?InMemoryAccessRequestRepository $accessRequestRepository = null;
+    private ?AccessRequestRepository $accessRequestRepository = null;
 
-    private ?InMemoryTaskRepository $taskRepository = null;
+    private ?TaskRepository $taskRepository = null;
 
-    private ?InMemoryPipelineStateRepository $pipelineStateRepository = null;
+    private ?PipelineStateRepository $pipelineStateRepository = null;
 
     private ?UuidIdGenerator $idGenerator = null;
+
+    private ?PDO $pdo = null;
+
+    private bool $migrationsRun = false;
 
     public function __construct(Config $config, Clock $clock)
     {
         $this->config = $config;
         $this->clock = $clock;
+        $this->runMigrations();
+    }
+
+    private function runMigrations(): void
+    {
+        if ($this->migrationsRun) {
+            return;
+        }
+
+        $runMigrations = getenv('RUN_MIGRATIONS');
+        $appEnv = $this->config->environment();
+        
+        // Run migrations in dev/test OR if explicitly enabled via RUN_MIGRATIONS=1
+        if ($appEnv !== 'prod' || $runMigrations === '1') {
+            $useSqlite = getenv('USE_SQLITE') !== 'false';
+            
+            if ($useSqlite) {
+                $pdo = $this->pdo();
+                $runner = new MigrationsRunner($pdo);
+                $runner->run();
+            }
+        }
+
+        $this->migrationsRun = true;
     }
 
     public function config(): Config
@@ -165,37 +204,70 @@ final class Container
         return $this->idGenerator;
     }
 
-    public function userRepository(): InMemoryUserRepository
+    private function pdo(): PDO
+    {
+        if ($this->pdo === null) {
+            $this->pdo = ConnectionFactory::create();
+        }
+
+        return $this->pdo;
+    }
+
+    public function userRepository(): UserRepository
     {
         if ($this->userRepository === null) {
-            $this->userRepository = new InMemoryUserRepository();
+            $useSqlite = getenv('USE_SQLITE') !== 'false';
+            
+            if ($useSqlite) {
+                $this->userRepository = new UsersRepository($this->pdo());
+            } else {
+                $this->userRepository = new InMemoryUserRepository();
+            }
         }
 
         return $this->userRepository;
     }
 
-    public function accessRequestRepository(): InMemoryAccessRequestRepository
+    public function accessRequestRepository(): AccessRequestRepository
     {
         if ($this->accessRequestRepository === null) {
-            $this->accessRequestRepository = new InMemoryAccessRequestRepository();
+            $useSqlite = getenv('USE_SQLITE') !== 'false';
+            
+            if ($useSqlite) {
+                $this->accessRequestRepository = new AccessRequestsRepository($this->pdo());
+            } else {
+                $this->accessRequestRepository = new InMemoryAccessRequestRepository();
+            }
         }
 
         return $this->accessRequestRepository;
     }
 
-    public function taskRepository(): InMemoryTaskRepository
+    public function taskRepository(): TaskRepository
     {
         if ($this->taskRepository === null) {
-            $this->taskRepository = new InMemoryTaskRepository();
+            $useSqlite = getenv('USE_SQLITE') !== 'false';
+            
+            if ($useSqlite) {
+                $this->taskRepository = new TasksRepository($this->pdo());
+            } else {
+                $this->taskRepository = new InMemoryTaskRepository();
+            }
         }
 
         return $this->taskRepository;
     }
 
-    public function pipelineStateRepository(): InMemoryPipelineStateRepository
+    public function pipelineStateRepository(): PipelineStateRepository
     {
         if ($this->pipelineStateRepository === null) {
-            $this->pipelineStateRepository = new InMemoryPipelineStateRepository();
+            $useSqlite = getenv('USE_SQLITE') !== 'false';
+            
+            if ($useSqlite) {
+                $this->pipelineStateRepository = new PipelineStatesRepository($this->pdo());
+            } else {
+                $this->pipelineStateRepository = new InMemoryPipelineStateRepository();
+            }
         }
 
         return $this->pipelineStateRepository;
