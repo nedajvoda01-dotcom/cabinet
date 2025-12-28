@@ -1,300 +1,210 @@
-# cabinet/app/backend/src/Infrastructure/Integrations/README.md — Integrations Model (Ports, Adapters, Fallbacks)
+# Integrations — External System Connectivity Layer
 
 ## Location
 
-cabinet/app/backend/src/Infrastructure/Integrations/README.md
+app/backend/src/Infrastructure/Integrations/README.md
 
 ---
 
 ## Purpose
 
-This document defines the **integration architecture** of Cabinet.
+The Integrations subsystem defines **how Cabinet communicates with external systems**.
 
-It specifies how Cabinet connects to external and internal services while preserving:
+These systems include:
+- parsers
+- robots
+- browsers
+- storage backends
+- media processors
+- internal auxiliary services
 
-- a frozen orchestration core
-- strict layer boundaries
-- deterministic execution
-- security guarantees
-- graceful degradation
-
-This README is **normative** for all integrations.
-
----
-
-## Cabinet Integration Philosophy
-
-Cabinet is a **control plane**.
-
-Integrations are the “hands” that execute work.
-Cabinet only:
-- validates and authorizes commands
-- schedules and orchestrates tasks
-- enforces security and invariants
-- observes execution
-
-Cabinet does **not** embed business intelligence about what integrations do.
-It routes and controls.
+Cabinet treats **all integrations as untrusted**.
 
 ---
 
-## Trust Model (CRITICAL)
+## Core Principle
 
-All integrations are treated as:
+Integrations are **replaceable adapters**, not embedded logic.
 
-- **untrusted**
-- **unreliable**
-- **replaceable**
-- **security-bound**
+Rules:
+- Cabinet never depends on integration internals
+- Cabinet never trusts integration responses
+- Cabinet never blocks execution on integration availability
 
-No integration is allowed to bypass:
-- request authentication
-- signature verification
-- encryption requirements
-- nonce/idempotency rules
-- hierarchy/scopes
-
-There are no “trusted internal services”.
+If an integration fails, Cabinet **continues operating**.
 
 ---
 
-## Structural Pattern (MANDATORY)
+## Integration Pattern (Mandatory)
 
-Every integration must follow the same structure:
+Every integration follows the same structure:
 
-1. **Application Port**  
-   A stable interface owned by the Application layer.
-
-2. **Infrastructure Integration Facade**  
-   Coordinates the selection of real vs fallback adapter.
-
-3. **Real Adapter**  
-   Performs the actual external call(s).
-
-4. **Fallback Adapter (Fake)**  
-   Minimal functional implementation used to preserve pipeline continuity.
-
-This is not optional.
-This pattern is the primary mechanism for freezing the core.
-
----
-
-## Directory Layout
-
-Integrations live under:
-
-app/backend/src/Infrastructure/Integrations
-
-vbnet
-Копировать код
-
-Typical structure:
-
-Integrations/<Name>/
-<Name>Integration.php # integration facade/coordinator
-Real/ # real implementation(s)
-Fallback/ # fallback (fake) implementation(s)
-
-vbnet
-Копировать код
-
-Shared integration utilities live under:
-
-Integrations/Shared/
-Integrations/Registry/
+<IntegrationName>/
+├── <IntegrationName>Integration.php → Facade / coordinator
+├── Real/ → Real adapter (HTTP, SDK, etc.)
+├── Fallback/ → Fallback adapter(s)
+└── README.md (optional)
 
 yaml
 Копировать код
 
+This pattern is enforced across the system.
+
 ---
 
-## Real vs Fallback
+## Components Explained
 
-### Real Adapter
+### Integration Facade
 
-The Real adapter:
-- calls the external service
-- validates and normalizes responses
-- maps external failures into internal error kinds
-- is contract-bound and security-bound
+Responsibilities:
+- expose integration capabilities
+- select real or fallback adapter
+- enforce configuration constraints
+- normalize errors
 
-### Fallback Adapter (Fake)
+The facade is the **only entry point** used by Application layer.
+
+---
+
+### Real Adapters
+
+Real adapters:
+- communicate with external systems
+- perform signed and encrypted requests
+- validate responses
+- map errors
+
+Rules:
+- must obey security protocol
+- must be deterministic
+- must never leak raw responses
+
+Real adapters are assumed to be unreliable.
+
+---
+
+### Fallback Adapters
 
 Fallbacks are **not mocks**.
 
-A fallback is a **minimal functional capability** that:
-- preserves pipeline continuity
-- avoids system-wide failure
-- enables degraded operation when possible
+Fallbacks are:
+- minimal functional implementations
+- used during outages
+- used during degradation
+- used for safety continuity
+
+Fallbacks must:
+- respect contracts
+- respect security boundaries
+- preserve pipeline flow
 
 Fallbacks must never:
-- invent privileged behavior
-- skip security requirements
-- silently hide failures without audit signals
-
-Fallbacks are allowed to:
-- return limited fixtures
-- return “degraded” results explicitly
-- simulate minimal safe behavior
+- bypass validation
+- fabricate unsafe data
+- skip audit events
 
 ---
 
-## Degradation Rules (CRITICAL)
+## Shared Integration SDK
 
-When an external service fails, Cabinet must:
+All integrations rely on a shared internal SDK:
 
-1. classify the failure deterministically  
-2. decide:
-   - retry (with policy)
-   - degrade (fallback)
-   - fail the stage
-   - move to DLQ (if applicable)
-3. emit observability signals:
-   - logs
-   - metrics
-   - audit events (if security-relevant)
+Integrations/Shared/
+├── HttpClient.php
+├── SignedRequest.php
+├── EncryptionWrapper.php
+├── CircuitBreaker.php
+├── HealthCache.php
+├── ErrorMapper.php
+└── ContractValidator.php
 
-The pipeline must remain consistent even under degradation.
+yaml
+Копировать код
 
----
-
-## Shared Integration Toolkit
-
-`Integrations/Shared` provides the common building blocks.
-
-Typical responsibilities include:
-
-- HTTP client wrapper (timeouts, retries, headers)
-- Circuit breaker
-- Health cache and health checks
-- Contract validation
-- Error mapping into internal failure categories
-- Security wrappers:
-  - signature
-  - nonce generation
-  - payload encryption (where required)
-
-All integrations must use the shared toolkit where applicable to keep:
-- consistent failure semantics
-- consistent security behavior
+This ensures:
+- uniform security
+- consistent error handling
 - consistent observability
+- consistent degradation behavior
+
+No integration may implement its own SDK.
 
 ---
 
-## Registry & Certificates
+## Security Model
 
-Cabinet supports explicit registration of integrations:
+Integrations:
+- authenticate explicitly
+- use scoped permissions
+- use signed requests
+- use encrypted payloads
+- are subject to rate limits
 
-- `IntegrationRegistry`
-- `IntegrationDescriptorInterface`
-- `CertificateRegistry`
+There are **no trusted integrations**.
 
-This exists to ensure:
-- integrations are declared, not discovered implicitly
-- certificates and trust materials are centrally managed
-- capabilities can be queried deterministically
-
-Integrations must not self-register dynamically at runtime in uncontrolled ways.
+Fallbacks do not bypass security.
 
 ---
 
-## Security Requirements
+## Registry
 
-Integrations must comply with the same security model as all other actors:
+The integration registry:
+- declares available integrations
+- manages certificates
+- enforces configuration validity
+- exposes capabilities
 
-- explicit authentication / identity binding
-- request signatures (canonicalized)
-- nonce-based replay protection
-- payload encryption (as required)
-- key versioning and rotation awareness
-
-Fallbacks do not bypass security.  
-Fallbacks execute within the same security posture as the system.
+Integrations are registered declaratively.
+They are not discovered dynamically.
 
 ---
 
-## Contracts
+## Failure Handling
 
-Integrations must validate:
-- input contracts before sending
-- output contracts after receiving
+Integration failures:
+- are classified
+- are logged
+- are audited
+- may trigger retries or fallbacks
 
-If a contract mismatch occurs:
-- treat it as an integration failure
-- emit signals
-- apply retry/degrade rules
-- never pass malformed data into Domain state
-
-Contracts are defined only in:
-- `shared/contracts`
-
-No local redefinitions are permitted.
-
----
-
-## Observability Requirements
-
-Every integration call must be observable:
-
-- structured logs (redacted)
-- metrics (success/failure/latency)
-- tracing (propagated trace context)
-- audit entries when security-relevant
-
-Integrations must not log:
-- secrets
-- raw encrypted payloads
-- private keys
-- full sensitive data
+Cabinet must never:
+- crash on integration failure
+- lose pipeline state
+- hide failures
 
 ---
 
 ## Forbidden Practices
 
-The following are forbidden in integrations:
+Integrations MUST NOT:
+- contain business logic
+- decide pipeline flow
+- mutate domain state directly
+- bypass security
+- access persistence directly
 
-- embedding business rules or workflow decisions
-- bypassing Cabinet security requirements
-- silent failure without metrics/logs
-- ad-hoc HTTP clients (ignoring shared toolkit)
-- returning unvalidated external payloads
-- implementing “temporary” bypass flags or environment-based weakening
-
----
-
-## Relationship to Other Documents
-
-This document complements:
-
-- `cabinet/app/backend/src/Infrastructure/README.md`  
-  (overall infrastructure responsibilities)
-
-- `cabinet/app/backend/src/Infrastructure/Security/README.md`  
-  (security component map)
-
-- `SECURITY-IMPLEMENTATION.md` and `ENCRYPTION-SCHEME.md`  
-  (normative security rules and crypto model)
-
-This file defines the **only allowed integration model**.
+If logic belongs to Cabinet — it does not belong here.
 
 ---
 
-## Final Statement
+## Audience
 
-Integrations are replaceable “tentacles”.
-The orchestrator core stays frozen.
+This document is written for:
+- backend developers
+- integration developers
+- security engineers
+- auditors
+- AI agents
 
-If an integration requires changing core orchestration semantics,
-the integration design is wrong.
+---
 
-If an integration cannot degrade safely,
-the integration is incomplete.
+## Summary
 
-If behavior is unclear:
-**deny, log, and escalate**.
+Integrations are **tentacles**, not brains.
 
+They connect Cabinet to the outside world.
+They fail.
+They degrade.
+They recover.
 
-
-
-
-
+Cabinet remains stable regardless.
