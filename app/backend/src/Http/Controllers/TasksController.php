@@ -6,6 +6,8 @@ namespace Cabinet\Backend\Http\Controllers;
 
 use Cabinet\Backend\Application\Bus\CommandBus;
 use Cabinet\Backend\Application\Commands\Tasks\CreateTaskCommand;
+use Cabinet\Backend\Application\Commands\Pipeline\TickTaskCommand;
+use Cabinet\Backend\Application\Queries\GetTaskOutputsQuery;
 use Cabinet\Backend\Http\Request;
 use Cabinet\Backend\Http\Responses\ApiResponse;
 use Cabinet\Backend\Http\Security\SecurityContext;
@@ -13,7 +15,8 @@ use Cabinet\Backend\Http\Security\SecurityContext;
 final class TasksController
 {
     public function __construct(
-        private readonly CommandBus $commandBus
+        private readonly CommandBus $commandBus,
+        private readonly ?GetTaskOutputsQuery $getTaskOutputsQuery = null
     ) {
     }
 
@@ -43,5 +46,50 @@ final class TasksController
         }
 
         return new ApiResponse(['taskId' => $result->value()], 201);
+    }
+
+    public function tick(Request $request): ApiResponse
+    {
+        $taskId = $request->attribute('id');
+
+        if (empty($taskId)) {
+            return new ApiResponse(['error' => 'Task ID is required'], 400);
+        }
+
+        $command = new TickTaskCommand($taskId);
+        $result = $this->commandBus->dispatch($command);
+
+        if ($result->isFailure()) {
+            return new ApiResponse([
+                'error' => $result->error()->message(),
+                'code' => $result->error()->code()->value
+            ], 400);
+        }
+
+        return new ApiResponse($result->value(), 200);
+    }
+
+    public function outputs(Request $request): ApiResponse
+    {
+        $taskId = $request->attribute('id');
+
+        if (empty($taskId)) {
+            return new ApiResponse(['error' => 'Task ID is required'], 400);
+        }
+
+        if ($this->getTaskOutputsQuery === null) {
+            return new ApiResponse(['error' => 'Query not available'], 500);
+        }
+
+        $result = $this->getTaskOutputsQuery->execute($taskId);
+
+        if ($result->isFailure()) {
+            return new ApiResponse([
+                'error' => $result->error()->message(),
+                'code' => $result->error()->code()->value
+            ], 400);
+        }
+
+        return new ApiResponse($result->value(), 200);
     }
 }
