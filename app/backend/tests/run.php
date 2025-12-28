@@ -8,6 +8,14 @@ use Cabinet\Backend\Tests\ReadinessEndpointTest;
 use Cabinet\Backend\Tests\RequestIdTest;
 use Cabinet\Backend\Tests\SecurityPipelineTest;
 use Cabinet\Backend\Tests\VersionEndpointTest;
+use Cabinet\Backend\Tests\Unit\Domain\IdentifierTest;
+use Cabinet\Backend\Tests\Unit\Domain\ScopeTest;
+use Cabinet\Backend\Tests\Unit\Domain\ScopeSetTest;
+use Cabinet\Backend\Tests\Unit\Domain\HierarchyRoleTest;
+use Cabinet\Backend\Tests\Unit\Domain\AccessRequestTest;
+use Cabinet\Backend\Tests\Unit\Domain\UserTest;
+use Cabinet\Backend\Tests\Unit\Domain\TaskTest;
+use Cabinet\Backend\Tests\Unit\Domain\PipelineStateTest;
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
@@ -18,6 +26,14 @@ $tests = [
     new RequestIdTest(),
     new ErrorHandlingTest(),
     new SecurityPipelineTest(),
+    new IdentifierTest(),
+    new ScopeTest(),
+    new ScopeSetTest(),
+    new HierarchyRoleTest(),
+    new AccessRequestTest(),
+    new UserTest(),
+    new TaskTest(),
+    new PipelineStateTest(),
 ];
 
 $failures = 0;
