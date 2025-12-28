@@ -1,10 +1,29 @@
-# Application Layer
+# Application Layer — Command & Orchestration Boundary
 
-The Application layer defines the **behavioral core** of the Cabinet backend.
+## Location
 
-This layer describes *what the system does* without specifying *how it is implemented*. It orchestrates use cases, enforces decision rules, coordinates pipelines, and connects the domain to infrastructure through stable interfaces.
+app/backend/src/Application
 
-The Application layer contains no HTTP code and no infrastructure-specific logic.
+---
+
+## Purpose
+
+The Application layer defines **how the system is used**.
+
+It is the boundary between:
+- external intent (HTTP, integrations, operators)
+- internal execution (Domain, Pipeline, Infrastructure)
+
+This layer:
+- accepts commands
+- validates intent
+- enforces policies
+- coordinates execution
+- delegates work to the pipeline or services
+
+It does **not** contain business rules.
+It does **not** implement infrastructure.
+It does **not** expose persistence details.
 
 ---
 
@@ -12,154 +31,166 @@ The Application layer contains no HTTP code and no infrastructure-specific logic
 
 The Application layer is responsible for:
 
-- Defining use cases through commands and queries
-- Enforcing access decisions and operational rules
-- Coordinating pipelines and background processing
-- Orchestrating security-related decisions
-- Declaring integration ports
-- Providing application services used by controllers
+- Command handling
+- Query handling
+- Access and hierarchy enforcement
+- Precondition validation
+- Policy evaluation
+- Orchestration of pipelines
+- Coordination of integrations
 
-It never performs I/O directly and never depends on concrete infrastructure implementations.
+It answers the question:
+
+> “Is this action allowed, valid, and executable right now?”
 
 ---
 
-## Core Concepts
+## Command Model
 
-### Commands
+Commands represent **explicit intent to change state**.
 
-Commands represent **intent to change state**.
+Characteristics:
+- immutable
+- validated before execution
+- authorized before execution
+- idempotent where required
 
 Examples:
-- authenticate a user
-- create or update a task
-- trigger pipeline stages
-- perform administrative actions
+- create task
+- trigger pipeline stage
+- retry job
+- cancel execution
 
-Commands are explicit, validated, and side-effect free until executed.
+Commands do not return domain objects.
+They return **execution acknowledgements**.
 
-### Queries
+---
 
-Queries represent **intent to read state**.
+## Query Model
 
-They:
-- never mutate data
-- may use optimized read models
-- are safe to cache
-- are permission-aware
+Queries represent **read-only intent**.
+
+Characteristics:
+- no side effects
+- permission-filtered
+- projection-based
+- optimized for reading
+
+Queries must never:
+- mutate state
+- trigger pipeline execution
+- call integrations
 
 ---
 
 ## Policies
 
-Policies define **decision logic**.
+Policies enforce **system-level rules**.
 
-They answer questions like:
-- is this action allowed?
-- should execution be degraded?
-- are limits exceeded?
-- is access permitted by hierarchy?
+Policies include:
+- access control
+- hierarchy constraints
+- rate limits
+- degradation behavior
+- data minimization
 
-Policies do not execute actions.  
-They only return decisions.
+Policies:
+- are deterministic
+- are explicit
+- fail closed
+
+Policies are **not configurable by users**.
 
 ---
 
 ## Preconditions
 
-Preconditions are **fail-fast guards**.
+Preconditions protect **internal consistency**.
 
 They validate:
-- structural correctness
-- invariants that must hold before execution
-- input constraints that cannot be recovered from
+- payload structure
+- references
+- stage validity
+- data boundaries
 
-If a precondition fails, execution stops immediately.
+Preconditions are:
+- not security
+- not authorization
+- not optional
 
----
-
-## Security Services
-
-The Application layer defines interfaces for security-related services:
-
-- nonce management
-- key management
-- signature verification
-- encryption orchestration
-
-Concrete cryptographic logic lives in Infrastructure.
+They execute **after security**, before orchestration.
 
 ---
 
-## Integrations
+## Services
 
-Each integration is defined by a **port** in this layer.
+Application services:
+- coordinate multiple actions
+- orchestrate calls to domain, pipeline, and integrations
+- do not own business rules
 
-Ports:
-- describe required capabilities
-- are technology-agnostic
-- expose no transport-level details
+Services must remain:
+- thin
+- explicit
+- predictable
 
-This allows integrations to be replaced or mocked without affecting application logic.
-
----
-
-## Pipeline Orchestration
-
-Pipelines coordinate asynchronous workflows:
-
-- stages
-- jobs
-- retries
-- locks
-- workers
-
-The Application layer defines pipeline intent and orchestration rules.
-
-Implementation details are delegated to Infrastructure.
-
-A dedicated document exists:
-- `Pipeline/README.md`
+If logic grows complex — it belongs elsewhere.
 
 ---
 
-## Application Services
+## Integrations (Application View)
 
-Services group related application logic:
+The Application layer defines:
+- ports
+- contracts
+- expectations
 
-- authentication flows
-- task coordination
-- integration status aggregation
-- security orchestration
+It never depends on:
+- real adapters
+- HTTP clients
+- storage drivers
 
-They are stateless where possible and deterministic by design.
-
----
-
-## Design Rules
-
-- No infrastructure dependencies
-- No HTTP concepts
-- No static state
-- No hidden side effects
-- No business interpretation of data
-
-All dependencies are injected via interfaces.
+All external interaction is abstracted.
 
 ---
 
-## Extension Guidelines
+## Non-Goals (Critical)
 
-When adding new functionality:
+The Application layer MUST NOT:
 
-1. Start with a command or query
-2. Add policies if decisions are required
-3. Add preconditions if fail-fast validation is needed
-4. Define integration ports if external systems are involved
-5. Extend pipelines only when async behavior is required
+- contain business intelligence
+- contain persistence logic
+- contain cryptography
+- implement retries
+- bypass security
+- encode UI logic
+
+Violations are architectural defects.
 
 ---
 
-## Status
+## Enforcement
 
-The Application layer is intentionally conservative.  
-Its primary goal is long-term stability and predictability.
+Boundaries are enforced by:
+- directory structure
+- static analysis
+- architecture tests
+- explicit interfaces
+
+Code outside this layer must not depend on its internals.
+
+---
+
+## Summary
+
+The Application layer is the **control surface** of Cabinet.
+
+It validates intent.
+It enforces rules.
+It coordinates execution.
+
+It does not decide meaning.
+It does not execute work.
+It does not store data.
+
+If intent is invalid — execution never begins.
