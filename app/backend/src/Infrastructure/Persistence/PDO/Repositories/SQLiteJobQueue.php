@@ -143,7 +143,7 @@ final class SQLiteJobQueue implements JobQueue
             return;
         }
 
-        // Schedule for retry with exponential backoff
+        // Schedule for retry with linear backoff (as per spec: 10 * attempt)
         $backoffSeconds = self::BACKOFF_BASE_SECONDS * $attempt;
         $availableAt = $this->addSeconds($this->now(), $backoffSeconds);
 
