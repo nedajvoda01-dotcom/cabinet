@@ -29,6 +29,11 @@ final class ScopeSet
         return new self($scopes);
     }
 
+    public static function empty(): self
+    {
+        return new self([]);
+    }
+
     public function has(Scope $scope): bool
     {
         return in_array($scope->toString(), $this->scopes, true);

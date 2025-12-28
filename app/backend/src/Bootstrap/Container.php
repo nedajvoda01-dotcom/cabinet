@@ -8,6 +8,9 @@ use Cabinet\Backend\Http\Controllers\HealthController;
 use Cabinet\Backend\Http\Controllers\ReadinessController;
 use Cabinet\Backend\Http\Controllers\SecurityController;
 use Cabinet\Backend\Http\Controllers\VersionController;
+use Cabinet\Backend\Http\Controllers\AccessController;
+use Cabinet\Backend\Http\Controllers\TasksController;
+use Cabinet\Backend\Http\Controllers\AdminController;
 use Cabinet\Backend\Http\Kernel\HttpKernel;
 use Cabinet\Backend\Http\Routing\Router;
 use Cabinet\Backend\Http\Security\Pipeline\AuthStep;
@@ -30,6 +33,22 @@ use Cabinet\Backend\Infrastructure\Security\Nonce\NonceRepository;
 use Cabinet\Backend\Infrastructure\Security\Signatures\SignatureCanonicalizer;
 use Cabinet\Backend\Infrastructure\Security\Signatures\SignatureVerifier;
 use Cabinet\Backend\Infrastructure\Security\Signatures\StringToSignBuilder;
+use Cabinet\Backend\Application\Bus\CommandBus;
+use Cabinet\Backend\Application\Handlers\RequestAccessHandler;
+use Cabinet\Backend\Application\Handlers\ApproveAccessHandler;
+use Cabinet\Backend\Application\Handlers\CreateTaskHandler;
+use Cabinet\Backend\Application\Handlers\AdvancePipelineHandler;
+use Cabinet\Backend\Application\Handlers\RetryJobHandler;
+use Cabinet\Backend\Application\Commands\Access\RequestAccessCommand;
+use Cabinet\Backend\Application\Commands\Access\ApproveAccessCommand;
+use Cabinet\Backend\Application\Commands\Tasks\CreateTaskCommand;
+use Cabinet\Backend\Application\Commands\Pipeline\AdvancePipelineCommand;
+use Cabinet\Backend\Application\Commands\Admin\RetryJobCommand;
+use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryUserRepository;
+use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAccessRequestRepository;
+use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryTaskRepository;
+use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryPipelineStateRepository;
+use Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator;
 
 final class Container
 {
@@ -54,6 +73,18 @@ final class Container
     private ?InMemoryActorRegistry $actorRegistry = null;
 
     private ?RateLimiter $rateLimiter = null;
+
+    private ?CommandBus $commandBus = null;
+
+    private ?InMemoryUserRepository $userRepository = null;
+
+    private ?InMemoryAccessRequestRepository $accessRequestRepository = null;
+
+    private ?InMemoryTaskRepository $taskRepository = null;
+
+    private ?InMemoryPipelineStateRepository $pipelineStateRepository = null;
+
+    private ?UuidIdGenerator $idGenerator = null;
 
     public function __construct(Config $config, Clock $clock)
     {
@@ -125,6 +156,99 @@ final class Container
         return $this->rateLimiter;
     }
 
+    public function idGenerator(): UuidIdGenerator
+    {
+        if ($this->idGenerator === null) {
+            $this->idGenerator = new UuidIdGenerator();
+        }
+
+        return $this->idGenerator;
+    }
+
+    public function userRepository(): InMemoryUserRepository
+    {
+        if ($this->userRepository === null) {
+            $this->userRepository = new InMemoryUserRepository();
+        }
+
+        return $this->userRepository;
+    }
+
+    public function accessRequestRepository(): InMemoryAccessRequestRepository
+    {
+        if ($this->accessRequestRepository === null) {
+            $this->accessRequestRepository = new InMemoryAccessRequestRepository();
+        }
+
+        return $this->accessRequestRepository;
+    }
+
+    public function taskRepository(): InMemoryTaskRepository
+    {
+        if ($this->taskRepository === null) {
+            $this->taskRepository = new InMemoryTaskRepository();
+        }
+
+        return $this->taskRepository;
+    }
+
+    public function pipelineStateRepository(): InMemoryPipelineStateRepository
+    {
+        if ($this->pipelineStateRepository === null) {
+            $this->pipelineStateRepository = new InMemoryPipelineStateRepository();
+        }
+
+        return $this->pipelineStateRepository;
+    }
+
+    public function commandBus(): CommandBus
+    {
+        if ($this->commandBus === null) {
+            $bus = new CommandBus();
+            
+            // Register handlers
+            $bus->register(
+                RequestAccessCommand::class,
+                new RequestAccessHandler($this->accessRequestRepository(), $this->idGenerator())
+            );
+            
+            $bus->register(
+                ApproveAccessCommand::class,
+                new ApproveAccessHandler(
+                    $this->accessRequestRepository(),
+                    $this->userRepository(),
+                    $this->idGenerator()
+                )
+            );
+            
+            $bus->register(
+                CreateTaskCommand::class,
+                new CreateTaskHandler(
+                    $this->taskRepository(),
+                    $this->pipelineStateRepository(),
+                    $this->idGenerator()
+                )
+            );
+            
+            $bus->register(
+                AdvancePipelineCommand::class,
+                new AdvancePipelineHandler(
+                    $this->taskRepository(),
+                    $this->pipelineStateRepository()
+                )
+            );
+            
+            $bus->register(
+                RetryJobCommand::class,
+                new RetryJobHandler($this->pipelineStateRepository())
+            );
+            
+            $this->commandBus = $bus;
+        }
+
+        return $this->commandBus;
+    }
+
     public function securityPipeline(): SecurityPipelineMiddleware
     {
         if ($this->securityPipeline === null) {
@@ -162,6 +286,17 @@ final class Container
             $router->post('/security/encrypted-echo', [new SecurityController(), 'encryptedEcho']);
             $router->post('/security/admin-echo', [new SecurityController(), 'echo']);
             $router->post('/security/missing-requirements', [new SecurityController(), 'echo']);
+            
+            // Application layer routes
+            $accessController = new AccessController($this->commandBus());
+            $router->post('/access/request', [$accessController, 'requestAccess']);
+            $router->post('/admin/access/approve', [$accessController, 'approveAccess']);
+            
+            $tasksController = new TasksController($this->commandBus());
+            $router->post('/tasks/create', [$tasksController, 'create']);
+            
+            $adminController = new AdminController($this->commandBus());
+            $router->post('/admin/pipeline/retry', [$adminController, 'retryJob']);
 
             $this->router = $router;
         }

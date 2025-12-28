@@ -21,6 +21,11 @@ final class RouteRequirementsMap
             'POST /security/echo' => new RouteRequirements(true, true, true, false, [Scope::fromString('security.echo')], HierarchyRole::USER, 2),
             'POST /security/encrypted-echo' => new RouteRequirements(true, true, true, true, [Scope::fromString('security.echo')], HierarchyRole::USER, 2),
             'POST /security/admin-echo' => new RouteRequirements(true, true, true, false, [Scope::fromString('security.echo')], HierarchyRole::ADMIN, 2),
+            // Application layer endpoints
+            'POST /access/request' => new RouteRequirements(false, false, false, false, [], HierarchyRole::USER, 5),
+            'POST /admin/access/approve' => new RouteRequirements(true, true, true, false, [Scope::fromString('admin.access.approve')], HierarchyRole::ADMIN, 5),
+            'POST /tasks/create' => new RouteRequirements(true, true, true, false, [Scope::fromString('tasks.create')], HierarchyRole::USER, 10),
+            'POST /admin/pipeline/retry' => new RouteRequirements(true, true, true, false, [Scope::fromString('admin.pipeline.retry')], HierarchyRole::ADMIN, 5),
         ];
     }
 

@@ -172,6 +172,21 @@ final class PipelineState
         $this->status = JobStatus::DEAD_LETTER;
     }
 
+    public function rescueFromDeadLetter(): void
+    {
+        if (!$this->isInDeadLetter()) {
+            throw InvalidStateTransition::forTransition(
+                "{$this->stage->value}:{$this->status->value}",
+                'rescue from DLQ',
+                'PipelineState'
+            );
+        }
+
+        $this->status = JobStatus::QUEUED;
+        $this->attemptCount = 0;
+        $this->lastError = null;
+    }
+
     private function getNextStage(PipelineStage $current): PipelineStage
     {
         return match ($current) {
