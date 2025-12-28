@@ -43,22 +43,36 @@ use Cabinet\Backend\Application\Commands\Access\RequestAccessCommand;
 use Cabinet\Backend\Application\Commands\Access\ApproveAccessCommand;
 use Cabinet\Backend\Application\Commands\Tasks\CreateTaskCommand;
 use Cabinet\Backend\Application\Commands\Pipeline\AdvancePipelineCommand;
+use Cabinet\Backend\Application\Commands\Pipeline\TickTaskCommand;
 use Cabinet\Backend\Application\Commands\Admin\RetryJobCommand;
 use Cabinet\Backend\Application\Ports\UserRepository;
 use Cabinet\Backend\Application\Ports\AccessRequestRepository;
 use Cabinet\Backend\Application\Ports\TaskRepository;
 use Cabinet\Backend\Application\Ports\PipelineStateRepository;
+use Cabinet\Backend\Application\Ports\TaskOutputRepository;
+use Cabinet\Backend\Application\Ports\UnitOfWork;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryUserRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAccessRequestRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryTaskRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryPipelineStateRepository;
+use Cabinet\Backend\Infrastructure\Persistence\InMemory\NoOpUnitOfWork;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator;
 use Cabinet\Backend\Infrastructure\Persistence\PDO\ConnectionFactory;
 use Cabinet\Backend\Infrastructure\Persistence\PDO\MigrationsRunner;
+use Cabinet\Backend\Infrastructure\Persistence\PDO\PDOUnitOfWork;
 use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\UsersRepository;
 use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\AccessRequestsRepository;
 use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\TasksRepository;
 use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\PipelineStatesRepository;
+use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\TaskOutputsRepository;
+use Cabinet\Backend\Infrastructure\Integrations\Registry\IntegrationRegistry;
+use Cabinet\Backend\Infrastructure\Integrations\Fallback\DemoParserAdapter;
+use Cabinet\Backend\Infrastructure\Integrations\Fallback\DemoPhotosAdapter;
+use Cabinet\Backend\Infrastructure\Integrations\Fallback\DemoPublisherAdapter;
+use Cabinet\Backend\Infrastructure\Integrations\Fallback\DemoExportAdapter;
+use Cabinet\Backend\Infrastructure\Integrations\Fallback\DemoCleanupAdapter;
+use Cabinet\Backend\Application\Handlers\TickTaskHandler;
+use Cabinet\Backend\Application\Queries\GetTaskOutputsQuery;
 use PDO;
 
 final class Container
@@ -94,6 +108,14 @@ final class Container
     private ?TaskRepository $taskRepository = null;
 
     private ?PipelineStateRepository $pipelineStateRepository = null;
+
+    private ?TaskOutputRepository $taskOutputRepository = null;
+
+    private ?IntegrationRegistry $integrationRegistry = null;
+
+    private ?UnitOfWork $unitOfWork = null;
+
+    private ?GetTaskOutputsQuery $getTaskOutputsQuery = null;
 
     private ?UuidIdGenerator $idGenerator = null;
 
@@ -273,6 +295,72 @@ final class Container
         return $this->pipelineStateRepository;
     }
 
+    public function taskOutputRepository(): TaskOutputRepository
+    {
+        if ($this->taskOutputRepository === null) {
+            $useSqlite = getenv('USE_SQLITE') !== 'false';
+            
+            if ($useSqlite) {
+                $this->taskOutputRepository = new TaskOutputsRepository($this->pdo());
+            } else {
+                // For in-memory, we could use a simple array-based implementation
+                // For now, always use SQLite for task outputs in dev/test
+                $this->taskOutputRepository = new TaskOutputsRepository($this->pdo());
+            }
+        }
+
+        return $this->taskOutputRepository;
+    }
+
+    public function integrationRegistry(): IntegrationRegistry
+    {
+        if ($this->integrationRegistry === null) {
+            // Check config flags - default to false (use fallback)
+            $parserEnabled = getenv('INTEGRATION_PARSER_ENABLED') === 'true';
+            $photosEnabled = getenv('INTEGRATION_PHOTOS_ENABLED') === 'true';
+            $publishEnabled = getenv('INTEGRATION_PUBLISH_ENABLED') === 'true';
+            $exportEnabled = getenv('INTEGRATION_EXPORT_ENABLED') === 'true';
+            $cleanupEnabled = getenv('INTEGRATION_CLEANUP_ENABLED') === 'true';
+
+            // For now, always use demo/fallback adapters
+            $this->integrationRegistry = new IntegrationRegistry(
+                new DemoParserAdapter(),
+                new DemoPhotosAdapter(),
+                new DemoPublisherAdapter(),
+                new DemoExportAdapter(),
+                new DemoCleanupAdapter()
+            );
+        }
+
+        return $this->integrationRegistry;
+    }
+
+    public function unitOfWork(): UnitOfWork
+    {
+        if ($this->unitOfWork === null) {
+            $useSqlite = getenv('USE_SQLITE') !== 'false';
+            
+            if ($useSqlite) {
+                $this->unitOfWork = new PDOUnitOfWork($this->pdo());
+            } else {
+                $this->unitOfWork = new NoOpUnitOfWork();
+            }
+        }
+
+        return $this->unitOfWork;
+    }
+
+    public function getTaskOutputsQuery(): GetTaskOutputsQuery
+    {
+        if ($this->getTaskOutputsQuery === null) {
+            $this->getTaskOutputsQuery = new GetTaskOutputsQuery(
+                $this->taskOutputRepository()
+            );
+        }
+
+        return $this->getTaskOutputsQuery;
+    }
+
     public function commandBus(): CommandBus
     {
         if ($this->commandBus === null) {
@@ -313,6 +401,17 @@ final class Container
             $bus->register(
                 RetryJobCommand::class,
                 new RetryJobHandler($this->pipelineStateRepository())
+            );
+            
+            $bus->register(
+                TickTaskCommand::class,
+                new TickTaskHandler(
+                    $this->taskRepository(),
+                    $this->pipelineStateRepository(),
+                    $this->taskOutputRepository(),
+                    $this->integrationRegistry(),
+                    $this->unitOfWork()
+                )
             );
             
             $this->commandBus = $bus;
@@ -364,8 +463,10 @@ final class Container
             $router->post('/access/request', [$accessController, 'requestAccess']);
             $router->post('/admin/access/approve', [$accessController, 'approveAccess']);
             
-            $tasksController = new TasksController($this->commandBus());
+            $tasksController = new TasksController($this->commandBus(), $this->getTaskOutputsQuery());
             $router->post('/tasks/create', [$tasksController, 'create']);
+            $router->post('/tasks/{id}/tick', [$tasksController, 'tick']);
+            $router->get('/tasks/{id}/outputs', [$tasksController, 'outputs']);
             
             $adminController = new AdminController($this->commandBus());
             $router->post('/admin/pipeline/retry', [$adminController, 'retryJob']);

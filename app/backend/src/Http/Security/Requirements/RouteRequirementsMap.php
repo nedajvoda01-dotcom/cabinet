@@ -25,6 +25,8 @@ final class RouteRequirementsMap
             'POST /access/request' => new RouteRequirements(false, false, false, false, [], HierarchyRole::USER, 5),
             'POST /admin/access/approve' => new RouteRequirements(true, true, true, false, [Scope::fromString('admin.access.approve')], HierarchyRole::ADMIN, 5),
             'POST /tasks/create' => new RouteRequirements(true, true, true, false, [Scope::fromString('tasks.create')], HierarchyRole::USER, 10),
+            'POST /tasks/{id}/tick' => new RouteRequirements(true, true, true, false, [Scope::fromString('tasks.tick')], HierarchyRole::USER, 10),
+            'GET /tasks/{id}/outputs' => new RouteRequirements(true, true, true, false, [Scope::fromString('tasks.read')], HierarchyRole::USER, 20),
             'POST /admin/pipeline/retry' => new RouteRequirements(true, true, true, false, [Scope::fromString('admin.pipeline.retry')], HierarchyRole::ADMIN, 5),
         ];
     }
@@ -33,7 +35,29 @@ final class RouteRequirementsMap
     {
         $key = sprintf('%s %s', strtoupper($method), $path);
 
-        return $this->map[$key] ?? null;
+        // Try exact match first
+        if (isset($this->map[$key])) {
+            return $this->map[$key];
+        }
+
+        // Try pattern matching
+        foreach ($this->map as $pattern => $requirements) {
+            if (strpos($pattern, '{') !== false) {
+                $regex = $this->compilePattern($pattern);
+                if (preg_match($regex, $key)) {
+                    return $requirements;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function compilePattern(string $key): string
+    {
+        // Convert "POST /tasks/{id}/tick" to regex
+        $pattern = preg_replace('/\{[^}]+\}/', '[^/]+', $key);
+        return '#^' . preg_quote($pattern, '#') . '$#';
     }
 
     public function add(string $method, string $path, RouteRequirements $requirements): void

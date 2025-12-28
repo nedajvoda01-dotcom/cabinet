@@ -22,6 +22,7 @@ final class MigrationsRunner
         $this->createTasksTable();
         $this->createPipelineStatesTable();
         $this->createIdempotencyKeysTable();
+        $this->createTaskOutputsTable();
     }
 
     private function createUsersTable(): void
@@ -97,6 +98,21 @@ final class MigrationsRunner
             task_id TEXT NOT NULL,
             created_at TEXT NOT NULL,
             PRIMARY KEY (actor_id, idem_key)
+        )
+        SQL;
+
+        $this->pdo->exec($sql);
+    }
+
+    private function createTaskOutputsTable(): void
+    {
+        $sql = <<<SQL
+        CREATE TABLE IF NOT EXISTS task_outputs (
+            task_id TEXT NOT NULL,
+            stage TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            PRIMARY KEY (task_id, stage)
         )
         SQL;
 
