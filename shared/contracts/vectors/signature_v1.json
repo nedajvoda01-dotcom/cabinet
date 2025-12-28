@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/security/echo",
+    "trace_id": "trace-123456789012",
+    "nonce": "nonce-123456789012",
+    "kid": "key-1",
+    "body_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "canonical": "{\"body_sha256\":\"44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a\",\"kid\":\"key-1\",\"method\":\"POST\",\"nonce\":\"nonce-123456789012\",\"path\":\"/security/echo\",\"trace_id\":\"trace-123456789012\"}",
+  "signature_hmac_sha256": "GnKxmNHsMwA5x0WEaVWes1YRqZlKuzELOkSCrHFnutg=",
+  "secret": "secret-key-user-123"
+}

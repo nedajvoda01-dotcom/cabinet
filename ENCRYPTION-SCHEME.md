@@ -115,13 +115,13 @@ All secured requests MUST carry the following protocol fields.
 ### 6.1 Required headers (secured endpoints)
 | Field | Required | Meaning |
 |------|----------|---------|
-| <TRACE_HEADER> | MUST | Correlation id |
-| <NONCE_HEADER> | MUST | Replay protection nonce |
-| <IDEMPOTENCY_HEADER> | MUST for commands | Idempotency key |
-| <KID_HEADER> | MUST | Key identifier/version |
-| <SIG_HEADER> | MUST | Request signature |
-| <ENC_HEADER> | MUST if encrypted | Encryption metadata/profile |
-| <KEYEX_HEADER> | MAY | Key exchange metadata (when initiating) |
+| X-Cabinet-Trace-Id | MUST | Correlation id |
+| X-Cabinet-Nonce | MUST | Replay protection nonce |
+| X-Cabinet-Idempotency-Key | MUST for commands | Idempotency key |
+| X-Cabinet-Key-Id | MUST | Key identifier/version |
+| X-Cabinet-Signature | MUST | Request signature |
+| X-Cabinet-Encryption | MUST if encrypted | Encryption metadata/profile |
+| X-Cabinet-Key-Exchange | MAY | Key exchange metadata (when initiating) |
 
 **Note:** Exact names MUST match implementation. No aliases.
 

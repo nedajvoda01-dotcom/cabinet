@@ -41,6 +41,7 @@ shared/contracts/
 ├── primitives/ → Human-readable contract definitions
 ├── implementations/ → Generated language-specific code
 ├── vectors/ → Test vectors for verification
+├── tools/ → Deterministic generators and utilities
 └── README.md → This document
 
 yaml
@@ -119,7 +120,7 @@ Vectors are not examples — they are **verification artifacts**.
 ### Modifying an Existing Contract
 
 1. Edit the primitive (`primitives/*.md`)
-2. Regenerate implementations
+2. Regenerate implementations via `php shared/contracts/tools/generate.php`
 3. Run parity and vector tests
 4. Commit all changes together
 
@@ -130,6 +131,14 @@ Vectors are not examples — they are **verification artifacts**.
 3. Generate implementations
 4. Update usage in backend and frontend
 5. Add vectors if security-relevant
+
+### Canonical JSON rule
+
+All contract payloads are canonicalized using **lexicographic key ordering** and
+UTF-8 JSON encoding without whitespace prettification. Arrays preserve order;
+objects are sorted by key recursively; scalar values are emitted with standard
+`json_encode` / `JSON.stringify` semantics. The canonicalizers live in the
+generated PHP/TypeScript implementations and must never be edited manually.
 
 ---
 
