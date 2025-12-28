@@ -10,6 +10,7 @@ use Cabinet\Backend\Http\Controllers\SecurityController;
 use Cabinet\Backend\Http\Controllers\VersionController;
 use Cabinet\Backend\Http\Controllers\AccessController;
 use Cabinet\Backend\Http\Controllers\TasksController;
+use Cabinet\Backend\Http\Controllers\AdminController;
 use Cabinet\Backend\Http\Kernel\HttpKernel;
 use Cabinet\Backend\Http\Routing\Router;
 use Cabinet\Backend\Http\Security\Pipeline\AuthStep;
@@ -36,9 +37,13 @@ use Cabinet\Backend\Application\Bus\CommandBus;
 use Cabinet\Backend\Application\Handlers\RequestAccessHandler;
 use Cabinet\Backend\Application\Handlers\ApproveAccessHandler;
 use Cabinet\Backend\Application\Handlers\CreateTaskHandler;
+use Cabinet\Backend\Application\Handlers\AdvancePipelineHandler;
+use Cabinet\Backend\Application\Handlers\RetryJobHandler;
 use Cabinet\Backend\Application\Commands\Access\RequestAccessCommand;
 use Cabinet\Backend\Application\Commands\Access\ApproveAccessCommand;
 use Cabinet\Backend\Application\Commands\Tasks\CreateTaskCommand;
+use Cabinet\Backend\Application\Commands\Pipeline\AdvancePipelineCommand;
+use Cabinet\Backend\Application\Commands\Admin\RetryJobCommand;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryUserRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAccessRequestRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryTaskRepository;
@@ -225,6 +230,19 @@ final class Container
                 )
             );
             
+            $bus->register(
+                AdvancePipelineCommand::class,
+                new AdvancePipelineHandler(
+                    $this->taskRepository(),
+                    $this->pipelineStateRepository()
+                )
+            );
+            
+            $bus->register(
+                RetryJobCommand::class,
+                new RetryJobHandler($this->pipelineStateRepository())
+            );
+            
             $this->commandBus = $bus;
         }
 
@@ -276,6 +294,9 @@ final class Container
             
             $tasksController = new TasksController($this->commandBus());
             $router->post('/tasks/create', [$tasksController, 'create']);
+            
+            $adminController = new AdminController($this->commandBus());
+            $router->post('/admin/pipeline/retry', [$adminController, 'retryJob']);
 
             $this->router = $router;
         }
