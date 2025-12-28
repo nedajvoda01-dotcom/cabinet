@@ -8,6 +8,7 @@ use Cabinet\Backend\Application\Ports\ClaimedJob;
 use Cabinet\Backend\Application\Ports\JobQueue;
 use Cabinet\Backend\Application\Observability\AuditLogger;
 use Cabinet\Backend\Application\Observability\AuditEvent;
+use Cabinet\Backend\Application\Observability\MetricsEmitter;
 use Cabinet\Backend\Domain\Tasks\TaskId;
 use Cabinet\Contracts\ErrorKind;
 use Cabinet\Contracts\JobStatus;
@@ -21,7 +22,8 @@ final class SQLiteJobQueue implements JobQueue
 
     public function __construct(
         private readonly PDO $pdo,
-        private readonly ?AuditLogger $auditLogger = null
+        private readonly ?AuditLogger $auditLogger = null,
+        private readonly ?MetricsEmitter $metricsEmitter = null
     ) {
     }
 
@@ -225,6 +227,14 @@ final class SQLiteJobQueue implements JobQueue
             );
             $this->auditLogger->record($auditEvent);
         }
+
+        // Metrics: job retry scheduled
+        if ($this->metricsEmitter !== null) {
+            $this->metricsEmitter->increment('job.retry_scheduled', [
+                'job_id' => $jobId,
+                'attempt' => (string)$attempt,
+            ]);
+        }
     }
 
     public function moveToDlq(string $jobId, ErrorKind $errorKind): void
@@ -255,6 +265,14 @@ final class SQLiteJobQueue implements JobQueue
                 ]
             );
             $this->auditLogger->record($auditEvent);
+        }
+
+        // Metrics: job entered DLQ
+        if ($this->metricsEmitter !== null) {
+            $this->metricsEmitter->increment('job.dlq_entered', [
+                'job_id' => $jobId,
+                'error_kind' => $errorKind->value,
+            ]);
         }
     }
 

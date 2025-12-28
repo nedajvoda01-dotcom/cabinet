@@ -64,7 +64,7 @@ final class PipelineTickIntegrationTest extends TestCase
         $jobId = JobId::fromString($taskIdString);
 
         // Create tick handler
-        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, $auditLogger, $idGenerator);
+        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, $auditLogger, $idGenerator, new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryMetricsEmitter());
 
         // Tick 1: Parse stage
         $tickCommand = new TickTaskCommand($taskIdString);
@@ -147,7 +147,7 @@ final class PipelineTickIntegrationTest extends TestCase
 
         $idGenerator = new UuidIdGenerator();
         $auditLogger = new InMemoryAuditLogger();
-        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, $auditLogger, $idGenerator);
+        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, $auditLogger, $idGenerator, new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryMetricsEmitter());
         $tickCommand = new TickTaskCommand('non-existent-task');
         $result = $tickHandler->handle($tickCommand);
 

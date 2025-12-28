@@ -75,7 +75,8 @@ final class AuditTrailIntegrationTest extends TestCase
         $jobId = $jobQueue->enqueueAdvance($taskId);
 
         // Run one worker iteration
-        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, $auditLogger, $idGenerator);
+        $metricsEmitter = new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryMetricsEmitter();
+        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, $auditLogger, $idGenerator, $metricsEmitter);
         $claimedJob = $jobQueue->claimNext();
         $this->assertTrue($claimedJob !== null, 'Worker should claim a job');
 

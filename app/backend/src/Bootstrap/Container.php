@@ -26,7 +26,9 @@ use Cabinet\Backend\Http\Security\Requirements\RouteRequirementsMap;
 use Cabinet\Backend\Http\Validation\Protocol\NonceFormatValidator;
 use Cabinet\Backend\Infrastructure\Observability\Logging\StructuredLogger;
 use Cabinet\Backend\Application\Observability\AuditLogger;
+use Cabinet\Backend\Application\Observability\MetricsEmitter;
 use Cabinet\Backend\Infrastructure\Observability\SQLiteAuditLogger;
+use Cabinet\Backend\Infrastructure\Observability\LogBasedMetricsEmitter;
 use Cabinet\Backend\Infrastructure\Security\AttackProtection\RateLimiter;
 use Cabinet\Backend\Infrastructure\Security\Encryption\SymmetricEncryption;
 use Cabinet\Backend\Infrastructure\Security\Identity\InMemoryActorRegistry;
@@ -134,6 +136,8 @@ final class Container
     private ?JobQueue $jobQueue = null;
 
     private ?AuditLogger $auditLogger = null;
+
+    private ?MetricsEmitter $metricsEmitter = null;
 
     public function __construct(Config $config, Clock $clock)
     {
@@ -365,7 +369,7 @@ final class Container
     public function jobQueue(): JobQueue
     {
         if ($this->jobQueue === null) {
-            $this->jobQueue = new SQLiteJobQueue($this->pdo(), $this->auditLogger());
+            $this->jobQueue = new SQLiteJobQueue($this->pdo(), $this->auditLogger(), $this->metricsEmitter());
         }
 
         return $this->jobQueue;
@@ -378,6 +382,15 @@ final class Container
         }
 
         return $this->auditLogger;
+    }
+
+    public function metricsEmitter(): MetricsEmitter
+    {
+        if ($this->metricsEmitter === null) {
+            $this->metricsEmitter = new LogBasedMetricsEmitter($this->logger());
+        }
+
+        return $this->metricsEmitter;
     }
 
     public function getTaskOutputsQuery(): GetTaskOutputsQuery
@@ -476,7 +489,8 @@ final class Container
                     $this->integrationRegistry(),
                     $this->unitOfWork(),
                     $this->auditLogger(),
-                    $this->idGenerator()
+                    $this->idGenerator(),
+                    $this->metricsEmitter()
                 )
             );
             

@@ -15,6 +15,7 @@ use Cabinet\Backend\Application\Shared\ApplicationError;
 use Cabinet\Backend\Application\Shared\Result;
 use Cabinet\Backend\Application\Observability\AuditLogger;
 use Cabinet\Backend\Application\Observability\AuditEvent;
+use Cabinet\Backend\Application\Observability\MetricsEmitter;
 use Cabinet\Backend\Application\Ports\IdGenerator;
 use Cabinet\Backend\Domain\Pipeline\JobId;
 use Cabinet\Backend\Domain\Tasks\TaskId;
@@ -33,7 +34,8 @@ final class TickTaskHandler implements CommandHandler
         private readonly IntegrationRegistry $integrationRegistry,
         private readonly UnitOfWork $unitOfWork,
         private readonly AuditLogger $auditLogger,
-        private readonly IdGenerator $idGenerator
+        private readonly IdGenerator $idGenerator,
+        private readonly MetricsEmitter $metricsEmitter
     ) {
     }
 
@@ -124,6 +126,12 @@ final class TickTaskHandler implements CommandHandler
             );
             $this->auditLogger->record($auditEvent);
 
+            // Metrics: pipeline stage succeeded
+            $this->metricsEmitter->increment('pipeline.stage.succeeded', [
+                'stage' => $currentStage->value,
+                'task_id' => $taskIdString,
+            ]);
+
             return Result::success([
                 'status' => 'advanced',
                 'completed_stage' => $currentStage->value,
@@ -158,6 +166,12 @@ final class TickTaskHandler implements CommandHandler
                 ]
             );
             $this->auditLogger->record($auditEvent);
+
+            // Metrics: pipeline stage failed
+            $this->metricsEmitter->increment('pipeline.stage.failed', [
+                'stage' => $currentStage->value,
+                'error_kind' => $integrationResult->errorKind()?->value ?? 'unknown',
+            ]);
 
             return Result::success([
                 'status' => 'failed',

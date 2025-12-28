@@ -29,6 +29,7 @@ use Cabinet\Backend\Tests\Integration\PipelineTickIntegrationTest;
 use Cabinet\Backend\Tests\Integration\JobQueueTest;
 use Cabinet\Backend\Tests\Integration\WorkerIntegrationTest;
 use Cabinet\Backend\Tests\Integration\AuditTrailIntegrationTest;
+use Cabinet\Backend\Tests\Integration\MetricsIntegrationTest;
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
@@ -60,6 +61,7 @@ $tests = [
     new JobQueueTest(),
     new WorkerIntegrationTest(),
     new AuditTrailIntegrationTest(),
+    new MetricsIntegrationTest(),
 ];
 
 $failures = 0;

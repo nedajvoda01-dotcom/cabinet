@@ -76,7 +76,7 @@ final class WorkerIntegrationTest extends TestCase
         $this->assertTrue(!empty($jobId), 'Job should be enqueued');
 
         // Simulate worker: claim and process job
-        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAuditLogger(), new \Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator());
+        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAuditLogger(), new \Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator(), new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryMetricsEmitter());
         
         $claimedJob = $jobQueue->claimNext();
         $this->assertTrue($claimedJob !== null, 'Worker should claim a job');
@@ -130,7 +130,7 @@ final class WorkerIntegrationTest extends TestCase
         $taskIdString = $createResult->value();
         $taskId = TaskId::fromString($taskIdString);
 
-        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAuditLogger(), new \Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator());
+        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAuditLogger(), new \Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator(), new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryMetricsEmitter());
 
         // Process all stages via worker simulation
         $stages = ['parse', 'photos', 'publish', 'export', 'cleanup'];
@@ -199,7 +199,7 @@ final class WorkerIntegrationTest extends TestCase
         $taskIdString = $createResult->value();
         $taskId = TaskId::fromString($taskIdString);
 
-        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAuditLogger(), new \Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator());
+        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAuditLogger(), new \Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator(), new \Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryMetricsEmitter());
 
         // Enqueue and process job
         $jobId = $jobQueue->enqueueAdvance($taskId);
