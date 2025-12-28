@@ -9,6 +9,80 @@ Any code generated or modified without complying with this file is considered **
 
 ## 1. Mandatory Reading Rules (NON-NEGOTIABLE)
 
+## 1.1 Repository Root Contract (IMMUTABLE)
+
+⚠️ **MERGE-BLOCKING AND NON-NEGOTIABLE**
+
+The repository root is an **immutable contract layer**.  
+It defines **ownership boundaries** and **entry points only**.
+
+### ✅ The ONLY allowed structure at repository root is:
+
+```
+cabinet/
+├─ .github/
+├─ backend/
+├─ frontend/
+│
+├─ AGENT.md
+├─ AGENT1.md
+├─ AGENT2.md
+└─ README.md
+```
+
+### ❌ FORBIDDEN at repository root
+
+The following are **strictly forbidden** at repository root:
+
+- runtime-specific configs (e.g. `package.json`, `jest.config.*`, `phpunit.xml`)
+- implementation artifacts
+- playgrounds, experiments, prototypes
+- integration contracts or fixtures
+- test folders
+- documentation files other than `AGENT*.md` and `README.md`
+- temporary or generated files
+
+If any such file or directory exists at root, it is an **architectural violation**.
+
+### 🧭 Ownership Rule (MANDATORY)
+
+Every file and directory **must have a single owner**:
+
+- Backend-related → **MUST live inside `backend/`**
+- Frontend-related → **MUST live inside `frontend/`**
+- Documentation (non-contract) → MUST live under the owning system or be removed
+
+There is **no shared ownership** at repository root.
+
+### 🚫 Root Is Not a Workspace
+
+The repository root is **NOT**:
+- a workspace
+- a build context
+- a runtime environment
+- a test execution area
+
+All tooling, builds, tests, configs, and experiments **must be scoped** to their owning system.
+
+### 🛑 Violation Rule
+
+If a change:
+- adds new files to repository root
+- moves runtime configs back to root
+- introduces ambiguity of ownership
+
+→ **THE CHANGE MUST BE REJECTED**, regardless of functionality.
+
+### 🧠 Agent Enforcement Rule
+
+Any agent (Codex or human) **MUST**:
+
+1. Read this root contract before making changes
+2. Validate that root structure remains unchanged
+3. Stop immediately if compliance is not possible
+
+---
+
 ### 🔒 Backend Rule
 If you are **writing, modifying, or analyzing backend code** (Domain / Application / Pipeline / Integrations):
 
@@ -143,4 +217,3 @@ If compliance is not possible — **Codex MUST STOP and report the issue**.
 
 > If the system starts to understand the external world —  
 > **the architecture is already broken.**
-
