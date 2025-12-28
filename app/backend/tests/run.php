@@ -14,6 +14,7 @@ use Cabinet\Backend\Tests\Unit\Domain\ScopeSetTest;
 use Cabinet\Backend\Tests\Unit\Domain\HierarchyRoleTest;
 use Cabinet\Backend\Tests\Unit\Domain\AccessRequestTest;
 use Cabinet\Backend\Tests\Unit\Domain\UserTest;
+use Cabinet\Backend\Tests\Unit\Domain\TaskTest;
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
@@ -30,6 +31,7 @@ $tests = [
     new HierarchyRoleTest(),
     new AccessRequestTest(),
     new UserTest(),
+    new TaskTest(),
 ];
 
 $failures = 0;
