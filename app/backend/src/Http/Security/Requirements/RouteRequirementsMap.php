@@ -24,6 +24,8 @@ final class RouteRequirementsMap
             // Application layer endpoints
             'POST /access/request' => new RouteRequirements(false, false, false, false, [], HierarchyRole::USER, 5),
             'POST /admin/access/approve' => new RouteRequirements(true, true, true, false, [Scope::fromString('admin.access.approve')], HierarchyRole::ADMIN, 5),
+            'GET /tasks' => new RouteRequirements(true, true, true, false, [Scope::fromString('tasks.read')], HierarchyRole::USER, 20),
+            'GET /tasks/{id}' => new RouteRequirements(true, true, true, false, [Scope::fromString('tasks.read')], HierarchyRole::USER, 20),
             'POST /tasks/create' => new RouteRequirements(true, true, true, false, [Scope::fromString('tasks.create')], HierarchyRole::USER, 10),
             'POST /tasks/{id}/tick' => new RouteRequirements(true, true, true, false, [Scope::fromString('tasks.tick')], HierarchyRole::USER, 10),
             'GET /tasks/{id}/outputs' => new RouteRequirements(true, true, true, false, [Scope::fromString('tasks.read')], HierarchyRole::USER, 20),
@@ -56,8 +58,10 @@ final class RouteRequirementsMap
     private function compilePattern(string $key): string
     {
         // Convert "POST /tasks/{id}/tick" to regex
-        $pattern = preg_replace('/\{[^}]+\}/', '[^/]+', $key);
-        return '#^' . preg_quote($pattern, '#') . '$#';
+        // First escape the pattern, then replace placeholders with regex
+        $pattern = preg_quote($key, '#');
+        $pattern = preg_replace('/\\\\\{[^}]+\\\\\}/', '[^/]+', $pattern);
+        return '#^' . $pattern . '$#';
     }
 
     public function add(string $method, string $path, RouteRequirements $requirements): void

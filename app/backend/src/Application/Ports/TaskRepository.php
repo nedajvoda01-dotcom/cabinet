@@ -14,4 +14,9 @@ interface TaskRepository
     public function findById(TaskId $id): ?Task;
 
     public function findByActorAndIdempotencyKey(string $actorId, string $idempotencyKey): ?Task;
+
+    /**
+     * @return Task[]
+     */
+    public function findAll(): array;
 }

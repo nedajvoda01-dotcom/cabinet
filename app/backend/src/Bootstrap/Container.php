@@ -117,6 +117,10 @@ final class Container
 
     private ?GetTaskOutputsQuery $getTaskOutputsQuery = null;
 
+    private ?\Cabinet\Backend\Application\Queries\ListTasksQuery $listTasksQuery = null;
+
+    private ?\Cabinet\Backend\Application\Queries\GetTaskDetailsQuery $getTaskDetailsQuery = null;
+
     private ?UuidIdGenerator $idGenerator = null;
 
     private ?PDO $pdo = null;
@@ -361,6 +365,30 @@ final class Container
         return $this->getTaskOutputsQuery;
     }
 
+    public function listTasksQuery(): \Cabinet\Backend\Application\Queries\ListTasksQuery
+    {
+        if ($this->listTasksQuery === null) {
+            $this->listTasksQuery = new \Cabinet\Backend\Application\Queries\ListTasksQuery(
+                $this->taskRepository(),
+                $this->pipelineStateRepository()
+            );
+        }
+
+        return $this->listTasksQuery;
+    }
+
+    public function getTaskDetailsQuery(): \Cabinet\Backend\Application\Queries\GetTaskDetailsQuery
+    {
+        if ($this->getTaskDetailsQuery === null) {
+            $this->getTaskDetailsQuery = new \Cabinet\Backend\Application\Queries\GetTaskDetailsQuery(
+                $this->taskRepository(),
+                $this->pipelineStateRepository()
+            );
+        }
+
+        return $this->getTaskDetailsQuery;
+    }
+
     public function commandBus(): CommandBus
     {
         if ($this->commandBus === null) {
@@ -463,7 +491,14 @@ final class Container
             $router->post('/access/request', [$accessController, 'requestAccess']);
             $router->post('/admin/access/approve', [$accessController, 'approveAccess']);
             
-            $tasksController = new TasksController($this->commandBus(), $this->getTaskOutputsQuery());
+            $tasksController = new TasksController(
+                $this->commandBus(), 
+                $this->getTaskOutputsQuery(),
+                $this->listTasksQuery(),
+                $this->getTaskDetailsQuery()
+            );
+            $router->get('/tasks', [$tasksController, 'list']);
+            $router->get('/tasks/{id}', [$tasksController, 'details']);
             $router->post('/tasks/create', [$tasksController, 'create']);
             $router->post('/tasks/{id}/tick', [$tasksController, 'tick']);
             $router->get('/tasks/{id}/outputs', [$tasksController, 'outputs']);
