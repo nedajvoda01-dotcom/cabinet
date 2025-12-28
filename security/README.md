@@ -1,151 +1,206 @@
-# Security Governance — Cabinet Security Domain
+# Security Governance — Non-Runtime Rules & Standards
 
 ## Location
 
-security/
+security/README.md
 
 ---
 
 ## Purpose
 
-This directory defines **non-runtime security governance** for the Cabinet system.
+This directory defines **security governance rules** for the Cabinet system.
 
-It contains:
-- security rules
-- architectural constraints
-- enforcement policies
-- review standards
-- non-executable specifications
+It documents:
+- security principles
+- non-runtime constraints
+- organizational rules
+- enforcement expectations
 
-This directory does **not** contain application code.
-It defines **what must be true**, not how it is implemented.
+This directory does **not** contain executable code.
+
+It defines **how security must be treated**, not how it is implemented.
 
 ---
 
 ## Scope
 
-Security governance applies to:
-
-- backend
-- frontend
+This document applies to:
+- backend runtime security
+- frontend runtime security
 - integrations
-- infrastructure
-- CI/CD pipelines
+- operational processes
+- audits and reviews
 - AI agents interacting with the repository
 
-All system components are subject to these rules.
-
----
-
-## What Lives Here
-
-This directory is the **authoritative source** for:
-
-- security rulesets
-- compliance constraints
-- forbidden patterns
-- architectural security guarantees
-- review checklists
-
-Examples:
-- mandatory encryption requirements
-- role and hierarchy invariants
-- audit and logging guarantees
-- forbidden bypass scenarios
-
----
-
-## What Does NOT Live Here
-
-This directory MUST NOT contain:
-
+It complements, but does not replace:
+- `SECURITY-IMPLEMENTATION.md`
+- `ENCRYPTION-SCHEME.md`
 - runtime security code
-- middleware
-- encryption implementations
-- request validation logic
-- authentication handlers
-
-Runtime security belongs exclusively to:
-
-app/backend/src/Infrastructure/Security
-
-yaml
-Копировать код
 
 ---
 
-## Relationship to Other Security Documents
+## Security Philosophy
 
-This directory works together with:
+Cabinet is built under the assumption that:
 
-- `SECURITY-IMPLEMENTATION.md`  
-  → Defines **how** security is executed at runtime
+- networks are hostile
+- integrations are untrusted
+- clients are fallible
+- configuration can be wrong
+- humans make mistakes
 
-- `ENCRYPTION-SCHEME.md`  
-  → Defines **cryptographic rules and protocols**
+Therefore:
+- security is structural
+- security is explicit
+- security is enforced in code
+- security failures are fail-closed
 
-- `HIERARCHY-GUIDE.md`  
-  → Defines **role and hierarchy invariants**
-
-This directory defines **governance**, not execution.
+Convenience is never prioritized over security.
 
 ---
 
-## Enforcement Model
+## Governance vs Runtime Security
 
-Rules defined here are enforced via:
+| Aspect | Governance | Runtime |
+|-----|-----------|--------|
+| Purpose | Rules & intent | Enforcement |
+| Location | `security/` | `Infrastructure/Security` |
+| Executable | ❌ | ✅ |
+| Change frequency | Low | Medium |
+| Audience | Humans & auditors | System |
 
-- architecture tests
-- code review
-- CI validation
-- audit procedures
-- agent behavior constraints
+Governance defines **what must be true**.  
+Runtime ensures **it actually is**.
 
-Violations are treated as:
-- security defects
-- release blockers
-- architectural regressions
+---
+
+## Key Governance Rules
+
+### No Implicit Trust
+
+- No trusted networks
+- No trusted integrations
+- No trusted environments
+- No trusted UI
+
+Trust must be:
+- explicit
+- authenticated
+- authorized
+- auditable
+
+---
+
+### Fail-Closed Behavior
+
+If something is unclear:
+- deny
+- stop
+- log
+- audit
+
+Never guess.
+Never fallback silently.
+
+---
+
+### Least Privilege
+
+Access must be:
+- minimal
+- scoped
+- revocable
+- hierarchical
+
+Visibility is not permission.
+
+---
+
+### Determinism
+
+Security behavior must be:
+- deterministic
+- reproducible
+- testable
+- observable
+
+Environment-dependent security is forbidden.
 
 ---
 
 ## Change Management
 
-Changes to this directory require:
+Security changes require:
+- explicit documentation update
+- code review
+- parity test updates (if applicable)
+- audit consideration
 
-- explicit review
-- security approval
-- documented rationale
+Undocumented security changes are invalid.
 
-Breaking or weakening rules is forbidden.
+---
 
-If a rule becomes obsolete:
-- it must be removed
-- replacement must be documented
-- ambiguity is not allowed
+## AI Agent Rules
+
+Any AI agent interacting with this repository:
+
+- must read this directory
+- must respect security invariants
+- must not weaken security
+- must stop if unsure
+
+Security shortcuts are treated as defects.
+
+---
+
+## Forbidden Practices
+
+The following are forbidden at the governance level:
+
+- disabling security for development convenience
+- environment-based weakening of security
+- undocumented bypasses
+- trusting frontend validation
+- assuming integration correctness
+
+Violations must be treated as incidents.
+
+---
+
+## Relationship to Other Documents
+
+This document:
+- defines expectations
+- sets boundaries
+- provides context
+
+Implementation details live in:
+- `SECURITY-IMPLEMENTATION.md`
+- `ENCRYPTION-SCHEME.md`
+
+Hierarchy rules live in:
+- `HIERARCHY-GUIDE.md`
 
 ---
 
 ## Audience
 
-This directory is written for:
-
+This document is written for:
 - security engineers
 - system architects
-- senior developers
 - auditors
-- AI agents (Codex)
-
-It is **not** onboarding documentation.
+- technical leadership
+- AI agents
 
 ---
 
 ## Summary
 
-The `security/` directory defines **what Cabinet must never violate**.
+This directory defines **how security is governed** in Cabinet.
 
-It is not optional.
-It is not advisory.
-It is not configurable.
+Security is not optional.
+Security is not configurable.
+Security is not negotiable.
 
-If runtime behavior contradicts this directory —  
-the runtime behavior is wrong.
+If something feels unsafe —
+it probably is.
