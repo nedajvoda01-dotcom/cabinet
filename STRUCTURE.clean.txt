@@ -1,0 +1,483 @@
+cabinet
+├── .editorconfig
+├── .env.example
+├── .gitattributes
+├── .gitignore
+├── .husky
+├── AGENT.md
+├── ENCRYPTION-SCHEME.md
+├── HIERARCHY-GUIDE.md
+├── Makefile
+├── README.md
+├── SECURITY-IMPLEMENTATION.md
+├── app
+│   ├── backend
+│   │   ├── README.md
+│   │   ├── public
+│   │   │   └── index.php
+│   │   ├── src
+│   │   │   ├── Application
+│   │   │   │   ├── Commands
+│   │   │   │   │   ├── Admin
+│   │   │   │   │   │   ├── CancelJobCommand.php
+│   │   │   │   │   │   ├── ForceCleanupCommand.php
+│   │   │   │   │   │   └── RetryJobCommand.php
+│   │   │   │   │   ├── Auth
+│   │   │   │   │   │   ├── LoginCommand.php
+│   │   │   │   │   │   ├── LogoutCommand.php
+│   │   │   │   │   │   └── RefreshTokenCommand.php
+│   │   │   │   │   └── Tasks
+│   │   │   │   │       ├── CreateTaskCommand.php
+│   │   │   │   │       ├── DeleteTaskCommand.php
+│   │   │   │   │       ├── TriggerParseCommand.php
+│   │   │   │   │       ├── TriggerPhotosCommand.php
+│   │   │   │   │       ├── TriggerPublishCommand.php
+│   │   │   │   │       └── UpdateTaskCommand.php
+│   │   │   │   ├── Integrations
+│   │   │   │   │   ├── BrowserContext
+│   │   │   │   │   │   └── BrowserContextPort.php
+│   │   │   │   │   ├── Parser
+│   │   │   │   │   │   └── ParserPort.php
+│   │   │   │   │   ├── PhotoProcessor
+│   │   │   │   │   │   └── PhotoProcessorPort.php
+│   │   │   │   │   ├── Robot
+│   │   │   │   │   │   └── RobotPort.php
+│   │   │   │   │   └── Storage
+│   │   │   │   │       └── StoragePort.php
+│   │   │   │   ├── Pipeline
+│   │   │   │   │   ├── Drivers
+│   │   │   │   │   │   ├── CleanupDriver.php
+│   │   │   │   │   │   ├── ExportDriver.php
+│   │   │   │   │   │   ├── ParserDriver.php
+│   │   │   │   │   │   ├── PhotosDriver.php
+│   │   │   │   │   │   ├── PublishDriver.php
+│   │   │   │   │   │   └── StageDriverInterface.php
+│   │   │   │   │   ├── Events
+│   │   │   │   │   │   ├── EventEmitter.php
+│   │   │   │   │   │   └── PipelineEvent.php
+│   │   │   │   │   ├── Idempotency
+│   │   │   │   │   │   ├── IdempotencyKey.php
+│   │   │   │   │   │   ├── IdempotencyService.php
+│   │   │   │   │   │   └── IdempotencyStore.php
+│   │   │   │   │   ├── Jobs
+│   │   │   │   │   │   ├── Job.php
+│   │   │   │   │   │   ├── JobPayload.php
+│   │   │   │   │   │   └── JobType.php
+│   │   │   │   │   ├── Locks
+│   │   │   │   │   │   ├── LockKey.php
+│   │   │   │   │   │   └── LockService.php
+│   │   │   │   │   ├── README.md
+│   │   │   │   │   ├── Retry
+│   │   │   │   │   │   ├── ErrorClassifier.php
+│   │   │   │   │   │   ├── RetryDecision.php
+│   │   │   │   │   │   └── RetryPolicy.php
+│   │   │   │   │   └── Workers
+│   │   │   │   │       ├── ExportWorker.php
+│   │   │   │   │       ├── ParserWorker.php
+│   │   │   │   │       ├── PhotosWorker.php
+│   │   │   │   │       ├── PublishWorker.php
+│   │   │   │   │       ├── RobotStatusWorker.php
+│   │   │   │   │       └── WorkerDaemon.php
+│   │   │   │   ├── Policies
+│   │   │   │   │   ├── AccessPolicy.php
+│   │   │   │   │   ├── DataMinimizationPolicy.php
+│   │   │   │   │   ├── DegradePolicy.php
+│   │   │   │   │   ├── HierarchyPolicy.php
+│   │   │   │   │   ├── LimitsPolicy.php
+│   │   │   │   │   ├── NoncePolicy.php
+│   │   │   │   │   ├── RateLimitPolicy.php
+│   │   │   │   │   └── SignaturePolicy.php
+│   │   │   │   ├── Preconditions
+│   │   │   │   │   ├── AssetRefGuard.php
+│   │   │   │   │   ├── CommandGuard.php
+│   │   │   │   │   ├── DataPrivacyGuard.php
+│   │   │   │   │   ├── PayloadSizeGuard.php
+│   │   │   │   │   ├── StageGuard.php
+│   │   │   │   │   └── UrlGuard.php
+│   │   │   │   ├── Queries
+│   │   │   │   │   ├── Admin
+│   │   │   │   │   │   ├── GetAuditQuery.php
+│   │   │   │   │   │   ├── GetDlqQuery.php
+│   │   │   │   │   │   └── GetQueuesQuery.php
+│   │   │   │   │   ├── Integrations
+│   │   │   │   │   │   ├── GetCapabilitiesQuery.php
+│   │   │   │   │   │   └── GetIntegrationsStatusQuery.php
+│   │   │   │   │   ├── Security
+│   │   │   │   │   │   ├── GetNonceUsageQuery.php
+│   │   │   │   │   │   ├── GetSecurityEventsQuery.php
+│   │   │   │   │   │   └── GetSignatureAuditQuery.php
+│   │   │   │   │   └── Tasks
+│   │   │   │   │       ├── GetTaskQuery.php
+│   │   │   │   │       ├── ListTasksQuery.php
+│   │   │   │   │       └── TaskReadModelBuilder.php
+│   │   │   │   ├── README.md
+│   │   │   │   ├── Security
+│   │   │   │   │   ├── Encryption
+│   │   │   │   │   │   └── EncryptionServiceInterface.php
+│   │   │   │   │   ├── Keys
+│   │   │   │   │   │   ├── KeyServiceInterface.php
+│   │   │   │   │   │   └── SessionKeyExchange.php
+│   │   │   │   │   ├── Nonce
+│   │   │   │   │   │   ├── NonceRepositoryInterface.php
+│   │   │   │   │   │   └── NonceServiceInterface.php
+│   │   │   │   │   └── Signatures
+│   │   │   │   │       └── SignatureServiceInterface.php
+│   │   │   │   └── Services
+│   │   │   │       ├── AdminService.php
+│   │   │   │       ├── AuthService.php
+│   │   │   │       ├── CapabilitiesService.php
+│   │   │   │       ├── EncryptionService.php
+│   │   │   │       ├── IntegrationsStatusService.php
+│   │   │   │       ├── KeyRotationOrchestrator.php
+│   │   │   │       ├── KeyService.php
+│   │   │   │       ├── NonceService.php
+│   │   │   │       ├── SecurityService.php
+│   │   │   │       ├── SignatureService.php
+│   │   │   │       ├── TasksService.php
+│   │   │   │       └── UsersService.php
+│   │   │   ├── Bootstrap
+│   │   │   │   ├── AppKernel.php
+│   │   │   │   ├── Clock.php
+│   │   │   │   ├── Config.php
+│   │   │   │   └── Container.php
+│   │   │   ├── Domain
+│   │   │   │   ├── Pipeline
+│   │   │   │   │   ├── PipelineState.php
+│   │   │   │   │   ├── Stage.php
+│   │   │   │   │   └── StageTransitionRules.php
+│   │   │   │   ├── Shared
+│   │   │   │   │   ├── Enum
+│   │   │   │   │   │   ├── TaskStatus.php
+│   │   │   │   │   │   └── UserRole.php
+│   │   │   │   │   ├── Exceptions
+│   │   │   │   │   │   ├── DomainException.php
+│   │   │   │   │   │   ├── InvariantViolation.php
+│   │   │   │   │   │   ├── NonceReuseException.php
+│   │   │   │   │   │   └── SecurityException.php
+│   │   │   │   │   └── ValueObject
+│   │   │   │   │       ├── Email.php
+│   │   │   │   │       ├── EncryptedPayload.php
+│   │   │   │   │       ├── Nonce.php
+│   │   │   │   │       └── Ulid.php
+│   │   │   │   ├── Tasks
+│   │   │   │   │   ├── Task.php
+│   │   │   │   │   ├── TaskId.php
+│   │   │   │   │   ├── TaskInvariants.php
+│   │   │   │   │   └── TaskSnapshot.php
+│   │   │   │   └── Users
+│   │   │   │       ├── AccessRole.php
+│   │   │   │       ├── AccessScope.php
+│   │   │   │       ├── PermissionMatrix.php
+│   │   │   │       ├── User.php
+│   │   │   │       ├── UserHierarchy.php
+│   │   │   │       └── UserId.php
+│   │   │   ├── Http
+│   │   │   │   ├── Controllers
+│   │   │   │   │   ├── AdminController.php
+│   │   │   │   │   ├── AuthController.php
+│   │   │   │   │   ├── ExportController.php
+│   │   │   │   │   ├── HealthController.php
+│   │   │   │   │   ├── IntegrationsController.php
+│   │   │   │   │   ├── KeyExchangeController.php
+│   │   │   │   │   ├── ParserController.php
+│   │   │   │   │   ├── PhotosController.php
+│   │   │   │   │   ├── PublishController.php
+│   │   │   │   │   ├── SecurityController.php
+│   │   │   │   │   ├── TasksController.php
+│   │   │   │   │   └── UsersController.php
+│   │   │   │   ├── Middleware
+│   │   │   │   │   ├── BodySizeLimitMiddleware.php
+│   │   │   │   │   ├── CorsMiddleware.php
+│   │   │   │   │   ├── ErrorHandlerMiddleware.php
+│   │   │   │   │   ├── JsonBodyMiddleware.php
+│   │   │   │   │   ├── TraceIdMiddleware.php
+│   │   │   │   │   └── WebhookAuthMiddleware.php
+│   │   │   │   ├── Responses
+│   │   │   │   │   ├── ApiErrorMapper.php
+│   │   │   │   │   ├── ApiResponse.php
+│   │   │   │   │   └── ProblemDetails.php
+│   │   │   │   ├── Routes
+│   │   │   │   │   └── api.php
+│   │   │   │   ├── Security
+│   │   │   │   │   ├── Pipeline
+│   │   │   │   │   │   ├── AuthStep.php
+│   │   │   │   │   │   ├── EncryptionStep.php
+│   │   │   │   │   │   ├── HierarchyStep.php
+│   │   │   │   │   │   ├── NonceStep.php
+│   │   │   │   │   │   ├── RateLimitStep.php
+│   │   │   │   │   │   ├── ScopeStep.php
+│   │   │   │   │   │   ├── SecurityPipelineMiddleware.php
+│   │   │   │   │   │   └── SignatureStep.php
+│   │   │   │   │   └── Requirements
+│   │   │   │   │       ├── EndpointRequirementsResolver.php
+│   │   │   │   │       ├── RouteRequirements.php
+│   │   │   │   │       └── RouteRequirementsMap.php
+│   │   │   │   └── Validation
+│   │   │   │       ├── Protocol
+│   │   │   │       │   ├── CommandStructureValidator.php
+│   │   │   │       │   ├── IdempotencyKeyValidator.php
+│   │   │   │       │   └── NonceFormatValidator.php
+│   │   │   │       └── Request
+│   │   │   │           ├── IncludeFieldsValidator.php
+│   │   │   │           ├── PaginationValidator.php
+│   │   │   │           └── RequestSchemaValidator.php
+│   │   │   └── Infrastructure
+│   │   │       ├── BackgroundTasks
+│   │   │       │   ├── KeyRotationJob.php
+│   │   │       │   ├── KeyRotator.php
+│   │   │       │   ├── NonceCleanupJob.php
+│   │   │       │   ├── OldDataCleaner.php
+│   │   │       │   └── QueueOptimizer.php
+│   │   │       ├── Cache
+│   │   │       │   ├── CacheWarmer.php
+│   │   │       │   ├── QueryCache.php
+│   │   │       │   └── RedisCache.php
+│   │   │       ├── Integrations
+│   │   │       │   ├── BrowserContext
+│   │   │       │   │   ├── BrowserContextIntegration.php
+│   │   │       │   │   ├── Fallback
+│   │   │       │   │   │   ├── FallbackBrowserContextAdapter.php
+│   │   │       │   │   │   └── FallbackBrowserContextPool.php
+│   │   │       │   │   └── Real
+│   │   │       │   │       └── BrowserContextHttpAdapter.php
+│   │   │       │   ├── Parser
+│   │   │       │   │   ├── Fallback
+│   │   │       │   │   │   ├── FallbackParserAdapter.php
+│   │   │       │   │   │   └── FallbackParserFixtures.php
+│   │   │       │   │   ├── ParserIntegration.php
+│   │   │       │   │   └── Real
+│   │   │       │   │       └── ParserHttpAdapter.php
+│   │   │       │   ├── PhotoProcessor
+│   │   │       │   │   ├── Fallback
+│   │   │       │   │   │   ├── FallbackPhotoPipeline.php
+│   │   │       │   │   │   └── FallbackPhotoProcessorAdapter.php
+│   │   │       │   │   ├── PhotoProcessorIntegration.php
+│   │   │       │   │   └── Real
+│   │   │       │   │       └── PhotoProcessorHttpAdapter.php
+│   │   │       │   ├── README.md
+│   │   │       │   ├── Registry
+│   │   │       │   │   ├── CertificateRegistry.php
+│   │   │       │   │   ├── IntegrationDescriptorInterface.php
+│   │   │       │   │   └── IntegrationRegistry.php
+│   │   │       │   ├── Robot
+│   │   │       │   │   ├── Fallback
+│   │   │       │   │   │   ├── FallbackRobotAdapter.php
+│   │   │       │   │   │   └── FallbackRobotScenario.php
+│   │   │       │   │   ├── Real
+│   │   │       │   │   │   ├── RobotHttpAdapter.php
+│   │   │       │   │   │   ├── RobotMessages.php
+│   │   │       │   │   │   └── RobotWebhookHandler.php
+│   │   │       │   │   └── RobotIntegration.php
+│   │   │       │   ├── Shared
+│   │   │       │   │   ├── CircuitBreaker.php
+│   │   │       │   │   ├── ConfigGuard.php
+│   │   │       │   │   ├── ContractValidator.php
+│   │   │       │   │   ├── EncryptionWrapper.php
+│   │   │       │   │   ├── ErrorMapper.php
+│   │   │       │   │   ├── FallbackPort.php
+│   │   │       │   │   ├── Headers.php
+│   │   │       │   │   ├── HealthCache.php
+│   │   │       │   │   ├── HttpClient.php
+│   │   │       │   │   ├── IntegrationException.php
+│   │   │       │   │   ├── NonceGenerator.php
+│   │   │       │   │   └── SignedRequest.php
+│   │   │       │   └── Storage
+│   │   │       │       ├── Fallback
+│   │   │       │       │   ├── FallbackStorageAdapter.php
+│   │   │       │       │   └── FallbackStorageFs.php
+│   │   │       │       ├── Real
+│   │   │       │       │   └── S3StorageAdapter.php
+│   │   │       │       └── StorageIntegration.php
+│   │   │       ├── Observability
+│   │   │       │   ├── Audit
+│   │   │       │   │   └── AuditService.php
+│   │   │       │   ├── Health
+│   │   │       │   │   ├── DatabaseHealthCheck.php
+│   │   │       │   │   ├── HealthChecker.php
+│   │   │       │   │   ├── RedisHealthCheck.php
+│   │   │       │   │   └── health.php
+│   │   │       │   ├── Logging
+│   │   │       │   │   ├── DbLogger.php
+│   │   │       │   │   ├── Redactor.php
+│   │   │       │   │   ├── SecureLogger.php
+│   │   │       │   │   ├── SentryLogger.php
+│   │   │       │   │   └── StructuredLogger.php
+│   │   │       │   ├── Metrics
+│   │   │       │   │   ├── BusinessMetrics.php
+│   │   │       │   │   ├── PrometheusMetrics.php
+│   │   │       │   │   └── exporters
+│   │   │       │   │       └── PrometheusExporter.php
+│   │   │       │   └── Tracing
+│   │   │       │       ├── OpenTelemetryAdapter.php
+│   │   │       │       └── Tracer.php
+│   │   │       ├── Persistence
+│   │   │       │   └── PDO
+│   │   │       │       ├── ConnectionFactory.php
+│   │   │       │       ├── MigrationsRunner.php
+│   │   │       │       └── Repositories
+│   │   │       │           ├── AuditRepository.php
+│   │   │       │           ├── DlqRepository.php
+│   │   │       │           ├── IdempotencyRepository.php
+│   │   │       │           ├── LockRepository.php
+│   │   │       │           ├── NonceRepository.php
+│   │   │       │           ├── QueueRepository.php
+│   │   │       │           ├── SecurityEventRepository.php
+│   │   │       │           ├── TasksRepository.php
+│   │   │       │           └── UsersRepository.php
+│   │   │       ├── Queue
+│   │   │       │   ├── DlqService.php
+│   │   │       │   ├── QueueMetrics.php
+│   │   │       │   └── QueueService.php
+│   │   │       ├── README.md
+│   │   │       ├── ReadModels
+│   │   │       │   ├── Projections
+│   │   │       │   │   ├── SecurityProjection.php
+│   │   │       │   │   └── TaskProjection.php
+│   │   │       │   └── TaskReadModel.php
+│   │   │       ├── Security
+│   │   │       │   ├── AttackProtection
+│   │   │       │   │   ├── RateLimiter.php
+│   │   │       │   │   ├── SQLInjectionProtection.php
+│   │   │       │   │   └── XSSProtection.php
+│   │   │       │   ├── Audit
+│   │   │       │   │   ├── SecurityAuditService.php
+│   │   │       │   │   └── SensitiveDataLogger.php
+│   │   │       │   ├── Certificates
+│   │   │       │   │   ├── AdapterCertificate.php
+│   │   │       │   │   ├── CertificateManager.php
+│   │   │       │   │   └── CertificateValidator.php
+│   │   │       │   ├── Encryption
+│   │   │       │   │   ├── AsymmetricEncryption.php
+│   │   │       │   │   ├── DataEncryption.php
+│   │   │       │   │   ├── EncryptionEnforcer.php
+│   │   │       │   │   ├── HybridEncryption.php
+│   │   │       │   │   └── SymmetricEncryption.php
+│   │   │       │   ├── Identity
+│   │   │       │   │   ├── JwtIssuer.php
+│   │   │       │   │   ├── JwtVerifier.php
+│   │   │       │   │   └── TwoFactorAuth.php
+│   │   │       │   ├── Keys
+│   │   │       │   │   ├── KeyManagement.php
+│   │   │       │   │   ├── KeyRotationEngine.php
+│   │   │       │   │   ├── KeyStore.php
+│   │   │       │   │   ├── KeyVersionManager.php
+│   │   │       │   │   └── SessionKeyExchangeEngine.php
+│   │   │       │   ├── Nonce
+│   │   │       │   │   ├── NonceValidator.php
+│   │   │       │   │   └── _internal
+│   │   │       │   │       ├── AtomicNonceStore.php
+│   │   │       │   │       ├── NonceCleanupRunner.php
+│   │   │       │   │       └── NonceLockKey.php
+│   │   │       │   ├── README.md
+│   │   │       │   ├── Signatures
+│   │   │       │   │   ├── SignatureCanonicalizer.php
+│   │   │       │   │   ├── SignatureVerifier.php
+│   │   │       │   │   └── StringToSignBuilder.php
+│   │   │       │   └── Vault
+│   │   │       │       ├── PolicyManager.php
+│   │   │       │       ├── SecretInjector.php
+│   │   │       │       └── VaultClient.php
+│   │   │       └── Ws
+│   │   │           ├── WsEmitter.php
+│   │   │           └── WsServer.php
+│   │   └── tests
+│   │       ├── Feature
+│   │       └── Unit
+│   │           ├── Architecture
+│   │           │   ├── BoundariesTest.php
+│   │           │   ├── ContractParityTest.php
+│   │           │   ├── IncludeFieldsLimitsTest.php
+│   │           │   ├── NonceInternalSealedTest.php
+│   │           │   └── SingleNonceRepositoryImplementationTest.php
+│   │           ├── Domain
+│   │           ├── Integrations
+│   │           ├── Pipeline
+│   │           └── Security
+│   └── frontend
+│       ├── README.md
+│       └── src
+│           ├── app
+│           ├── entities
+│           ├── features
+│           ├── pages
+│           ├── shared
+│           │   ├── access
+│           │   ├── api
+│           │   │   ├── client.ts
+│           │   │   ├── endpoints.ts
+│           │   │   ├── errors.ts
+│           │   │   ├── generated
+│           │   │   │   ├── README.md
+│           │   │   │   └── openapi-parity.test.ts
+│           │   │   └── includeFields.ts
+│           │   ├── auth
+│           │   ├── runtime
+│           │   │   └── security
+│           │   │       ├── canonicalizer.ts
+│           │   │       ├── encryption.ts
+│           │   │       ├── index.ts
+│           │   │       ├── keyExchange.ts
+│           │   │       ├── keyStore.ts
+│           │   │       ├── nonce.ts
+│           │   │       └── signature.ts
+│           │   ├── security
+│           │   ├── trace
+│           │   ├── ui
+│           │   └── ws
+│           └── tests
+├── automation
+├── commitlint.config.js
+├── composer.json
+├── config
+├── dev
+├── docker-compose.yml
+├── docs
+│   └── README.md
+├── eslint.config.js
+├── governance
+├── package.json
+├── phpcs.xml
+├── phpmd.xml
+├── phpstan.neon
+├── platform
+├── psalm.xml
+├── scripts
+├── security
+│   └── README.md
+├── security-rules.xml
+├── shared
+│   ├── canonicalization
+│   ├── contracts
+│   │   ├── README.md
+│   │   ├── implementations
+│   │   │   ├── php
+│   │   │   │   ├── AssetRef.php
+│   │   │   │   ├── CapabilitySet.php
+│   │   │   │   ├── Error.php
+│   │   │   │   ├── ErrorKind.php
+│   │   │   │   ├── IntegrationHealth.php
+│   │   │   │   ├── Status.php
+│   │   │   │   └── TraceContext.php
+│   │   │   └── typescript
+│   │   │       ├── assetRef.ts
+│   │   │       ├── capabilitySet.ts
+│   │   │       ├── errorKind.ts
+│   │   │       ├── status.ts
+│   │   │       └── traceContext.ts
+│   │   ├── primitives
+│   │   │   ├── AssetRef.md
+│   │   │   ├── CapabilitySet.md
+│   │   │   ├── ErrorKind.md
+│   │   │   ├── Status.md
+│   │   │   └── TraceContext.md
+│   │   └── vectors
+│   │       ├── encryption-vectors.json
+│   │       ├── nonce-vectors.json
+│   │       └── signature-vectors.json
+│   └── crypto
+├── stylelint.config.js
+├── tests
+│   ├── e2e
+│   ├── integration
+│   └── security
+└── tools
