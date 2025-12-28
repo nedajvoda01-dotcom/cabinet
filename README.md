@@ -1,92 +1,218 @@
-# Documentation Index
+# Cabinet — Internal Control & Orchestration Platform
 
-This directory contains structured documentation for the Cabinet platform.
+Cabinet is an **internal control plane and orchestration system**.
 
-The goal of this documentation is not to duplicate the code, but to explain **how the system is intended to be understood, extended, and operated**. Every document here has a clear scope and a defined audience.
+It is designed to securely accept commands, enforce authorization,
+and orchestrate execution across multiple external and internal services
+without embedding business-specific intelligence into the core.
 
-If you are new to the project, follow the reading order below.
-
----
-
-## Recommended Reading Order
-
-### 1. Project Overview
-- **Root overview**
-  - `cabinet/README.md`  
-    High-level description of the system, its purpose, and core principles.
-
-### 2. Backend Architecture
-- **Backend entry point**
-  - `app/backend/README.md`  
-    How the backend is structured, how to run it, and how responsibilities are divided.
-- **Application layer**
-  - `app/backend/src/Application/README.md`  
-    Commands, queries, policies, preconditions, and orchestration logic.
-- **Pipeline orchestration**
-  - `app/backend/src/Application/Pipeline/README.md`  
-    Asynchronous processing, jobs, retries, workers, and state transitions.
-
-### 3. Infrastructure and Integrations
-- **Infrastructure overview**
-  - `app/backend/src/Infrastructure/README.md`  
-    Persistence, queues, observability, background tasks.
-- **Integrations**
-  - `app/backend/src/Infrastructure/Integrations/README.md`  
-    How external services are connected, including real and fallback adapters.
-- **Runtime security**
-  - `app/backend/src/Infrastructure/Security/README.md`  
-    Cryptography, keys, nonces, vaults, and security enforcement.
-
-### 4. Frontend
-- **Frontend overview**
-  - `app/frontend/README.md`  
-    UI architecture, role-based access, and runtime security on the client.
-- **Generated API client**
-  - `app/frontend/src/shared/api/generated/README.md`  
-    API client generation and contract parity guarantees.
-
-### 5. Contracts (Cross-Language)
-- **Source of truth**
-  - `shared/contracts/README.md`  
-    Shared contracts used across backend and frontend, including primitives and vectors.
-
-### 6. Security and Governance
-- **Security governance**
-  - `security/README.md`  
-    Non-runtime security policies and standards.
-- **Implementation details**
-  - `SECURITY-IMPLEMENTATION.md`
-  - `ENCRYPTION-SCHEME.md`
-  - `HIERARCHY-GUIDE.md`
+Cabinet is a **platform component**, not an end-user product.
 
 ---
 
-## Documentation Principles
+## What Cabinet Is
 
-- Documentation describes **intent**, not implementation details.
-- If something is enforced by tests or code, documentation explains *why*, not *how*.
-- Security-related behavior is always documented explicitly.
-- There is no duplicated source of truth:
-  - Contracts live only in `shared/contracts`
-  - Runtime security lives only in backend infrastructure
-  - Governance lives only in root `security/`
+Cabinet is:
+
+- an internal orchestration and execution control system
+- a secure command routing layer
+- a pipeline-based task executor
+- an integration hub for external services
+- an auditable, observable control plane
+
+Cabinet exists to ensure that execution across systems is:
+
+- authorized
+- ordered
+- resilient
+- observable
+- recoverable
+- secure by default
+
+Cabinet **does not care** what business logic is executed.
+It only guarantees that execution happens **correctly and safely**.
 
 ---
 
-## When to Add New Documents
+## What Cabinet Is NOT
 
-Add a new document only if at least one of the following is true:
+Cabinet is **not**:
 
-- The subsystem has non-obvious invariants.
-- Incorrect usage may compromise security or data integrity.
-- The subsystem is expected to be extended by other developers.
-- The subsystem coordinates multiple layers (Application + Infrastructure).
+- a public SaaS
+- a self-service platform
+- a business-logic engine
+- a workflow designer
+- a place to encode domain intelligence
+- a UI-driven system of record
 
-If none of the above apply, prefer code-level documentation.
+If a feature requires understanding *what* the data means,
+it likely does **not** belong in Cabinet.
 
 ---
 
-## Status
+## Core Philosophy
 
-This documentation set evolves together with the system.  
-Outdated documents must be updated or removed — never left ambiguous.
+### Frozen Core
+
+The core of Cabinet is intentionally **frozen**.
+
+This includes:
+- security model
+- pipeline execution logic
+- retry and failure semantics
+- idempotency guarantees
+- locking and concurrency rules
+
+The core should remain stable and predictable.
+
+---
+
+### Extensibility via Integrations
+
+All extensibility happens **outside** the core via integrations.
+
+Cabinet connects to:
+- external services
+- internal tools
+- automation systems
+- analytical or processing engines
+
+through **explicit ports and adapters**.
+
+Cabinet orchestrates.
+Integrations execute.
+
+---
+
+## Access & Usage Model
+
+Cabinet is an **internal system**.
+
+- Users cannot self-register and start using the system.
+- Registration creates an **access request**, not an account.
+- Access requests require **manual approval** by a Super Admin.
+
+All users share:
+- a single interface
+- a single execution model
+
+Differences between users are enforced via:
+- hierarchy
+- scopes
+- permissions
+- visibility filtering
+
+There are no role-specific UIs.
+
+---
+
+## High-Level Architecture
+
+Cabinet is composed of the following major parts:
+
+- **Backend**
+  - HTTP boundary
+  - security enforcement
+  - orchestration and pipelines
+  - integrations and infrastructure
+
+- **Frontend**
+  - controlled UI
+  - permission-based visibility
+  - client-side security participation
+
+- **Shared Contracts**
+  - cross-language primitives
+  - security vectors
+  - generated types
+
+- **Security & Governance**
+  - cryptographic schemes
+  - hierarchy rules
+  - enforcement models
+
+Each part has **strict boundaries**.
+Crossing boundaries incorrectly is considered a defect.
+
+---
+
+## Security First
+
+Security in Cabinet is:
+
+- mandatory
+- layered
+- fail-closed
+- enforced structurally, not optionally
+
+No request reaches application logic without passing
+the full security pipeline.
+
+Security is not configurable per developer or environment.
+
+---
+
+## Documentation Map
+
+This repository contains structured documentation.
+
+Start here, then follow the index:
+
+- `docs/README.md` — documentation index and reading order
+
+Normative security documents:
+- `SECURITY-IMPLEMENTATION.md`
+- `ENCRYPTION-SCHEME.md`
+- `HIERARCHY-GUIDE.md`
+
+Shared contracts:
+- `shared/contracts/README.md`
+
+Each document defines **intent and constraints**, not code duplication.
+
+---
+
+## Source of Truth Rules
+
+There is **no duplicated source of truth**:
+
+- Architecture rules live in code structure and architecture tests
+- Runtime security behavior lives in backend infrastructure
+- Cross-language data definitions live in `shared/contracts`
+- Governance rules live in root-level security documents
+
+If two sources conflict:
+> the more **normative** document wins.
+
+---
+
+## Intended Audience
+
+This repository is written for:
+
+- internal developers
+- platform engineers
+- security engineers
+- auditors
+- AI agents operating on the codebase
+
+It is **not** written as a tutorial.
+
+---
+
+## Final Note
+
+Cabinet is a **control plane**, not a playground.
+
+If something feels unclear:
+- consult documentation
+- inspect tests
+- follow existing patterns
+
+If something violates documented constraints:
+- do not implement it
+
+Predictability, safety, and correctness
+are more important than convenience.
+
+---
