@@ -1,168 +1,59 @@
-# Infrastructure Layer
+# cabinet/app/backend/src/Infrastructure/README.md — Infrastructure Responsibilities & Runtime Systems
 
-The Infrastructure layer contains **all concrete implementations** used by the Cabinet backend.
+## Location
 
-This layer is responsible for interacting with the outside world: databases, queues, external services, cryptography providers, observability systems, and background execution environments.
-
-It is the **only layer** allowed to depend on external technologies.
+cabinet/app/backend/src/Infrastructure/README.md
 
 ---
 
-## Responsibilities
+## Purpose
 
-The Infrastructure layer is responsible for:
+This document defines the **Infrastructure layer** of the Cabinet backend.
 
-- Persistence and data storage
-- Queueing and background execution
-- External service integrations
-- Cryptography and key management
-- Runtime security enforcement
-- Observability (logging, metrics, tracing)
-- Background maintenance tasks
+It explains:
+- what infrastructure is responsible for
+- what *must* live here
+- what *must not* live here
+- how infrastructure supports the Application and Domain layers
 
-Infrastructure implements interfaces declared in the Application layer.
+This README is **normative** for all infrastructure code.
 
 ---
 
-## Layer Boundaries
+## Role of Infrastructure in Cabinet
 
-Infrastructure **must not**:
+Infrastructure is the **execution and side-effect layer**.
 
-- Contain business decision logic
-- Define authorization rules
-- Interpret domain data
-- Expose HTTP controllers
-- Call Application services directly without explicit orchestration
+It is responsible for:
+- persistence
+- networking
+- cryptography
+- external integrations
+- background jobs
+- observability
+- queues and workers
 
-All behavior is driven by higher layers.
-
----
-
-## Subsystems Overview
-
-### Persistence
-
-Handles all storage concerns:
-- relational databases
-- repositories
-- migrations
-- transactional boundaries
-
-Repositories are deterministic and side-effect free.
+Infrastructure exists to **execute decisions**, not to make them.
 
 ---
 
-### Queue and Background Execution
+## What Infrastructure Is NOT
 
-Provides:
-- job queues
-- dead-letter queues
-- metrics
-- workers
-- schedulers
+Infrastructure must not:
+- contain business rules
+- decide workflow logic
+- validate domain invariants
+- interpret user intent
+- bypass security rules
 
-Execution is asynchronous, observable, and idempotent.
-
----
-
-### Integrations
-
-External systems are connected here.
-
-Each integration consists of:
-- a real adapter
-- one or more fallback adapters
-- shared integration utilities
-- registry and capability descriptors
-
-Integration logic never leaks into Application or Domain layers.
-
-See:
-- `Integrations/README.md`
+If logic answers *“should this happen?”* — it does not belong here.
 
 ---
 
-### Runtime Security
+## Infrastructure Subsystems
 
-Implements all cryptographic and security mechanisms:
+Infrastructure is intentionally decomposed into subsystems.
 
-- encryption and decryption
-- signatures and verification
-- nonce storage and validation
-- key rotation and exchange
-- vault and secret injection
-- attack protection
+### BackgroundTasks
 
-Security behavior is explicit and enforced centrally.
-
-See:
-- `Security/README.md`
-
----
-
-### Observability
-
-Infrastructure provides full observability:
-
-- structured logging
-- security audits
-- metrics (business and technical)
-- distributed tracing
-- health checks
-
-Observability never alters execution flow.
-
----
-
-### Background Tasks
-
-Background tasks perform:
-- maintenance
-- cleanup
-- key rotation
-- data compaction
-- queue optimization
-
-They are isolated from pipelines and do not affect user-facing flows.
-
----
-
-## Failure Model
-
-Infrastructure is designed to fail safely:
-
-- external failures are isolated
-- retries are controlled
-- fallbacks prevent pipeline collapse
-- security failures fail closed
-
-State corruption is unacceptable.
-
----
-
-## Extension Rules
-
-When adding new infrastructure components:
-
-1. Ensure an interface exists in Application
-2. Keep implementations replaceable
-3. Make failures explicit
-4. Add observability
-5. Avoid hidden coupling
-
----
-
-## Design Guarantees
-
-- Explicit dependencies
-- Replaceable implementations
-- Deterministic behavior
-- Centralized security enforcement
-- Full observability
-
----
-
-## Status
-
-Infrastructure evolves as integrations and scale requirements grow,  
-while preserving strict separation from business logic.
+Location:
