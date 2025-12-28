@@ -25,6 +25,8 @@ use Cabinet\Backend\Tests\PipelineEndpointsTest;
 use Cabinet\Backend\Tests\Integration\SqlitePersistenceTest;
 use Cabinet\Backend\Tests\Integration\TaskOutputsRepositoryTest;
 use Cabinet\Backend\Tests\Integration\PipelineTickIntegrationTest;
+use Cabinet\Backend\Tests\Integration\JobQueueTest;
+use Cabinet\Backend\Tests\Integration\WorkerIntegrationTest;
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
@@ -52,6 +54,8 @@ $tests = [
     new SqlitePersistenceTest(),
     new TaskOutputsRepositoryTest(),
     new PipelineTickIntegrationTest(),
+    new JobQueueTest(),
+    new WorkerIntegrationTest(),
 ];
 
 $failures = 0;
