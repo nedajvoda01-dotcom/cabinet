@@ -1,149 +1,219 @@
-# Cabinet Frontend
+# cabinet/app/frontend/README.md — Frontend Architecture & Access Projection
 
-The frontend is a **single, unified interface** for all users of the Cabinet platform.
+## Location
 
-There are no separate applications for different roles.  
-The same interface is rendered for everyone, while **capabilities are progressively restricted** based on access level.
-
-The frontend does not contain business logic and does not orchestrate workflows.  
-It is a controlled, observable client of the backend.
+cabinet/app/frontend/README.md
 
 ---
 
-## Core Concept
+## Purpose
 
-- One interface
-- One codebase
-- One design system
-- Multiple access levels
+This document defines the **frontend system of Cabinet**.
 
-UI capabilities are enabled or disabled purely by permissions and scopes provided by the backend.
+It explains:
+- the role of the frontend in the overall system
+- architectural principles of the UI
+- how access control is reflected in the interface
+- how frontend security relates to backend security
 
----
-
-## Access Model
-
-Users cannot freely register and use the system.
-
-Registration results in:
-- a **request for access**
-- pending approval by a super admin
-
-Only a super admin can:
-- approve registrations
-- elevate users to super admin
-- see full system-wide visibility
-
-Admins:
-- cannot elevate roles
-- can invite users
-- operate within assigned scopes
-
-Directors and observers:
-- have read-only or analytical access
-- cannot modify system configuration
-
-All access decisions are enforced by the backend.
+This README is **normative** for frontend structure and behavior.
 
 ---
 
-## Design Principles
+## Role of the Frontend in Cabinet
 
-- **Desktop-first**
-- **No mobile layout**
-- **No adaptive UI**
-- **Single design target: super admin**
+The frontend is **not a decision-making component**.
 
-Lower roles receive the same interface with features removed or disabled.
+Its role is to:
+- present system state
+- submit user commands
+- reflect permissions and hierarchy
+- visualize pipeline execution and results
+- provide operational visibility
+
+The frontend does **not**:
+- enforce security
+- decide permissions
+- contain business logic
+- bypass backend validation
+
+The backend is always authoritative.
 
 ---
 
-## Architecture
+## Interface Philosophy
 
-The frontend follows a modular structure:
+Cabinet has **one interface**.
 
-- `app/` — application shell
-- `pages/` — routed views
-- `features/` — feature-level logic
-- `entities/` — domain-aligned UI entities
-- `shared/` — reusable infrastructure
+Principles:
+- UI is designed once, for Super Admin
+- lower roles see a **reduced projection** of the same UI
+- nothing is duplicated per role
+- no alternative role-specific layouts exist
+
+Access is reduced by:
+- permission filtering
+- capability checks
+- visibility gating
+
+Not by:
+- separate pages
+- forks of UI logic
+- conditional navigation trees
+
+---
+
+## Role & Capability Model
+
+The frontend:
+- receives role and capability data from backend
+- never infers permissions locally
+- never hardcodes role logic
+
+Capabilities determine:
+- which actions are visible
+- which controls are enabled
+- which data is shown
+
+If a capability is missing:
+- the UI hides the control
+- the backend would reject it anyway
+
+UI visibility ≠ permission.
+
+---
+
+## Architectural Style
+
+The frontend follows a **feature-oriented structure**:
+
+- `app/` — application bootstrap
+- `pages/` — routed screens
+- `features/` — user actions and workflows
+- `entities/` — domain-shaped UI state
+- `shared/` — cross-cutting utilities
+
+This structure exists to:
+- prevent coupling
+- isolate concerns
+- enable gradual extension
+
+---
+
+## Security on the Frontend
+
+The frontend participates in the **security protocol**, but does not define it.
+
+Responsibilities include:
+- request canonicalization
+- nonce generation
+- request signing
+- payload encryption
+- key exchange
+
+These mechanisms:
+- mirror backend expectations
+- are validated by parity tests
+- must not be modified casually
+
+The frontend never:
+- skips security steps
+- weakens encryption
+- assumes trusted transport
 
 ---
 
 ## API Interaction
 
-The frontend communicates exclusively through:
+All API interaction goes through:
+shared/api/
 
-- a generated API client
-- shared contract definitions
-- runtime security helpers
+yaml
+Копировать код
 
-No raw HTTP calls are allowed outside the API layer.
+Rules:
+- generated clients are the source of truth
+- manual editing of generated code is forbidden
+- API requests must comply with contracts
 
----
-
-## Security Model
-
-Frontend security responsibilities are limited to:
-
-- request canonicalization
-- signing
-- encryption
-- nonce handling
-- key exchange
-
-All security logic mirrors backend expectations.
-
-Runtime cryptography exists only to satisfy backend security requirements.
+If API schema changes:
+- regenerate clients
+- update parity tests
+- commit changes together
 
 ---
 
-## Generated API Client
+## Desktop-Only Policy
 
-API types and endpoints are generated from shared contracts.
+Cabinet frontend is **desktop-only by design**.
 
-See:
-- `src/shared/api/generated/README.md`
+Rules:
+- no mobile layouts
+- no responsive breakpoints
+- no touch-first assumptions
 
-The generated client is treated as immutable.
-
----
-
-## Observability
-
-Frontend emits:
-
-- trace identifiers
-- security-related telemetry
-- integration status signals
-
-No business metrics are calculated on the client.
+This is intentional and enforced.
 
 ---
 
-## What the Frontend Does NOT Do
+## State & Data Flow
 
-- No business decisions
-- No role interpretation
-- No workflow orchestration
-- No security policy definition
-- No integration logic
+Frontend state:
+- mirrors backend read models
+- is disposable
+- is never authoritative
 
----
-
-## Extension Rules
-
-When extending the frontend:
-
-1. Respect access scopes
-2. Use generated API types
-3. Do not infer permissions
-4. Keep UI deterministic
-5. Do not add mobile layouts
+If frontend state diverges:
+- refresh from backend
+- do not “fix” locally
 
 ---
 
-## Status
+## Testing Philosophy
 
-The frontend is a controlled execution environment.  
-It reflects system state but does not own it.
+Frontend tests focus on:
+- contract parity
+- security protocol correctness
+- permission-based visibility
+- deterministic rendering
+
+Visual polish is secondary to correctness.
+
+---
+
+## Forbidden Practices
+
+The following are forbidden:
+
+- implementing business rules in UI
+- trusting frontend validation
+- role-based branching logic in components
+- editing generated API code
+- storing secrets in frontend code
+
+---
+
+## Relationship to Other Documents
+
+This README complements:
+
+- `shared/contracts/README.md`
+- `SECURITY-IMPLEMENTATION.md`
+- `ENCRYPTION-SCHEME.md`
+
+Frontend security exists to support backend enforcement.
+
+---
+
+## Final Statement
+
+The frontend is a **secure operator console**, not an application brain.
+
+If the UI can do something the backend forbids —  
+the UI is wrong.
+
+If the UI hides something the backend allows —  
+the UI is incomplete.
+
+If behavior is unclear —  
+**ask the backend, not the UI**.
