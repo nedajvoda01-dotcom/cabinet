@@ -20,6 +20,7 @@ use Cabinet\Backend\Infrastructure\Integrations\Fallback\DemoCleanupAdapter;
 use Cabinet\Backend\Infrastructure\Integrations\Registry\IntegrationRegistry;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryTaskRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryPipelineStateRepository;
+use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAuditLogger;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\NoOpUnitOfWork;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator;
 use Cabinet\Backend\Infrastructure\Persistence\PDO\ConnectionFactory;
@@ -52,7 +53,8 @@ final class PipelineTickIntegrationTest extends TestCase
 
         // Create a task
         $idGenerator = new UuidIdGenerator();
-        $createHandler = new CreateTaskHandler($taskRepo, $pipelineRepo, $idGenerator);
+        $auditLogger = new InMemoryAuditLogger();
+        $createHandler = new CreateTaskHandler($taskRepo, $pipelineRepo, $idGenerator, $auditLogger);
         $createCommand = new CreateTaskCommand('actor-123', 'idem-key-1');
         $createResult = $createHandler->handle($createCommand);
         
@@ -62,7 +64,7 @@ final class PipelineTickIntegrationTest extends TestCase
         $jobId = JobId::fromString($taskIdString);
 
         // Create tick handler
-        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork);
+        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, $auditLogger, $idGenerator);
 
         // Tick 1: Parse stage
         $tickCommand = new TickTaskCommand($taskIdString);
@@ -143,7 +145,9 @@ final class PipelineTickIntegrationTest extends TestCase
             new DemoCleanupAdapter()
         );
 
-        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork);
+        $idGenerator = new UuidIdGenerator();
+        $auditLogger = new InMemoryAuditLogger();
+        $tickHandler = new TickTaskHandler($taskRepo, $pipelineRepo, $outputRepo, $registry, $unitOfWork, $auditLogger, $idGenerator);
         $tickCommand = new TickTaskCommand('non-existent-task');
         $result = $tickHandler->handle($tickCommand);
 

@@ -14,6 +14,8 @@ use Cabinet\Backend\Domain\Tasks\Task;
 use Cabinet\Backend\Domain\Tasks\TaskId;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryPipelineStateRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryTaskRepository;
+use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAuditLogger;
+use Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator;
 use Cabinet\Backend\Tests\TestCase;
 use Cabinet\Contracts\ErrorKind;
 use Cabinet\Contracts\PipelineStage;
@@ -87,7 +89,9 @@ final class PipelineHandlersTest extends TestCase
         $pipelineState->markFailed(ErrorKind::INTERNAL_ERROR);
         $pipelineRepo->save($pipelineState);
 
-        $handler = new RetryJobHandler($pipelineRepo);
+        $auditLogger = new InMemoryAuditLogger();
+        $idGen = new UuidIdGenerator();
+        $handler = new RetryJobHandler($pipelineRepo, $auditLogger, $idGen);
         $command = new RetryJobCommand('task-123');
         $result = $handler->handle($command);
 
@@ -133,7 +137,9 @@ final class PipelineHandlersTest extends TestCase
         $pipelineState->moveToDeadLetter();
         $pipelineRepo->save($pipelineState);
 
-        $handler = new RetryJobHandler($pipelineRepo);
+        $auditLogger = new InMemoryAuditLogger();
+        $idGen = new UuidIdGenerator();
+        $handler = new RetryJobHandler($pipelineRepo, $auditLogger, $idGen);
         
         // Try retry without override
         $command = new RetryJobCommand('task-123', false);
@@ -158,7 +164,9 @@ final class PipelineHandlersTest extends TestCase
 
         $this->assertTrue($pipelineState->isInDeadLetter(), 'Should be in DLQ initially');
 
-        $handler = new RetryJobHandler($pipelineRepo);
+        $auditLogger = new InMemoryAuditLogger();
+        $idGen = new UuidIdGenerator();
+        $handler = new RetryJobHandler($pipelineRepo, $auditLogger, $idGen);
         
         // Retry with override
         $command = new RetryJobCommand('task-123', true, 'Manual admin override');

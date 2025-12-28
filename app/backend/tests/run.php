@@ -20,6 +20,7 @@ use Cabinet\Backend\Tests\Unit\Application\ApplicationInfrastructureTest;
 use Cabinet\Backend\Tests\Unit\Application\HandlersTest;
 use Cabinet\Backend\Tests\Unit\Application\PipelineHandlersTest;
 use Cabinet\Backend\Tests\Unit\Application\IntegrationResultTest;
+use Cabinet\Backend\Tests\Unit\Application\Observability\RedactorTest;
 use Cabinet\Backend\Tests\ApplicationEndpointsTest;
 use Cabinet\Backend\Tests\PipelineEndpointsTest;
 use Cabinet\Backend\Tests\Integration\SqlitePersistenceTest;
@@ -27,6 +28,7 @@ use Cabinet\Backend\Tests\Integration\TaskOutputsRepositoryTest;
 use Cabinet\Backend\Tests\Integration\PipelineTickIntegrationTest;
 use Cabinet\Backend\Tests\Integration\JobQueueTest;
 use Cabinet\Backend\Tests\Integration\WorkerIntegrationTest;
+use Cabinet\Backend\Tests\Integration\AuditTrailIntegrationTest;
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
@@ -49,6 +51,7 @@ $tests = [
     new HandlersTest(),
     new PipelineHandlersTest(),
     new IntegrationResultTest(),
+    new RedactorTest(),
     new ApplicationEndpointsTest(),
     new PipelineEndpointsTest(),
     new SqlitePersistenceTest(),
@@ -56,6 +59,7 @@ $tests = [
     new PipelineTickIntegrationTest(),
     new JobQueueTest(),
     new WorkerIntegrationTest(),
+    new AuditTrailIntegrationTest(),
 ];
 
 $failures = 0;

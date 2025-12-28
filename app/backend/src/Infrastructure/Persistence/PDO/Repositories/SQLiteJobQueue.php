@@ -6,6 +6,8 @@ namespace Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories;
 
 use Cabinet\Backend\Application\Ports\ClaimedJob;
 use Cabinet\Backend\Application\Ports\JobQueue;
+use Cabinet\Backend\Application\Observability\AuditLogger;
+use Cabinet\Backend\Application\Observability\AuditEvent;
 use Cabinet\Backend\Domain\Tasks\TaskId;
 use Cabinet\Contracts\ErrorKind;
 use Cabinet\Contracts\JobStatus;
@@ -18,7 +20,8 @@ final class SQLiteJobQueue implements JobQueue
     private const BACKOFF_BASE_SECONDS = 10;
 
     public function __construct(
-        private readonly PDO $pdo
+        private readonly PDO $pdo,
+        private readonly ?AuditLogger $auditLogger = null
     ) {
     }
 
@@ -46,6 +49,22 @@ final class SQLiteJobQueue implements JobQueue
             'created_at' => $now,
             'updated_at' => $now,
         ]);
+
+        // Audit: job enqueued
+        if ($this->auditLogger !== null) {
+            $auditEvent = new AuditEvent(
+                id: $this->generateJobId(),
+                ts: $now,
+                action: 'job.enqueued',
+                targetType: 'job',
+                targetId: $jobId,
+                data: [
+                    'task_id' => $taskId->toString(),
+                    'kind' => self::KIND_ADVANCE_PIPELINE,
+                ]
+            );
+            $this->auditLogger->record($auditEvent);
+        }
 
         return $jobId;
     }
@@ -95,6 +114,22 @@ final class SQLiteJobQueue implements JobQueue
 
             $this->pdo->commit();
 
+            // Audit: job claimed
+            if ($this->auditLogger !== null) {
+                $auditEvent = new AuditEvent(
+                    id: $this->generateJobId(),
+                    ts: $this->now(),
+                    action: 'job.claimed',
+                    targetType: 'job',
+                    targetId: $row['job_id'],
+                    data: [
+                        'task_id' => $row['task_id'],
+                        'attempt' => $newAttempt,
+                    ]
+                );
+                $this->auditLogger->record($auditEvent);
+            }
+
             return new ClaimedJob(
                 $row['job_id'],
                 $row['task_id'],
@@ -120,6 +155,19 @@ final class SQLiteJobQueue implements JobQueue
             'updated_at' => $this->now(),
             'job_id' => $jobId,
         ]);
+
+        // Audit: job succeeded
+        if ($this->auditLogger !== null) {
+            $auditEvent = new AuditEvent(
+                id: $this->generateJobId(),
+                ts: $this->now(),
+                action: 'job.succeeded',
+                targetType: 'job',
+                targetId: $jobId,
+                data: []
+            );
+            $this->auditLogger->record($auditEvent);
+        }
     }
 
     public function markFailed(string $jobId, ErrorKind $errorKind, bool $retryable): void
@@ -160,6 +208,23 @@ final class SQLiteJobQueue implements JobQueue
             'updated_at' => $this->now(),
             'job_id' => $jobId,
         ]);
+
+        // Audit: job retry scheduled
+        if ($this->auditLogger !== null) {
+            $auditEvent = new AuditEvent(
+                id: $this->generateJobId(),
+                ts: $this->now(),
+                action: 'job.retry_scheduled',
+                targetType: 'job',
+                targetId: $jobId,
+                data: [
+                    'attempt' => $attempt,
+                    'error_kind' => $errorKind->value,
+                    'backoff_seconds' => $backoffSeconds,
+                ]
+            );
+            $this->auditLogger->record($auditEvent);
+        }
     }
 
     public function moveToDlq(string $jobId, ErrorKind $errorKind): void
@@ -176,6 +241,21 @@ final class SQLiteJobQueue implements JobQueue
             'updated_at' => $this->now(),
             'job_id' => $jobId,
         ]);
+
+        // Audit: job moved to DLQ
+        if ($this->auditLogger !== null) {
+            $auditEvent = new AuditEvent(
+                id: $this->generateJobId(),
+                ts: $this->now(),
+                action: 'job.dlq_entered',
+                targetType: 'job',
+                targetId: $jobId,
+                data: [
+                    'error_kind' => $errorKind->value,
+                ]
+            );
+            $this->auditLogger->record($auditEvent);
+        }
     }
 
     private function generateJobId(): string

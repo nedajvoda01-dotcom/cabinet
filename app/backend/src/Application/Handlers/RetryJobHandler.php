@@ -10,6 +10,9 @@ use Cabinet\Backend\Application\Commands\Admin\RetryJobCommand;
 use Cabinet\Backend\Application\Ports\PipelineStateRepository;
 use Cabinet\Backend\Application\Shared\ApplicationError;
 use Cabinet\Backend\Application\Shared\Result;
+use Cabinet\Backend\Application\Observability\AuditLogger;
+use Cabinet\Backend\Application\Observability\AuditEvent;
+use Cabinet\Backend\Application\Ports\IdGenerator;
 use Cabinet\Backend\Domain\Pipeline\JobId;
 
 /**
@@ -18,7 +21,9 @@ use Cabinet\Backend\Domain\Pipeline\JobId;
 final class RetryJobHandler implements CommandHandler
 {
     public function __construct(
-        private readonly PipelineStateRepository $pipelineStateRepository
+        private readonly PipelineStateRepository $pipelineStateRepository,
+        private readonly AuditLogger $auditLogger,
+        private readonly IdGenerator $idGenerator
     ) {
     }
 
@@ -46,9 +51,31 @@ final class RetryJobHandler implements CommandHandler
                 
                 // Rescue from DLQ back to queued (requires manual intervention)
                 $pipelineState->rescueFromDeadLetter();
+
+                // Audit: DLQ override used
+                $auditEvent = new AuditEvent(
+                    id: $this->idGenerator->generate(),
+                    ts: (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.u\Z'),
+                    action: 'admin.retry.dlq_override',
+                    targetType: 'task',
+                    targetId: $command->taskId(),
+                    data: ['from_dlq' => true]
+                );
+                $this->auditLogger->record($auditEvent);
             } else {
                 // Normal retry: must be in failed status
                 $pipelineState->scheduleRetry();
+
+                // Audit: Admin retry invoked
+                $auditEvent = new AuditEvent(
+                    id: $this->idGenerator->generate(),
+                    ts: (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.u\Z'),
+                    action: 'admin.retry.invoked',
+                    targetType: 'task',
+                    targetId: $command->taskId(),
+                    data: ['from_dlq' => false]
+                );
+                $this->auditLogger->record($auditEvent);
             }
 
             $this->pipelineStateRepository->save($pipelineState);

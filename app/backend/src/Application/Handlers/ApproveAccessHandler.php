@@ -12,6 +12,8 @@ use Cabinet\Backend\Application\Ports\IdGenerator;
 use Cabinet\Backend\Application\Ports\UserRepository;
 use Cabinet\Backend\Application\Shared\ApplicationError;
 use Cabinet\Backend\Application\Shared\Result;
+use Cabinet\Backend\Application\Observability\AuditLogger;
+use Cabinet\Backend\Application\Observability\AuditEvent;
 use Cabinet\Backend\Domain\Shared\ValueObject\HierarchyRole;
 use Cabinet\Backend\Domain\Shared\ValueObject\ScopeSet;
 use Cabinet\Backend\Domain\Users\AccessRequestId;
@@ -26,7 +28,8 @@ final class ApproveAccessHandler implements CommandHandler
     public function __construct(
         private readonly AccessRequestRepository $accessRequestRepository,
         private readonly UserRepository $userRepository,
-        private readonly IdGenerator $idGenerator
+        private readonly IdGenerator $idGenerator,
+        private readonly AuditLogger $auditLogger
     ) {
     }
 
@@ -46,6 +49,17 @@ final class ApproveAccessHandler implements CommandHandler
         try {
             $accessRequest->approve();
         } catch (\Exception $e) {
+            // Audit: ApproveAccess rejected
+            $auditEvent = new AuditEvent(
+                id: $this->idGenerator->generate(),
+                ts: (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.u\Z'),
+                action: 'access.approve.rejected',
+                targetType: 'access_request',
+                targetId: $accessRequestId->toString(),
+                data: ['error' => $e->getMessage()]
+            );
+            $this->auditLogger->record($auditEvent);
+            
             return Result::failure(ApplicationError::invalidState($e->getMessage()));
         }
 
@@ -59,6 +73,17 @@ final class ApproveAccessHandler implements CommandHandler
 
         $user = User::create($userId, $role, $scopes, $timestamp);
         $this->userRepository->save($user);
+
+        // Audit: ApproveAccess approved
+        $auditEvent = new AuditEvent(
+            id: $this->idGenerator->generate(),
+            ts: (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.u\Z'),
+            action: 'access.approve.approved',
+            targetType: 'access_request',
+            targetId: $accessRequestId->toString(),
+            data: ['user_id' => $userId->toString()]
+        );
+        $this->auditLogger->record($auditEvent);
 
         return Result::success($userId->toString());
     }

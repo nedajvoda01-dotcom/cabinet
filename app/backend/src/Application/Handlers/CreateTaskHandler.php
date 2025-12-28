@@ -11,6 +11,8 @@ use Cabinet\Backend\Application\Ports\IdGenerator;
 use Cabinet\Backend\Application\Ports\PipelineStateRepository;
 use Cabinet\Backend\Application\Ports\TaskRepository;
 use Cabinet\Backend\Application\Shared\Result;
+use Cabinet\Backend\Application\Observability\AuditLogger;
+use Cabinet\Backend\Application\Observability\AuditEvent;
 use Cabinet\Backend\Domain\Pipeline\JobId;
 use Cabinet\Backend\Domain\Pipeline\PipelineState;
 use Cabinet\Backend\Domain\Tasks\Task;
@@ -26,7 +28,8 @@ final class CreateTaskHandler implements CommandHandler
     public function __construct(
         private readonly TaskRepository $taskRepository,
         private readonly PipelineStateRepository $pipelineStateRepository,
-        private readonly IdGenerator $idGenerator
+        private readonly IdGenerator $idGenerator,
+        private readonly AuditLogger $auditLogger
     ) {
     }
 
@@ -43,6 +46,20 @@ final class CreateTaskHandler implements CommandHandler
         );
 
         if ($existingTask !== null) {
+            // Audit: idempotency hit
+            $auditEvent = new AuditEvent(
+                id: $this->idGenerator->generate(),
+                ts: (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.u\Z'),
+                action: 'task.create.idempotency_hit',
+                targetType: 'task',
+                targetId: $existingTask->id()->toString(),
+                data: [
+                    'idempotency_key' => $command->idempotencyKey(),
+                ],
+                actorId: $command->actorId()
+            );
+            $this->auditLogger->record($auditEvent);
+            
             return Result::success($existingTask->id()->toString());
         }
 
@@ -64,6 +81,20 @@ final class CreateTaskHandler implements CommandHandler
         $jobId = JobId::fromString($taskId->toString());
         $pipelineState = PipelineState::create($jobId);
         $this->pipelineStateRepository->save($pipelineState);
+
+        // Audit: task created
+        $auditEvent = new AuditEvent(
+            id: $this->idGenerator->generate(),
+            ts: (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.u\Z'),
+            action: 'task.created',
+            targetType: 'task',
+            targetId: $taskId->toString(),
+            data: [
+                'idempotency_key' => $command->idempotencyKey(),
+            ],
+            actorId: $command->actorId()
+        );
+        $this->auditLogger->record($auditEvent);
 
         return Result::success($taskId->toString());
     }
