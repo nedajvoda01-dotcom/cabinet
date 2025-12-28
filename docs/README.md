@@ -8,144 +8,150 @@ docs/README.md
 
 ## Purpose
 
-This directory contains **authoritative documentation** for understanding,
-operating, and extending the Cabinet system.
+This directory contains the **authoritative human-readable documentation**
+for the Cabinet system.
 
-Documentation here exists to:
-- explain system intent
-- describe architectural decisions
-- define invariants and constraints
-- guide correct usage and extension
+Its role is to explain:
+- system intent
+- architectural boundaries
+- operational rules
+- extension principles
 
-It does **not** duplicate code.
-It explains **why the code exists in its current form**.
+This documentation does **not** duplicate code.
+It explains **why the code exists and how it must be understood**.
 
 ---
 
 ## Documentation Philosophy
 
-Documentation in Cabinet follows strict principles:
+Documentation in Cabinet follows strict rules:
 
-- Intent over implementation  
-- Constraints over examples  
-- Invariants over tutorials  
-- Clarity over completeness  
+- describes intent, not implementation details
+- complements code, never contradicts it
+- is explicit about security and invariants
+- avoids speculation or informal language
 
-If behavior is enforced by code or tests, documentation explains **why**,
-not **how**.
+If documentation becomes outdated, it must be:
+- updated
+- or removed
 
----
-
-## Reading Order
-
-For new contributors, the recommended order is:
-
-1. **System Overview**  
-   `cabinet/README.md`  
-   High-level purpose, philosophy, and boundaries.
-
-2. **Backend Architecture**  
-   `app/backend/README.md`  
-   How the backend is structured and executed.
-
-3. **Application & Pipeline**  
-   `app/backend/src/Application/README.md`  
-   `app/backend/src/Application/Pipeline/README.md`  
-   Orchestration, execution model, and command handling.
-
-4. **Infrastructure & Integrations**  
-   `app/backend/src/Infrastructure/README.md`  
-   `app/backend/src/Infrastructure/Integrations/README.md`  
-
-5. **Frontend**  
-   `app/frontend/README.md`  
-   UI architecture and permission model.
-
-6. **Shared Contracts**  
-   `shared/contracts/README.md`  
-   Cross-language source of truth.
-
-7. **Security & Governance**  
-   `security/README.md`  
-   `SECURITY-IMPLEMENTATION.md`  
-   `ENCRYPTION-SCHEME.md`  
-   `HIERARCHY-GUIDE.md`
+Ambiguity is forbidden.
 
 ---
 
-## Scope of This Directory
+## Recommended Reading Order
 
-This directory contains:
-- architectural explanations
-- system boundaries
-- extension guidelines
-- operational understanding
+### 1. System Overview
 
-It does not contain:
-- API references
-- SDK documentation
-- code-level comments
-- tutorials for end users
+- `cabinet/README.md`  
+  High-level explanation of what Cabinet is and what it is not.
 
 ---
 
-## Adding New Documents
+### 2. Backend Architecture
 
-A new document should be added **only if**:
+- `app/backend/README.md`  
+  Backend role, runtime responsibilities, and structure.
+
+- `app/backend/src/Application/README.md`  
+  Application layer orchestration and use cases.
+
+- `app/backend/src/Application/Pipeline/README.md`  
+  Asynchronous pipeline execution model.
+
+---
+
+### 3. Infrastructure & Integrations
+
+- `app/backend/src/Infrastructure/README.md`  
+  Runtime infrastructure responsibilities.
+
+- `app/backend/src/Infrastructure/Integrations/README.md`  
+  External system adapters and fallback model.
+
+- `app/backend/src/Infrastructure/Security/README.md`  
+  Runtime cryptography and enforcement.
+
+---
+
+### 4. Frontend
+
+- `app/frontend/README.md`  
+  UI philosophy and runtime security participation.
+
+- `app/frontend/src/shared/api/generated/README.md`  
+  Generated API client rules and parity guarantees.
+
+---
+
+### 5. Cross-Language Contracts
+
+- `shared/contracts/README.md`  
+  Shared primitives, generated implementations, and vectors.
+
+---
+
+### 6. Security & Governance
+
+- `security/README.md`  
+  Security governance and non-runtime rules.
+
+- `SECURITY-IMPLEMENTATION.md`  
+  Runtime security execution model.
+
+- `ENCRYPTION-SCHEME.md`  
+  Cryptographic design and threat model.
+
+- `HIERARCHY-GUIDE.md`  
+  Role hierarchy and access rules.
+
+---
+
+## When to Add Documentation
+
+Add a new document **only if** at least one condition is met:
 
 - the subsystem has non-obvious invariants
-- incorrect usage may compromise security or integrity
+- incorrect usage could compromise security or data integrity
+- the subsystem is intended to be extended
 - the subsystem coordinates multiple layers
-- the subsystem is intended for extension
 
-If none apply — prefer code-level documentation.
-
----
-
-## Source of Truth Rules
-
-There is **no duplicated authority**:
-
-- Contracts → `shared/contracts`
-- Runtime security → backend infrastructure
-- Governance → `security/`
-- Execution model → Application & Pipeline
-
-Documentation must reference the authoritative source,
-never redefine it.
+If none apply, prefer code-level documentation.
 
 ---
 
-## Maintenance Rules
+## Single Source of Truth
 
-Documentation must be:
-- versioned
-- kept in sync with code
-- updated or removed when obsolete
+There is no duplicated authority:
 
-Outdated documentation is considered **technical debt**.
+| Topic | Source |
+|----|------|
+| Contracts | `shared/contracts` |
+| Runtime Security | `Infrastructure/Security` |
+| Governance | `security/` |
+| Architecture | this directory |
+
+If two documents disagree — the system is inconsistent.
 
 ---
 
 ## Audience
 
-This directory is written for:
-- internal developers
-- system operators
+This documentation is written for:
+- engineers
 - security reviewers
-- architects
+- auditors
+- technical leadership
 - AI agents
-
-It is not intended for public users.
 
 ---
 
 ## Summary
 
-The `docs/` directory explains **how Cabinet should be understood**.
+This directory is the **map of the system**.
 
-If documentation and code disagree:
-- code defines behavior
-- documentation must be updated
+If you are lost — start here.
+If something is unclear — documentation must be improved.
+If documentation and code disagree — fix the documentation or the code.
 
-Ambiguity is not acceptable.
+Never ignore the mismatch.
