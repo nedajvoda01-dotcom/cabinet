@@ -1,133 +1,154 @@
 # Shared Contracts
 
-This directory defines the **canonical contracts** used across the entire Cabinet platform.
+This directory defines the **canonical language-agnostic contracts**
+used across the entire system.
 
-Contracts are the foundational agreement between all participating systems:
-- backend
-- frontend
-- integrations
-- external services
-- tooling
-
-They describe **what is exchanged**, not **how it is processed**.
+Contracts describe **meaning**, not behavior.
 
 ---
 
 ## Role in the System
 
-Shared contracts act as the **single source of truth** for:
+Contracts form the **semantic backbone** of the platform.
 
-- request and response shapes
-- domain primitives
-- protocol rules
-- cryptographic expectations
-- integration boundaries
+They ensure that:
+- backend services
+- frontend clients
+- background workers
+- external integrations
 
-No component is allowed to diverge from these definitions.
+all interpret data **identically**.
 
----
-
-## Contract-First Architecture
-
-Cabinet follows a **contract-first** approach.
-
-This means:
-1. Contracts are defined first
-2. Implementations are generated or written against them
-3. Validation and parity are enforced automatically
-
-If a contract changes, all consumers must adapt.
+If two components disagree on a contract, the system is broken.
 
 ---
 
 ## Structure Overview
 
-This directory is structured into four logical parts:
+contracts/
+├─ primitives/
+├─ implementations/
+├─ vectors/
+└─ README.md
 
-- `primitives/` — human-readable definitions
-- `implementations/` — language-specific realizations
-- `vectors/` — cryptographic and protocol test vectors
-- root-level metadata and documentation
 
-Each layer has a strict responsibility.
+Each subdirectory has a strict responsibility.
 
 ---
 
 ## Primitives
 
-Primitives describe domain concepts in an **implementation-agnostic** way.
+`primitives/` contains the **authoritative definitions**.
 
-They are:
-- written for humans
-- reviewed for correctness
-- versioned intentionally
+They describe:
+- fields
+- constraints
+- invariants
+- semantic meaning
 
-They define meaning, not code.
+Primitives are:
+- language-agnostic
+- stable
+- reviewed with extreme care
+
+They define **what a thing is**.
 
 ---
 
 ## Implementations
 
-Implementations are generated or derived from primitives.
+`implementations/` contains **language-specific realizations**
+of primitives.
 
-They provide:
-- exact type mappings
-- serialization rules
-- language-specific constraints
+They must:
+- follow primitives exactly
+- never extend meaning
+- never reinterpret constraints
 
-Implementations must never introduce semantics not present in primitives.
+Implementations define **how a thing is represented** in code.
 
 ---
 
 ## Vectors
 
-Vectors are used to validate correctness across implementations.
+`vectors/` contains **test vectors** used to verify parity.
 
-They ensure:
-- cryptographic consistency
-- signature parity
-- encryption compatibility
-- nonce behavior alignment
+They provide:
+- valid examples
+- invalid examples
+- edge cases
+- cryptographic fixtures
 
-Vectors are authoritative and immutable once published.
+Vectors are used in:
+- backend tests
+- frontend tests
+- integration tests
 
----
-
-## Governance Rules
-
-- Contracts are immutable once released
-- Breaking changes require explicit versioning
-- Silent changes are forbidden
-- Consumers must fail fast on mismatch
+If a vector fails, parity is broken.
 
 ---
 
-## What This Directory Is NOT
+## Design Philosophy
 
-- Not application logic
-- Not orchestration logic
-- Not UI concerns
-- Not infrastructure configuration
+Contracts are designed to be:
 
-It defines **agreements**, nothing else.
+- explicit
+- boring
+- strict
+- predictable
+
+Ambiguity is treated as a bug.
+
+Convenience is rejected in favor of correctness.
 
 ---
 
-## Design Principles
+## Change Policy
 
-- Explicit over implicit
-- Deterministic over flexible
-- Shared truth over local convenience
-- Validation over assumptions
+Changes to contracts must be:
+
+1. intentional
+2. reviewed
+3. backward-aware
+4. immediately reflected in implementations
+
+Breaking changes are extremely expensive and avoided.
+
+---
+
+## What Contracts Are NOT
+
+Contracts are not:
+- API schemas
+- database models
+- UI models
+- transport formats
+
+They sit **below APIs and above storage**.
+
+---
+
+## Security Implications
+
+Contracts are security-sensitive.
+
+They define:
+- trust boundaries
+- cryptographic inputs
+- identity representations
+- authorization contexts
+
+Any drift here creates systemic risk.
 
 ---
 
 ## Outcome
 
-If every system follows these contracts:
-- integrations remain stable
-- refactors are safe
-- failures are predictable
-- scaling remains controlled
+When contracts are correct:
 
-This directory is the backbone of the platform.
+- integrations are safe
+- analytics are reliable
+- security assumptions hold
+- systems evolve without chaos
+
+Contracts are the quiet foundation everything stands on.
