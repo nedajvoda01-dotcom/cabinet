@@ -42,6 +42,9 @@ final class StructuredLogger
             'event' => $event,
         ], $context);
 
-        fwrite(STDOUT, (string) json_encode($payload, JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        $stream = defined('STDOUT') ? STDOUT : fopen('php://stdout', 'w');
+        if ($stream) {
+            fwrite($stream, (string) json_encode($payload, JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        }
     }
 }
