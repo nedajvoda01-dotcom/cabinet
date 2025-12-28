@@ -3,6 +3,10 @@
 
 namespace Backend\Middlewares;
 
+use Backend\Application\Contracts\Error;
+use Backend\Application\Contracts\ErrorKind;
+use Backend\Application\Contracts\TraceContext;
+
 /**
  * Используется как:
  *  new RoleMiddleware(['admin'])
@@ -46,7 +50,9 @@ final class RoleMiddleware
 
     private function forbidden(string $message)
     {
+        TraceContext::ensure();
+        $error = Error::fromMessage('forbidden', ErrorKind::AUTH, $message);
         http_response_code(403);
-        return ['error' => 'forbidden', 'message' => $message];
+        return ['error' => $error->toArray()];
     }
 }

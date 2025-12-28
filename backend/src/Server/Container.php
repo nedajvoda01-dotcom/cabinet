@@ -149,7 +149,6 @@ final class Container
             $p = $c->config()['integrations']['parser'];
             return new \App\Adapters\ParserAdapter(
                 $c->get(\App\Adapters\HttpClient::class),
-                $c->get(\App\Adapters\S3Adapter::class),
                 $c->get(\App\Utils\ContractValidator::class),
                 $p['base_url'],
                 $p['api_key']
@@ -162,6 +161,23 @@ final class Container
             $useFakeIntegrations
                 ? $c->get(FakeParserAdapter::class)
                 : $c->get(\App\Adapters\ParserAdapter::class)
+        );
+
+        $this->set(\App\Adapters\PhotosIngestAdapter::class, fn(Container $c) =>
+            new \App\Adapters\PhotosIngestAdapter(
+                $c->get(\App\Adapters\HttpClient::class),
+                $c->get(\App\Adapters\S3Adapter::class)
+            )
+        );
+
+        $this->set(\App\Application\Ports\PhotosIngestPort::class, fn(Container $c) =>
+            $c->get(\App\Adapters\PhotosIngestAdapter::class)
+        );
+
+        $this->set(\App\Application\Services\RawPhotosIngestService::class, fn(Container $c) =>
+            new \App\Application\Services\RawPhotosIngestService(
+                $c->get(\App\Application\Ports\PhotosIngestPort::class)
+            )
         );
 
         // ----------------------------------------------------

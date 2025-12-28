@@ -6,6 +6,7 @@ namespace App\Workers;
 use App\Queues\QueueJob;
 use App\Queues\QueueService;
 use App\Adapters\AdapterException;
+use Backend\Application\Pipeline\Reliability\ReliabilityHandler;
 
 abstract class BaseWorker
 {
@@ -17,6 +18,11 @@ abstract class BaseWorker
     abstract protected function queueType(): string;
 
     abstract protected function handle(QueueJob $job): void;
+
+    protected function reliability(): ?ReliabilityHandler
+    {
+        return null;
+    }
 
     /** Hook for subclasses to react on successful processing (WS/status). */
     protected function afterSuccess(QueueJob $job): void {}
@@ -42,6 +48,18 @@ abstract class BaseWorker
     {
         $job = $this->queues->fetchNext($this->queueType(), $this->workerId);
         if (!$job) {
+            return;
+        }
+
+        $reliability = $this->reliability();
+        if ($reliability) {
+            $reliability->process(
+                $job,
+                fn (QueueJob $queueJob) => $this->handle($queueJob),
+                fn () => $this->afterSuccess($job),
+                fn (array $error, string $outcome) => $this->afterFailure($job, $error, $outcome),
+            );
+
             return;
         }
 

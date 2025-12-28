@@ -5,7 +5,10 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use App\Queues\QueueJob;
-use App\Queues\QueueService;
+use Backend\Application\Contracts\TraceContext;
+use Backend\Application\Pipeline\JobDispatcher;
+use Backend\Application\Pipeline\Jobs\Job;
+use Backend\Application\Pipeline\Jobs\JobType;
 use Backend\Modules\Parser\ParserJobs;
 use Backend\Modules\Photos\PhotosJobs;
 use Backend\Modules\Export\ExportJobs;
@@ -15,13 +18,21 @@ final class JobsDispatchTest extends TestCase
 {
     public function testParserDispatchesWithCorrelation(): void
     {
-        $queue = $this->createMock(QueueService::class);
-        $queue->expects($this->once())
-            ->method('enqueueParser')
-            ->with(5, $this->callback(fn(array $payload) => ($payload['task_id'] ?? null) === 5 && ($payload['correlation_id'] ?? null) === 'cid-parser'))
+        TraceContext::setCurrent(TraceContext::fromString('trace-parser'));
+
+        $dispatcher = $this->createMock(JobDispatcher::class);
+        $dispatcher->expects($this->once())
+            ->method('enqueue')
+            ->with($this->callback(function (Job $job) {
+                $payload = $job->payload()->toArray();
+                return $job->type() === JobType::PARSER
+                    && $payload['task_id'] === 5
+                    && $payload['correlation_id'] === 'cid-parser'
+                    && $payload['trace_id'] === 'trace-parser';
+            }))
             ->willReturn($this->job('parser'));
 
-        $jobs = new ParserJobs($queue);
+        $jobs = new ParserJobs($dispatcher);
         $job = $jobs->dispatchParseRun(5, 'cid-parser');
 
         $this->assertSame('parser', $job->type);
@@ -29,18 +40,23 @@ final class JobsDispatchTest extends TestCase
 
     public function testPhotosRetryDispatchesWithReasonForce(): void
     {
-        $queue = $this->createMock(QueueService::class);
-        $queue->expects($this->once())
-            ->method('enqueuePhotos')
-            ->with(10, $this->callback(function (array $payload) {
-                return ($payload['task_id'] ?? null) === 20
-                    && ($payload['reason'] ?? null) === 'oops'
-                    && ($payload['force'] ?? null) === true
-                    && ($payload['correlation_id'] ?? null) === 'cid-photos';
+        TraceContext::setCurrent(TraceContext::fromString('trace-photos'));
+
+        $dispatcher = $this->createMock(JobDispatcher::class);
+        $dispatcher->expects($this->once())
+            ->method('enqueue')
+            ->with($this->callback(function (Job $job) {
+                $payload = $job->payload()->toArray();
+                return $job->type() === JobType::PHOTOS
+                    && $job->subjectId() === 10
+                    && $payload['task_id'] === 20
+                    && $payload['reason'] === 'oops'
+                    && $payload['force'] === true
+                    && $payload['trace_id'] === 'trace-photos';
             }))
             ->willReturn($this->job('photos'));
 
-        $jobs = new PhotosJobs($queue);
+        $jobs = new PhotosJobs($dispatcher);
         $job = $jobs->dispatchPhotosRetry(10, 20, 'oops', true, 'cid-photos');
 
         $this->assertSame('photos', $job->type);
@@ -48,13 +64,15 @@ final class JobsDispatchTest extends TestCase
 
     public function testExportDispatchRun(): void
     {
-        $queue = $this->createMock(QueueService::class);
-        $queue->expects($this->once())
-            ->method('enqueueExport')
-            ->with(7, $this->callback(fn(array $payload) => ($payload['export_id'] ?? null) === 7 && isset($payload['correlation_id'])))
+        TraceContext::setCurrent(TraceContext::fromString('trace-export'));
+
+        $dispatcher = $this->createMock(JobDispatcher::class);
+        $dispatcher->expects($this->once())
+            ->method('enqueue')
+            ->with($this->callback(fn(Job $job) => $job->type() === JobType::EXPORT && $job->payload()->toArray()['export_id'] === 7))
             ->willReturn($this->job('export'));
 
-        $jobs = new ExportJobs($queue);
+        $jobs = new ExportJobs($dispatcher);
         $job = $jobs->dispatchExportRun(7, 'cid-export');
 
         $this->assertSame('export', $job->type);
@@ -62,17 +80,21 @@ final class JobsDispatchTest extends TestCase
 
     public function testPublishCancelDispatches(): void
     {
-        $queue = $this->createMock(QueueService::class);
-        $queue->expects($this->once())
-            ->method('enqueuePublish')
-            ->with(15, $this->callback(function (array $payload) {
-                return ($payload['task_id'] ?? null) === 25
-                    && ($payload['reason'] ?? null) === 'user_cancel'
-                    && ($payload['correlation_id'] ?? null) === 'cid-publish';
+        TraceContext::setCurrent(TraceContext::fromString('trace-publish'));
+
+        $dispatcher = $this->createMock(JobDispatcher::class);
+        $dispatcher->expects($this->once())
+            ->method('enqueue')
+            ->with($this->callback(function (Job $job) {
+                $payload = $job->payload()->toArray();
+                return $job->type() === JobType::PUBLISH
+                    && $payload['task_id'] === 25
+                    && $payload['reason'] === 'user_cancel'
+                    && $payload['trace_id'] === 'trace-publish';
             }))
             ->willReturn($this->job('publish'));
 
-        $jobs = new PublishJobs($queue);
+        $jobs = new PublishJobs($dispatcher);
         $job = $jobs->dispatchPublishCancel(15, 25, 'user_cancel', 'cid-publish');
 
         $this->assertSame('publish', $job->type);

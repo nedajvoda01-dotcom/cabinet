@@ -32,6 +32,7 @@ final class WorkerDaemon
                 $this->c->get(\App\Queues\QueueService::class),
                 $wid,
                 $this->c->get(\App\Adapters\Ports\ParserPort::class),
+                $this->c->get(\App\Application\Services\RawPhotosIngestService::class),
                 $this->c->get(\Backend\Modules\Parser\ParserService::class),
                 $this->c->get(\Backend\Modules\Cards\CardsService::class),
                 $this->c->get(\App\WS\WsEmitter::class),

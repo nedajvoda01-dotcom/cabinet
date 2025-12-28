@@ -6,6 +6,7 @@ namespace Backend\Server;
 use Backend\Middlewares\CorsMiddleware;
 use Backend\Middlewares\AuthMiddleware;
 use Backend\Middlewares\AdminMiddleware;
+use Backend\Middlewares\TraceIdMiddleware;
 
 final class App
 {
@@ -19,6 +20,7 @@ final class App
         // global middlewares (если роутер поддерживает)
         if (method_exists($this->router, 'middleware')) {
             $this->router->middleware([
+                TraceIdMiddleware::class,
                 CorsMiddleware::class,
             ]);
         }

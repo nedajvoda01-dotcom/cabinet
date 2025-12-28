@@ -5,6 +5,9 @@ namespace Backend\Middlewares;
 
 use Backend\Modules\Auth\AuthService;
 use Backend\Modules\Users\UsersService;
+use Backend\Application\Contracts\Error;
+use Backend\Application\Contracts\ErrorKind;
+use Backend\Application\Contracts\TraceContext;
 
 /**
  * Проверяет access token.
@@ -106,14 +109,19 @@ final class AuthMiddleware
 
     private function unauthorized(string $message)
     {
-        // adapt if your framework uses Response objects
+        TraceContext::ensure();
+        $error = Error::fromMessage('unauthorized', ErrorKind::AUTH, $message);
+
         http_response_code(401);
-        return ['error' => 'unauthorized', 'message' => $message];
+        return ['error' => $error->toArray()];
     }
 
     private function forbidden(string $message)
     {
+        TraceContext::ensure();
+        $error = Error::fromMessage('forbidden', ErrorKind::AUTH, $message);
+
         http_response_code(403);
-        return ['error' => 'forbidden', 'message' => $message];
+        return ['error' => $error->toArray()];
     }
 }

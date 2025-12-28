@@ -5,7 +5,12 @@ namespace App\Workers;
 
 use App\Queues\QueueJob;
 use App\Queues\QueueTypes;
-use App\Adapters\ParserAdapter;
+use Backend\Application\Contracts\TraceContext;
+use Backend\Application\Pipeline\JobDispatcher;
+use Backend\Application\Pipeline\Jobs\Job;
+use Backend\Application\Pipeline\Jobs\JobType;
+use App\Adapters\Ports\ParserPort;
+use App\Application\Services\RawPhotosIngestService;
 use App\Modules\Parser\ParserService;
 use App\Modules\Cards\CardsService;
 use App\WS\WsEmitter;
@@ -17,12 +22,15 @@ final class ParserWorker extends BaseWorker
     public function __construct(
         \App\Queues\QueueService $queues,
         string $workerId,
-        private ParserAdapter $parserAdapter,
+        private ParserPort $parserAdapter,
+        private RawPhotosIngestService $photosIngestService,
         private ParserService $parserService,
         private CardsService $cardsService,
-        private WsEmitter $ws
+        private WsEmitter $ws,
+        private ?JobDispatcher $pipeline = null
     ) {
         parent::__construct($queues, $workerId);
+        $this->pipeline = $this->pipeline ?? new JobDispatcher($queues);
     }
 
     protected function queueType(): string
@@ -32,6 +40,10 @@ final class ParserWorker extends BaseWorker
 
     protected function handle(QueueJob $job): void
     {
+        if (isset($job->payload['trace_id'])) {
+            TraceContext::setCurrent(TraceContext::fromString((string)$job->payload['trace_id']));
+        }
+
         $push = $job->payload['push'] ?? null;
         if (!$push || !is_array($push)) {
             throw new \RuntimeException("Parser job payload missing push");
@@ -57,16 +69,21 @@ final class ParserWorker extends BaseWorker
         $draftCardId = $this->cardsService->createDraftFromAd($norm['ad']);
         $this->lastJobMeta['card_id'] = $draftCardId;
 
-        // бизнес-оркестрация инжеста в воркере (адаптер — тонкий IO)
-        $rawPhotos = $this->ingestRawPhotos($norm['photos'], $draftCardId);
+        $rawPhotos = $this->photosIngestService->ingest($norm['photos'], $draftCardId);
 
         $this->parserService->attachRawPhotos($draftCardId, $rawPhotos);
 
-        $this->queues->enqueuePhotos($draftCardId, [
-            'source' => 'parser',
-            'correlation_id' => $this->lastJobMeta['correlation_id'],
-            'idempotency_key' => $this->idempotencyKey($job, 'photos'),
-        ]);
+        $this->pipeline->enqueue(Job::create(
+            JobType::PHOTOS,
+            'card',
+            $draftCardId,
+            [
+                'source' => 'parser',
+                'correlation_id' => $this->lastJobMeta['correlation_id'],
+            ],
+            $this->idempotencyKey($job, 'photos'),
+            TraceContext::ensure()->traceId()
+        ));
     }
 
     protected function afterSuccess(QueueJob $job): void
@@ -92,36 +109,5 @@ final class ParserWorker extends BaseWorker
         ], $extra);
 
         $this->ws->emit('pipeline.stage', $payload);
-    }
-
-    /**
-     * Оркестрация инжеста raw фоток.
-     * Внешний idempotency не нужен: это внутренняя последовательная операция.
-     */
-    private function ingestRawPhotos(array $photoUrls, int $cardDraftId): array
-    {
-        $out = [];
-        $order = 0;
-
-        foreach ($photoUrls as $url) {
-            $order++;
-            if (!is_string($url) || $url === '') {
-                continue;
-            }
-
-            $binary = $this->parserAdapter->downloadBinary($url);
-            $ext = $this->parserAdapter->guessExt($url) ?? 'jpg';
-
-            $key = "raw/{$cardDraftId}/{$order}.{$ext}";
-            $publicUrl = $this->parserAdapter->uploadRaw($key, $binary, $ext);
-
-            $out[] = [
-                'order' => $order,
-                'raw_key' => $key,
-                'raw_url' => $publicUrl,
-            ];
-        }
-
-        return $out;
     }
 }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Backend\Modules\Auth;
 
+use Backend\Application\Contracts\TraceContext;
 use InvalidArgumentException;
 
 /**
@@ -141,6 +142,6 @@ final class AuthSchemas
     {
         $err = ['message' => $message];
         if ($code) $err['code'] = $code;
-        return ['ok' => false, 'error' => $err];
+        return ['ok' => false, 'error' => $err, 'traceId' => TraceContext::ensure()->traceId()];
     }
 }

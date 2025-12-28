@@ -22,28 +22,6 @@ final class FakeParserAdapter implements ParserPort
         ];
     }
 
-    public function ingestRawPhotos(array $photoUrls, int $cardDraftId): array
-    {
-        $out = [];
-        $order = 0;
-
-        foreach ($photoUrls as $url) {
-            if (!is_string($url) || $url === '') {
-                continue;
-            }
-
-            $order++;
-
-            $out[] = [
-                'order' => $order,
-                'raw_key' => "raw/{$cardDraftId}/{$order}.jpg",
-                'raw_url' => (string)$url,
-            ];
-        }
-
-        return $out;
-    }
-
     public function poll(int $limit = 20): array
     {
         $fixture = $this->fixture('parse_response.example.json');
