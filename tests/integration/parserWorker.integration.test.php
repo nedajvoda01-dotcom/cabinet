@@ -9,7 +9,8 @@ use App\Queues\QueueJob;
 use App\Queues\QueueTypes;
 use App\Queues\QueueService;
 use App\Adapters\AdapterException;
-use App\Adapters\ParserAdapter;
+use App\Adapters\Ports\ParserPort;
+use App\Application\Services\RawPhotosIngestService;
 use App\Modules\Parser\ParserService;
 use App\Modules\Cards\CardsService;
 use App\WS\WsEmitter;
@@ -25,10 +26,11 @@ final class ParserWorkerIntegrationTest extends TestCase
         $job->entityId = 1;
         $job->id = 42;
 
-        $adapter = $this->createMock(ParserAdapter::class);
+        $adapter = $this->createMock(ParserPort::class);
         $adapter->method('normalizePush')->willReturn($job->payload['push']);
-        $adapter->method('downloadBinary')->willThrowException(new AdapterException('boom', 'parser_photo_download', true));
-        $adapter->method('guessExt')->willReturn(null);
+
+        $ingest = $this->createMock(RawPhotosIngestService::class);
+        $ingest->method('ingest')->willThrowException(new AdapterException('boom', 'parser_photo_download', true));
 
         $queues = $this->createMock(QueueService::class);
         $queues->expects($this->exactly(2))
@@ -44,7 +46,7 @@ final class ParserWorkerIntegrationTest extends TestCase
         $cards = $this->createMock(CardsService::class);
         $ws = $this->createMock(WsEmitter::class);
 
-        $worker = new class($queues, 'worker-1', $adapter, $parserService, $cards, $ws) extends ParserWorker {};
+        $worker = new class($queues, 'worker-1', $adapter, $ingest, $parserService, $cards, $ws) extends ParserWorker {};
 
         $worker->tick();
     }

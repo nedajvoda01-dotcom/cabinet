@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace Backend\Modules\Photos;
 
 use App\Queues\QueueJob;
-use App\Queues\QueueService;
+use Backend\Application\Pipeline\JobDispatcher;
+use Backend\Application\Pipeline\Jobs\Job;
+use Backend\Application\Pipeline\Jobs\JobType;
 
 /**
  * PhotosJobs
@@ -14,26 +16,34 @@ use App\Queues\QueueService;
  */
 final class PhotosJobs
 {
-    public function __construct(private QueueService $queues) {}
+    public function __construct(private JobDispatcher $pipeline) {}
 
     public function dispatchPhotosRun(int $cardId, int $taskId, ?string $correlationId = null): QueueJob
     {
-        return $this->queues->enqueuePhotos($cardId, [
+        return $this->pipeline->enqueue($this->createJob($cardId, [
             'task_id' => $taskId,
             'correlation_id' => $this->correlationId($correlationId),
             'action' => 'photos.run',
-        ]);
+        ]));
     }
 
     public function dispatchPhotosRetry(int $cardId, int $taskId, string $reason, bool $force, ?string $correlationId = null): QueueJob
     {
-        return $this->queues->enqueuePhotos($cardId, [
+        return $this->pipeline->enqueue($this->createJob($cardId, [
             'task_id' => $taskId,
             'reason' => $reason,
             'force' => $force,
             'correlation_id' => $this->correlationId($correlationId),
             'action' => 'photos.retry',
-        ]);
+        ]));
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function createJob(int $cardId, array $payload): Job
+    {
+        return Job::create(JobType::PHOTOS, 'card', $cardId, $payload);
     }
 
     private function correlationId(?string $corr): string

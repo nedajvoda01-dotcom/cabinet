@@ -4,6 +4,7 @@
 namespace App\Queues;
 
 use Backend\Logger\LoggerInterface;
+use Backend\Application\Contracts\TraceContext;
 
 final class QueueService
 {
@@ -19,6 +20,7 @@ final class QueueService
     public function enqueuePhotos(int $cardId, array $payload = []): QueueJob
     {
         $payload = $this->withIdempotency($payload, QueueTypes::PHOTOS, 'card', $cardId);
+        $payload = $this->withTraceId($payload);
         $job = $this->repo->enqueue(QueueTypes::PHOTOS, 'card', $cardId, $payload);
 
         $this->log->info("job enqueued", [
@@ -38,6 +40,7 @@ final class QueueService
     public function enqueueExport(int $exportId, array $payload = []): QueueJob
     {
         $payload = $this->withIdempotency($payload, QueueTypes::EXPORT, 'export', $exportId);
+        $payload = $this->withTraceId($payload);
         $job = $this->repo->enqueue(QueueTypes::EXPORT, 'export', $exportId, $payload);
 
         $this->log->info("job enqueued", [
@@ -57,6 +60,7 @@ final class QueueService
     public function enqueuePublish(int $cardId, array $payload = []): QueueJob
     {
         $payload = $this->withIdempotency($payload, QueueTypes::PUBLISH, 'card', $cardId);
+        $payload = $this->withTraceId($payload);
         $job = $this->repo->enqueue(QueueTypes::PUBLISH, 'card', $cardId, $payload);
 
         $this->log->info("job enqueued", [
@@ -76,6 +80,7 @@ final class QueueService
     public function enqueueParser(int $payloadId, array $payload = []): QueueJob
     {
         $payload = $this->withIdempotency($payload, QueueTypes::PARSER, 'parser_payload', $payloadId);
+        $payload = $this->withTraceId($payload);
         $job = $this->repo->enqueue(QueueTypes::PARSER, 'parser_payload', $payloadId, $payload);
 
         $this->log->info("job enqueued", [
@@ -95,6 +100,7 @@ final class QueueService
     public function enqueueRobotStatus(int $publishJobId, array $payload = []): QueueJob
     {
         $payload = $this->withIdempotency($payload, QueueTypes::ROBOT_STATUS, 'publish_job', $publishJobId);
+        $payload = $this->withTraceId($payload);
         $job = $this->repo->enqueue(QueueTypes::ROBOT_STATUS, 'publish_job', $publishJobId, $payload);
 
         $this->log->info("job enqueued", [
@@ -222,12 +228,78 @@ final class QueueService
         return 'dlq';
     }
 
+    /**
+     * @param array{code?:string,message?:string,meta?:array,fatal?:bool,kind?:string,traceId?:string} $error
+     */
+    public function handleFailureWithDecision(QueueJob $job, array $error, bool $shouldRetry, ?string $nextRetryAt = null): string
+    {
+        $attempts = $job->attempts + 1;
+
+        $this->log->error("job failed", [
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'idempotency_key' => $job->payload['idempotency_key'] ?? null,
+            'job_id' => $job->id,
+            'type' => $job->type,
+            'attempts' => $attempts,
+            'entity' => $job->entity,
+            'entity_id' => $job->entityId,
+            'card_id' => $job->entity === 'card' ? $job->entityId : null,
+            'last_error' => $error,
+        ]);
+
+        if ($shouldRetry) {
+            $retryAt = $nextRetryAt ?? date('Y-m-d H:i:s');
+            $this->repo->markRetrying($job->id, $attempts, $retryAt, $error);
+
+            $this->log->warn("job scheduled for retry", [
+                'correlation_id' => $job->payload['correlation_id'] ?? null,
+                'idempotency_key' => $job->payload['idempotency_key'] ?? null,
+                'job_id' => $job->id,
+                'type' => $job->type,
+                'attempts' => $attempts,
+                'next_retry_at' => $retryAt,
+                'card_id' => $job->entity === 'card' ? $job->entityId : null,
+            ]);
+
+            return 'retrying';
+        }
+
+        $job->attempts = $attempts;
+        $job->lastError = $error;
+
+        $this->repo->markDead($job->id, $attempts, $error);
+        $this->dlq->put($job);
+
+        $this->log->error("job moved to dlq", [
+            'correlation_id' => $job->payload['correlation_id'] ?? null,
+            'idempotency_key' => $job->payload['idempotency_key'] ?? null,
+            'job_id' => $job->id,
+            'type' => $job->type,
+            'attempts' => $attempts,
+            'entity' => $job->entity,
+            'entity_id' => $job->entityId,
+            'card_id' => $job->entity === 'card' ? $job->entityId : null,
+            'last_error' => $error,
+            'reason' => 'attempts_exhausted',
+        ]);
+
+        return 'dlq';
+    }
+
     private function withIdempotency(array $payload, string $type, string $entity, int $entityId): array
     {
         if (!isset($payload['idempotency_key'])) {
             $correlation = $payload['correlation_id'] ?? 'nocorrelation';
             $payload['idempotency_key'] = "{$type}:{$entity}:{$entityId}:{$correlation}";
         }
+
+        return $payload;
+    }
+
+    private function withTraceId(array $payload): array
+    {
+        $trace = TraceContext::ensure();
+        $payload['trace_id'] = $payload['trace_id'] ?? $trace->traceId();
 
         return $payload;
     }

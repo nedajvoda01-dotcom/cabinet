@@ -11,10 +11,20 @@ use App\Modules\Publish\PublishService;
 use App\Queues\QueueJob;
 use App\Queues\QueueTypes;
 use App\WS\WsEmitter;
+use Backend\Application\Contracts\TraceContext;
+use Backend\Application\Pipeline\Dlq\FileDlqWriter;
+use Backend\Application\Pipeline\Idempotency\InMemoryIdempotencyStore;
+use Backend\Application\Pipeline\JobDispatcher;
+use Backend\Application\Pipeline\Jobs\Job;
+use Backend\Application\Pipeline\Jobs\JobType;
+use Backend\Application\Pipeline\Reliability\ReliabilityHandler;
+use Backend\Application\Pipeline\Retry\ErrorClassifier;
+use Backend\Application\Pipeline\Retry\RetryPolicy;
 
 final class PublishWorker extends BaseWorker
 {
     private array $lastJobMeta = [];
+    private ?ReliabilityHandler $reliabilityHandler = null;
 
     public function __construct(
         \App\Queues\QueueService $queues,
@@ -24,9 +34,11 @@ final class PublishWorker extends BaseWorker
         private RobotProfilePort $dolphin,
         private PublishService $publishService,
         private CardsService $cardsService,
-        private WsEmitter $ws
+        private WsEmitter $ws,
+        private ?JobDispatcher $pipeline = null
     ) {
         parent::__construct($queues, $workerId);
+        $this->pipeline = $this->pipeline ?? new JobDispatcher($queues);
     }
 
     protected function queueType(): string
@@ -36,6 +48,10 @@ final class PublishWorker extends BaseWorker
 
     protected function handle(QueueJob $job): void
     {
+        if (isset($job->payload['trace_id'])) {
+            TraceContext::setCurrent(TraceContext::fromString((string)$job->payload['trace_id']));
+        }
+
         $cardId = $job->entityId;
         $this->lastJobMeta = [
             'correlation_id' => $job->payload['correlation_id'] ?? null,
@@ -76,13 +92,19 @@ final class PublishWorker extends BaseWorker
         );
 
         // 7) поставить робот-статус чекер
-        $this->queues->enqueueRobotStatus($publishJobId, [
-            'avito_item_id' => $result['avito_item_id'],
-            'session_id' => $session['session_id'],
-            'profile_id' => $profile['profile_id'],
-            'correlation_id' => $this->lastJobMeta['correlation_id'],
-            'idempotency_key' => $this->idempotencyKey($job, 'robot_status'),
-        ]);
+        $this->pipeline->enqueue(Job::create(
+            JobType::ROBOT_STATUS,
+            'publish_job',
+            $publishJobId,
+            [
+                'avito_item_id' => $result['avito_item_id'],
+                'session_id' => $session['session_id'],
+                'profile_id' => $profile['profile_id'],
+                'correlation_id' => $this->lastJobMeta['correlation_id'],
+            ],
+            $this->idempotencyKey($job, 'robot_status'),
+            TraceContext::ensure()->traceId()
+        ));
         $this->lastJobMeta['publish_job_id'] = $publishJobId;
 
         $this->emitStage($job, 'running', [
@@ -109,5 +131,20 @@ final class PublishWorker extends BaseWorker
         ], $extra);
 
         $this->ws->emit('pipeline.stage', $payload);
+    }
+
+    protected function reliability(): ?ReliabilityHandler
+    {
+        if ($this->reliabilityHandler === null) {
+            $this->reliabilityHandler = new ReliabilityHandler(
+                new RetryPolicy(new ErrorClassifier()),
+                new FileDlqWriter(__DIR__ . '/../../var/dlq.log'),
+                new InMemoryIdempotencyStore(),
+                $this->queues,
+                true,
+            );
+        }
+
+        return $this->reliabilityHandler;
     }
 }

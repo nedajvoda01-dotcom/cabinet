@@ -10,7 +10,6 @@ final class ParserAdapter implements ParserPort
 {
     public function __construct(
         private HttpClient $http,
-        private S3Adapter $s3,
         private ContractValidator $contracts,
         private string $baseUrl,
         private string $apiKey
@@ -36,39 +35,6 @@ final class ParserAdapter implements ParserPort
         }
 
         return ['ad' => $push['ad'], 'photos' => $photos];
-    }
-
-    /**
-     * Download raw photos and upload to S3 raw/.
-     * Internal helper/orchestration, not an external call -> no idempotencyKey.
-     * Returns list of {raw_key, raw_url, order}.
-     */
-    public function ingestRawPhotos(array $photoUrls, int $cardDraftId): array
-    {
-        $out = [];
-        $order = 0;
-
-        foreach ($photoUrls as $url) {
-            if (!is_string($url) || $url === '') {
-                continue;
-            }
-
-            $order++;
-
-            $binary = $this->downloadBinary($url);
-            $ext = $this->guessExt($url) ?? 'jpg';
-
-            $key = "raw/{$cardDraftId}/{$order}.{$ext}";
-            $publicUrl = $this->uploadRaw($key, $binary, $ext);
-
-            $out[] = [
-                'order' => $order,
-                'raw_key' => $key,
-                'raw_url' => $publicUrl,
-            ];
-        }
-
-        return $out;
     }
 
     /**
@@ -108,45 +74,6 @@ final class ParserAdapter implements ParserPort
         ], $idempotencyKey);
 
         $this->http->assertOk($resp, "parser");
-    }
-
-    // -------- helpers
-
-    public function downloadBinary(string $url): string
-    {
-        $resp = $this->http->get($url);
-
-        if ($resp['status'] >= 400) {
-            throw new AdapterException(
-                "Photo download failed: {$url}",
-                "parser_photo_download",
-                true,
-                ['url' => $url, 'status' => $resp['status']]
-            );
-        }
-
-        return (string)$resp['raw'];
-    }
-
-    public function uploadRaw(string $key, string $binary, string $extension): string
-    {
-        $this->s3->putObject($key, $binary, "image/{$extension}");
-
-        return $this->s3->publicUrl($key);
-    }
-
-    public function publicUrl(string $key): string
-    {
-        return $this->s3->publicUrl($key);
-    }
-
-    public function guessExt(string $url): ?string
-    {
-        $p = parse_url($url, PHP_URL_PATH);
-        if (!$p) return null;
-
-        $ext = strtolower(pathinfo($p, PATHINFO_EXTENSION));
-        return $ext ?: null;
     }
 
     private function contractPath(string $file): string

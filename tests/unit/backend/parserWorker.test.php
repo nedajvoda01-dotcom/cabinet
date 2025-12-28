@@ -8,40 +8,39 @@ use App\Workers\ParserWorker;
 use App\Queues\QueueJob;
 use App\Queues\QueueService;
 use App\Queues\QueueTypes;
-use App\Adapters\ParserAdapter;
+use App\Adapters\Ports\ParserPort;
+use App\Application\Services\RawPhotosIngestService;
 use App\Modules\Parser\ParserService;
 use App\Modules\Cards\CardsService;
 use App\WS\WsEmitter;
+use Backend\Application\Contracts\TraceContext;
+use Backend\Application\Pipeline\JobDispatcher;
+use Backend\Application\Pipeline\Jobs\Job;
+use Backend\Application\Pipeline\Jobs\JobType;
 
 final class ParserWorkerUnitTest extends TestCase
 {
-    public function test_ingest_flow_uses_adapter_as_io_only(): void
+    public function test_ingest_flow_delegates_to_service_and_keeps_adapter_thin(): void
     {
         $pushPayload = [
             'ad' => ['id' => 77],
             'photos' => ['http://x/1.jpg', 'http://x/2.png'],
         ];
 
-        $adapter = $this->createMock(ParserAdapter::class);
+        $adapter = $this->createMock(ParserPort::class);
         $adapter->expects($this->once())
             ->method('normalizePush')
             ->with($pushPayload)
             ->willReturn($pushPayload);
-        $adapter->expects($this->exactly(2))
-            ->method('downloadBinary')
-            ->withConsecutive(['http://x/1.jpg'], ['http://x/2.png'])
-            ->willReturnOnConsecutiveCalls('bin1', 'bin2');
-        $adapter->expects($this->exactly(2))
-            ->method('guessExt')
-            ->withConsecutive(['http://x/1.jpg'], ['http://x/2.png'])
-            ->willReturnOnConsecutiveCalls('jpg', 'png');
-        $adapter->expects($this->exactly(2))
-            ->method('uploadRaw')
-            ->withConsecutive(
-                ['raw/10/1.jpg', 'bin1', 'jpg'],
-                ['raw/10/2.png', 'bin2', 'png']
-            )
-            ->willReturnOnConsecutiveCalls('http://s3/raw/10/1.jpg', 'http://s3/raw/10/2.png');
+
+        $ingestService = $this->createMock(RawPhotosIngestService::class);
+        $ingestService->expects($this->once())
+            ->method('ingest')
+            ->with($pushPayload['photos'], 10)
+            ->willReturn([
+                ['order' => 1, 'raw_key' => 'raw/10/1.jpg', 'raw_url' => 'http://s3/raw/10/1.jpg'],
+                ['order' => 2, 'raw_key' => 'raw/10/2.png', 'raw_url' => 'http://s3/raw/10/2.png'],
+            ]);
 
         $cards = $this->createMock(CardsService::class);
         $cards->expects($this->once())
@@ -57,10 +56,20 @@ final class ParserWorkerUnitTest extends TestCase
                 ['order' => 2, 'raw_key' => 'raw/10/2.png', 'raw_url' => 'http://s3/raw/10/2.png'],
             ]);
 
+        TraceContext::setCurrent(TraceContext::fromString('trace-worker'));
+
+        $pipeline = $this->createMock(JobDispatcher::class);
+        $pipeline->expects($this->once())
+            ->method('enqueue')
+            ->with($this->callback(function (Job $job) {
+                $payload = $job->payload()->toArray();
+                return $job->type() === JobType::PHOTOS
+                    && $payload['source'] === 'parser'
+                    && $payload['correlation_id'] === 'corr-1'
+                    && $payload['trace_id'] === 'trace-worker';
+            }));
+
         $queues = $this->createMock(QueueService::class);
-        $queues->expects($this->once())
-            ->method('enqueuePhotos')
-            ->with(10, ['source' => 'parser', 'correlation_id' => 'corr-1']);
 
         $ws = $this->createMock(WsEmitter::class);
         $ws->expects($this->atLeastOnce())
@@ -73,7 +82,7 @@ final class ParserWorkerUnitTest extends TestCase
                     && $payload['correlation_id'] === 'corr-1';
             }));
 
-        $worker = new class($queues, 'w1', $adapter, $parserService, $cards, $ws) extends ParserWorker {
+        $worker = new class($queues, 'w1', $adapter, $ingestService, $parserService, $cards, $ws, $pipeline) extends ParserWorker {
             public function runHandle(QueueJob $job): void
             {
                 $this->handle($job);
@@ -88,3 +97,5 @@ final class ParserWorkerUnitTest extends TestCase
         $job->id = 1;
 
         $worker->runHandle($job);
+    }
+}
