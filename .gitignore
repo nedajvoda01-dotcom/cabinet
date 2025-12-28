@@ -1,2 +1,7 @@
 /vendor/
 /composer.lock
+
+# Frontend
+/app/frontend/node_modules/
+/app/frontend/dist/
+/app/frontend/package-lock.json

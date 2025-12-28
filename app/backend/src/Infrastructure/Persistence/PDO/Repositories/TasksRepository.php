@@ -95,6 +95,22 @@ final class TasksRepository implements TaskRepository
     }
 
     /**
+     * @return Task[]
+     */
+    public function findAll(): array
+    {
+        $sql = 'SELECT * FROM tasks ORDER BY created_at DESC';
+        $stmt = $this->pdo->query($sql);
+        
+        $tasks = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $tasks[] = $this->hydrateTask($row);
+        }
+        
+        return $tasks;
+    }
+
+    /**
      * @param array<string, mixed> $row
      */
     private function hydrateTask(array $row): Task

@@ -43,4 +43,12 @@ final class InMemoryTaskRepository implements TaskRepository
         $key = sprintf('%s:%s', $actorId, $idempotencyKey);
         $this->idempotencyMap[$key] = $taskId;
     }
+
+    /**
+     * @return Task[]
+     */
+    public function findAll(): array
+    {
+        return array_values($this->tasks);
+    }
 }

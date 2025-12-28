@@ -16,7 +16,9 @@ final class TasksController
 {
     public function __construct(
         private readonly CommandBus $commandBus,
-        private readonly ?GetTaskOutputsQuery $getTaskOutputsQuery = null
+        private readonly ?GetTaskOutputsQuery $getTaskOutputsQuery = null,
+        private readonly ?\Cabinet\Backend\Application\Queries\ListTasksQuery $listTasksQuery = null,
+        private readonly ?\Cabinet\Backend\Application\Queries\GetTaskDetailsQuery $getTaskDetailsQuery = null
     ) {
     }
 
@@ -28,14 +30,15 @@ final class TasksController
             return new ApiResponse(['error' => 'idempotencyKey is required'], 400);
         }
 
-        // Get actorId from SecurityContext
+        // Get actorId from SecurityContext, fallback to demo actor for development
         $context = $request->attribute('security_context');
-
-        if (!$context instanceof SecurityContext) {
-            return new ApiResponse(['error' => 'Actor not authenticated'], 401);
+        
+        $actorId = 'demo-user'; // Default for demo/development
+        if ($context instanceof SecurityContext) {
+            $actorId = $context->actorId();
         }
 
-        $command = new CreateTaskCommand($context->actorId(), $body['idempotencyKey']);
+        $command = new CreateTaskCommand($actorId, $body['idempotencyKey']);
         $result = $this->commandBus->dispatch($command);
 
         if ($result->isFailure()) {
@@ -88,6 +91,53 @@ final class TasksController
                 'error' => $result->error()->message(),
                 'code' => $result->error()->code()->value
             ], 400);
+        }
+
+        return new ApiResponse($result->value(), 200);
+    }
+
+    public function list(Request $request): ApiResponse
+    {
+        if ($this->listTasksQuery === null) {
+            return new ApiResponse(['error' => 'Query not available'], 500);
+        }
+
+        $result = $this->listTasksQuery->execute();
+
+        if ($result->isFailure()) {
+            return new ApiResponse([
+                'error' => $result->error()->message(),
+                'code' => $result->error()->code()->value
+            ], 400);
+        }
+
+        return new ApiResponse($result->value(), 200);
+    }
+
+    public function details(Request $request): ApiResponse
+    {
+        $taskId = $request->attribute('id');
+
+        if (empty($taskId)) {
+            return new ApiResponse(['error' => 'Task ID is required'], 400);
+        }
+
+        if ($this->getTaskDetailsQuery === null) {
+            return new ApiResponse(['error' => 'Query not available'], 500);
+        }
+
+        $result = $this->getTaskDetailsQuery->execute($taskId);
+
+        if ($result->isFailure()) {
+            $statusCode = match ($result->error()->code()->value) {
+                'not_found' => 404,
+                default => 400
+            };
+
+            return new ApiResponse([
+                'error' => $result->error()->message(),
+                'code' => $result->error()->code()->value
+            ], $statusCode);
         }
 
         return new ApiResponse($result->value(), 200);

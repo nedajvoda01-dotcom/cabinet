@@ -9,10 +9,13 @@ use Cabinet\Backend\Bootstrap\Clock;
 final class StructuredLogger
 {
     private Clock $clock;
+    private $stream;
 
     public function __construct(Clock $clock)
     {
         $this->clock = $clock;
+        // Open stdout stream once and reuse
+        $this->stream = defined('STDOUT') ? STDOUT : fopen('php://stdout', 'w');
     }
 
     /**
@@ -42,6 +45,8 @@ final class StructuredLogger
             'event' => $event,
         ], $context);
 
-        fwrite(STDOUT, (string) json_encode($payload, JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        if ($this->stream) {
+            fwrite($this->stream, (string) json_encode($payload, JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        }
     }
 }
