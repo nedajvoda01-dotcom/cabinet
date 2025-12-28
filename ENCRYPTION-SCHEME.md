@@ -1,47 +1,49 @@
-# ENCRYPTION-SCHEME.md — CABINET CRYPTOGRAPHIC MODEL
+# ENCRYPTION-SCHEME.md — CABINET CRYPTOGRAPHIC MODEL (NORMATIVE)
 
-This document defines the **mandatory encryption, signing, and key–management scheme**
-used by the Cabinet system.
+This document is **normative** for the Cabinet security protocol:
+encryption, signing, key exchange, nonce, and key management.
 
-It is written for:
-- internal developers
-- security reviewers
-- AI agents (Codex)
-- auditors
-
-Deviation from this scheme is **forbidden** unless explicitly approved.
+Deviation is **forbidden** unless explicitly approved.
 
 ---
 
-## 1. PURPOSE OF ENCRYPTION IN CABINET
+## 0. Scope
 
-Cabinet is a **secure orchestration layer**.
-It routes commands and data between systems it does not own.
+This scheme applies to:
+- Browser → Backend API requests (frontend client)
+- Integration → Backend requests (adapters, webhooks where applicable)
+- Backend → Integration requests (signed/encrypted outbound calls)
 
-Encryption exists to guarantee:
-- confidentiality of payloads
-- integrity of commands
-- authenticity of callers
-- replay protection
-- forward secrecy where applicable
-
-Cabinet does **not** encrypt “because security”.
-It encrypts because it **cannot trust the transport, intermediaries, or integrations**.
+Out of scope:
+- Compromised client runtime
+- Compromised Super Admin workstation
+- Malicious approved integration code
 
 ---
 
-## 2. THREAT MODEL
+## 1. Goals
 
-Cabinet assumes:
+Cabinet MUST guarantee:
+- Confidentiality of payloads (where required)
+- Integrity of requests (always)
+- Authenticity of caller identity (always)
+- Replay protection (always for secured endpoints)
+- Downgrade resistance
+- Auditability and provable enforcement
 
-- Network is hostile
-- Requests can be replayed
-- Payloads can be intercepted
-- Integrations can be compromised
-- Logs can be inspected
-- Traffic can be reordered
+Cabinet MUST fail closed.
 
-Cabinet explicitly protects against:
+---
+
+## 2. Threat Model
+
+Assume:
+- Hostile network / MITM
+- Replay and reordering
+- Partial interception and log inspection
+- Compromised integrations (treat as untrusted actors)
+
+Cabinet MUST explicitly protect against:
 - replay attacks
 - tampering
 - impersonation
@@ -49,143 +51,98 @@ Cabinet explicitly protects against:
 - leaked credentials
 - partial payload disclosure
 
-Cabinet does **not** attempt to protect against:
-- compromised client runtime
-- compromised Super Admin machine
-- malicious approved integration code
+---
+
+## 3. Protocol Overview (High-level)
+
+Every secured request follows:
+
+1) Key exchange (if no valid session)
+2) Canonicalization
+3) Payload encryption (if endpoint requires)
+4) Signature generation
+5) Attach nonce + idempotency key
+6) Send request
+7) Cabinet validates all steps **before execution**
+
+Any failure MUST abort processing immediately.
 
 ---
 
-## 3. HIGH-LEVEL FLOW
+## 4. Key Classes (Strict Separation)
 
-Every secured request follows this lifecycle:
-
-1. Client performs **key exchange**
-2. Client builds canonical request representation
-3. Payload is encrypted
-4. Signature is generated
-5. Nonce and idempotency key are attached
-6. Request is sent
-7. Cabinet validates everything **before execution**
-
-Failure at any step **aborts processing immediately**.
-
----
-
-## 4. KEY TYPES
-
-Cabinet uses **multiple key classes**, each with a strict purpose.
-
-### 4.1 Long-Term Identity Keys
-
+### 4.1 Long-Term Identity Keys (LTIK)
 - Asymmetric
-- Used to identify a client or integration
-- Never used to encrypt payloads directly
-- Used only for:
-  - authentication
-  - key exchange
-  - trust establishment
+- Used ONLY for: trust establishment and key exchange
+- MUST NOT encrypt payloads
+- MUST NOT be reused as signing keys (unless explicitly defined in a profile)
 
-Stored securely.
-Rotated via controlled procedures.
-
----
-
-### 4.2 Session Keys
-
-- Symmetric
+### 4.2 Session Keys (SK)
+- Symmetric (AEAD encryption key)
 - Short-lived
-- Generated per session or exchange
-- Used for payload encryption
+- Derived via key exchange
+- Bound to identity and key version (kid)
+- Disposable and revocable
 
-Session keys are:
-- derived via key exchange
-- bound to identity
-- versioned
-- disposable
-
----
-
-### 4.3 Signing Keys
-
-- Used exclusively for request signing
-- Never reused for encryption
-- Can be asymmetric or symmetric depending on integration trust level
+### 4.3 Signing Keys (SigK)
+- Used ONLY for signing
+- MUST NOT be reused for encryption
+- Type depends on profile (asymmetric preferred)
 
 ---
 
-## 5. KEY EXCHANGE
+## 5. Crypto Profiles (Versioned)
 
-Key exchange is mandatory before encrypted communication.
+Cabinet defines versioned cryptographic profiles.
 
-### Properties:
-- Explicit
-- Versioned
-- Audited
-- Rotatable
+### 5.1 Profile v1 (CURRENT)
+- Encryption: <ALGO, e.g. AES-256-GCM>
+- Signature: <ALGO, e.g. Ed25519 / HMAC-SHA256>
+- Hash: <ALGO, e.g. SHA-256>
+- KDF / Exchange: <ALGO, e.g. ECDH + HKDF>
+- Token binding / session binding: <RULES>
 
-The exchange produces:
-- session encryption key
-- session signing context
-- key identifiers (kid)
-
-No implicit trust is allowed.
+### 5.2 Profile vNext (RESERVED)
+- (Reserved for rotations/migrations)
+- MUST be deployable in dual-accept mode during transition.
 
 ---
 
-## 6. PAYLOAD ENCRYPTION
+## 6. Wire Format (NORMATIVE)
 
-### 6.1 What Is Encrypted
+All secured requests MUST carry the following protocol fields.
 
-Encrypted:
-- request payloads
-- sensitive headers (where applicable)
-- command parameters
+### 6.1 Required headers (secured endpoints)
+| Field | Required | Meaning |
+|------|----------|---------|
+| <TRACE_HEADER> | MUST | Correlation id |
+| <NONCE_HEADER> | MUST | Replay protection nonce |
+| <IDEMPOTENCY_HEADER> | MUST for commands | Idempotency key |
+| <KID_HEADER> | MUST | Key identifier/version |
+| <SIG_HEADER> | MUST | Request signature |
+| <ENC_HEADER> | MUST if encrypted | Encryption metadata/profile |
+| <KEYEX_HEADER> | MAY | Key exchange metadata (when initiating) |
 
-Not encrypted:
-- routing metadata
-- version identifiers
-- non-sensitive protocol fields
+**Note:** Exact names MUST match implementation. No aliases.
 
----
-
-### 6.2 Encryption Characteristics
-
-Payload encryption must be:
-- symmetric
-- authenticated (AEAD)
-- deterministic only where explicitly required
-- resistant to padding oracle attacks
-
-Each payload encryption must:
-- include a nonce/iv
-- be bound to the session key
-- be bound to request context
+### 6.2 Body format
+- If encryption required: body MUST be an encrypted envelope (see §7).
+- If not encrypted: body MUST still be signed (canonicalization includes body hash).
 
 ---
 
-## 7. SIGNATURE MODEL
+## 7. Encrypted Envelope (NORMATIVE)
 
-Encryption alone is insufficient.
+When encryption is required, request payload MUST be an envelope:
 
-Every secured request is **signed**.
-
-### Signature guarantees:
-- payload integrity
-- request authenticity
-- canonical ordering
-- tamper detection
-
-Signature verification occurs **before decryption**.
-
----
-
-## 8. CANONICALIZATION
-
-Before signing:
-- request is canonicalized
-- fields are ordered deterministically
-- whitespace and formatting are normalized
-
-Canonicalization rules are shared across languages via:
-
+```json
+{
+  "v": "<protocol_version>",
+  "kid": "<key_id>",
+  "alg": "<encryption_alg_profile>",
+  "iv": "<base64>",
+  "aad": "<base64 or omitted if derived>",
+  "ct": "<base64 ciphertext>",
+  "tag": "<base64 auth tag>",
+  "meta": { "ts": "<optional>", "ctx": "<optional>" }
+}
