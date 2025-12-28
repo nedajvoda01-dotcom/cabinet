@@ -7,7 +7,9 @@ namespace Cabinet\Backend\Http\Controllers;
 use Cabinet\Backend\Application\Bus\CommandBus;
 use Cabinet\Backend\Application\Commands\Tasks\CreateTaskCommand;
 use Cabinet\Backend\Application\Commands\Pipeline\TickTaskCommand;
+use Cabinet\Backend\Application\Ports\JobQueue;
 use Cabinet\Backend\Application\Queries\GetTaskOutputsQuery;
+use Cabinet\Backend\Domain\Tasks\TaskId;
 use Cabinet\Backend\Http\Request;
 use Cabinet\Backend\Http\Responses\ApiResponse;
 use Cabinet\Backend\Http\Security\SecurityContext;
@@ -18,7 +20,8 @@ final class TasksController
         private readonly CommandBus $commandBus,
         private readonly ?GetTaskOutputsQuery $getTaskOutputsQuery = null,
         private readonly ?\Cabinet\Backend\Application\Queries\ListTasksQuery $listTasksQuery = null,
-        private readonly ?\Cabinet\Backend\Application\Queries\GetTaskDetailsQuery $getTaskDetailsQuery = null
+        private readonly ?\Cabinet\Backend\Application\Queries\GetTaskDetailsQuery $getTaskDetailsQuery = null,
+        private readonly ?JobQueue $jobQueue = null
     ) {
     }
 
@@ -141,5 +144,25 @@ final class TasksController
         }
 
         return new ApiResponse($result->value(), 200);
+    }
+
+    public function enqueueAdvance(Request $request): ApiResponse
+    {
+        $taskId = $request->attribute('id');
+
+        if (empty($taskId)) {
+            return new ApiResponse(['error' => 'Task ID is required'], 400);
+        }
+
+        if ($this->jobQueue === null) {
+            return new ApiResponse(['error' => 'Job queue not available'], 500);
+        }
+
+        try {
+            $jobId = $this->jobQueue->enqueueAdvance(TaskId::fromString($taskId));
+            return new ApiResponse(['jobId' => $jobId], 200);
+        } catch (\Exception $e) {
+            return new ApiResponse(['error' => $e->getMessage()], 400);
+        }
     }
 }

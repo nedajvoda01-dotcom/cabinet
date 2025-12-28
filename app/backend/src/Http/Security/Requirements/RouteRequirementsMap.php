@@ -28,6 +28,7 @@ final class RouteRequirementsMap
             'GET /tasks/{id}' => new RouteRequirements(false, false, false, false, [], HierarchyRole::USER, 0),
             'POST /tasks/create' => new RouteRequirements(false, false, false, false, [], HierarchyRole::USER, 0),
             'POST /tasks/{id}/tick' => new RouteRequirements(false, false, false, false, [], HierarchyRole::USER, 0),
+            'POST /tasks/{id}/enqueue-advance' => new RouteRequirements(false, false, false, false, [], HierarchyRole::USER, 0),
             'GET /tasks/{id}/outputs' => new RouteRequirements(false, false, false, false, [], HierarchyRole::USER, 0),
             'POST /admin/pipeline/retry' => new RouteRequirements(false, false, false, false, [], HierarchyRole::USER, 0),
         ];

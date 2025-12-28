@@ -23,6 +23,7 @@ final class MigrationsRunner
         $this->createPipelineStatesTable();
         $this->createIdempotencyKeysTable();
         $this->createTaskOutputsTable();
+        $this->createJobsTable();
     }
 
     private function createUsersTable(): void
@@ -117,5 +118,33 @@ final class MigrationsRunner
         SQL;
 
         $this->pdo->exec($sql);
+    }
+
+    private function createJobsTable(): void
+    {
+        $sql = <<<SQL
+        CREATE TABLE IF NOT EXISTS jobs (
+            job_id TEXT PRIMARY KEY,
+            task_id TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            status TEXT NOT NULL,
+            attempt INTEGER NOT NULL,
+            available_at TEXT NOT NULL,
+            last_error_kind TEXT NULL,
+            payload_json TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+        SQL;
+
+        $this->pdo->exec($sql);
+
+        // Create index for efficient querying of available jobs
+        $indexSql = <<<SQL
+        CREATE INDEX IF NOT EXISTS idx_jobs_status_available 
+        ON jobs (status, available_at)
+        SQL;
+
+        $this->pdo->exec($indexSql);
     }
 }

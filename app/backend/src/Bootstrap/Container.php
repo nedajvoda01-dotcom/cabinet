@@ -51,6 +51,7 @@ use Cabinet\Backend\Application\Ports\TaskRepository;
 use Cabinet\Backend\Application\Ports\PipelineStateRepository;
 use Cabinet\Backend\Application\Ports\TaskOutputRepository;
 use Cabinet\Backend\Application\Ports\UnitOfWork;
+use Cabinet\Backend\Application\Ports\JobQueue;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryUserRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAccessRequestRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryTaskRepository;
@@ -65,6 +66,7 @@ use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\AccessRequestsRe
 use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\TasksRepository;
 use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\PipelineStatesRepository;
 use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\TaskOutputsRepository;
+use Cabinet\Backend\Infrastructure\Persistence\PDO\Repositories\SQLiteJobQueue;
 use Cabinet\Backend\Infrastructure\Integrations\Registry\IntegrationRegistry;
 use Cabinet\Backend\Infrastructure\Integrations\Fallback\DemoParserAdapter;
 use Cabinet\Backend\Infrastructure\Integrations\Fallback\DemoPhotosAdapter;
@@ -126,6 +128,8 @@ final class Container
     private ?PDO $pdo = null;
 
     private bool $migrationsRun = false;
+
+    private ?JobQueue $jobQueue = null;
 
     public function __construct(Config $config, Clock $clock)
     {
@@ -354,6 +358,15 @@ final class Container
         return $this->unitOfWork;
     }
 
+    public function jobQueue(): JobQueue
+    {
+        if ($this->jobQueue === null) {
+            $this->jobQueue = new SQLiteJobQueue($this->pdo());
+        }
+
+        return $this->jobQueue;
+    }
+
     public function getTaskOutputsQuery(): GetTaskOutputsQuery
     {
         if ($this->getTaskOutputsQuery === null) {
@@ -495,12 +508,14 @@ final class Container
                 $this->commandBus(), 
                 $this->getTaskOutputsQuery(),
                 $this->listTasksQuery(),
-                $this->getTaskDetailsQuery()
+                $this->getTaskDetailsQuery(),
+                $this->jobQueue()
             );
             $router->get('/tasks', [$tasksController, 'list']);
             $router->get('/tasks/{id}', [$tasksController, 'details']);
             $router->post('/tasks/create', [$tasksController, 'create']);
             $router->post('/tasks/{id}/tick', [$tasksController, 'tick']);
+            $router->post('/tasks/{id}/enqueue-advance', [$tasksController, 'enqueueAdvance']);
             $router->get('/tasks/{id}/outputs', [$tasksController, 'outputs']);
             
             $adminController = new AdminController($this->commandBus());
