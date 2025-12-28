@@ -9,7 +9,6 @@ cabinet/
 ├── Makefile
 ├── README.md
 ├── SECURITY-IMPLEMENTATION.md
-├── STRUCTURE.txt
 ├── app
 │   ├── backend
 │   │   ├── README.md
@@ -135,7 +134,6 @@ cabinet/
 │   │   │   │       ├── SignatureService.php
 │   │   │   │       ├── TasksService.php
 │   │   │   │       └── UsersService.php
-│   │   │   ├── BackgroundTasks
 │   │   │   ├── Bootstrap
 │   │   │   │   ├── AppKernel.php
 │   │   │   │   ├── Clock.php
@@ -169,10 +167,6 @@ cabinet/
 │   │   │   │   ├── Routes
 │   │   │   │   │   └── api.php
 │   │   │   │   ├── Security
-│   │   │   │   │   ├── AuthStep.php
-│   │   │   │   │   ├── EncryptionStep.php
-│   │   │   │   │   ├── HierarchyStep.php
-│   │   │   │   │   ├── NonceStep.php
 │   │   │   │   │   ├── Pipeline
 │   │   │   │   │   │   ├── AuthStep.php
 │   │   │   │   │   │   ├── EncryptionStep.php
@@ -182,18 +176,11 @@ cabinet/
 │   │   │   │   │   │   ├── ScopeStep.php
 │   │   │   │   │   │   ├── SecurityPipelineMiddleware.php
 │   │   │   │   │   │   └── SignatureStep.php
-│   │   │   │   │   ├── RateLimitStep.php
-│   │   │   │   │   ├── Requirements
-│   │   │   │   │   │   ├── EndpointRequirementsResolver.php
-│   │   │   │   │   │   ├── RouteRequirements.php
-│   │   │   │   │   │   └── RouteRequirementsMap.php
-│   │   │   │   │   ├── ScopeStep.php
-│   │   │   │   │   ├── SecurityPipelineMiddleware.php
-│   │   │   │   │   └── SignatureStep.php
+│   │   │   │   │   └── Requirements
+│   │   │   │   │       ├── EndpointRequirementsResolver.php
+│   │   │   │   │       ├── RouteRequirements.php
+│   │   │   │   │       └── RouteRequirementsMap.php
 │   │   │   │   └── Validation
-│   │   │   │       ├── CommandStructureValidator.php
-│   │   │   │       ├── IdempotencyKeyValidator.php
-│   │   │   │       ├── NonceFormatValidator.php
 │   │   │   │       ├── Protocol
 │   │   │   │       │   ├── CommandStructureValidator.php
 │   │   │   │       │   ├── IdempotencyKeyValidator.php
@@ -433,7 +420,8 @@ cabinet/
 │   └── .gitkeep
 ├── docker-compose.yml
 ├── docs
-│   └── README.md
+│   ├── README.md
+│   └── STRUCTURE.txt
 ├── eslint.config.js
 ├── governance
 │   └── .gitkeep
