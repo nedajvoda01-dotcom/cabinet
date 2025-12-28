@@ -1,9 +1,0 @@
-{
-  "source": "auto_ru",
-  "url": "https://auto.ru/cars/used/sale/audi/a6/1122334455.html",
-  "correlation_id": "c9aa33b1-1700000000",
-  "options": {
-    "with_photos": true,
-    "priority": 7
-  }
-}

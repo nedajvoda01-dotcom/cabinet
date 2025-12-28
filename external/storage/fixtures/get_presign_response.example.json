@@ -1,7 +1,0 @@
-{
-  "correlation_id": "c9aa33b1-1700000000",
-  "status": "ok",
-  "key": "masked/a6/0.jpg",
-  "url": "http://storage.local/presign/masked/a6/0.jpg?sig=abc",
-  "expires_at": "2025-01-01T12:00:00Z"
-}
