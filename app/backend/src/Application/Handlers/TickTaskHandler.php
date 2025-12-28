@@ -13,6 +13,10 @@ use Cabinet\Backend\Application\Ports\TaskOutputRepository;
 use Cabinet\Backend\Application\Ports\UnitOfWork;
 use Cabinet\Backend\Application\Shared\ApplicationError;
 use Cabinet\Backend\Application\Shared\Result;
+use Cabinet\Backend\Application\Observability\AuditLogger;
+use Cabinet\Backend\Application\Observability\AuditEvent;
+use Cabinet\Backend\Application\Observability\MetricsEmitter;
+use Cabinet\Backend\Application\Ports\IdGenerator;
 use Cabinet\Backend\Domain\Pipeline\JobId;
 use Cabinet\Backend\Domain\Tasks\TaskId;
 use Cabinet\Backend\Infrastructure\Integrations\Registry\IntegrationRegistry;
@@ -28,7 +32,10 @@ final class TickTaskHandler implements CommandHandler
         private readonly PipelineStateRepository $pipelineStateRepository,
         private readonly TaskOutputRepository $taskOutputRepository,
         private readonly IntegrationRegistry $integrationRegistry,
-        private readonly UnitOfWork $unitOfWork
+        private readonly UnitOfWork $unitOfWork,
+        private readonly AuditLogger $auditLogger,
+        private readonly IdGenerator $idGenerator,
+        private readonly MetricsEmitter $metricsEmitter
     ) {
     }
 
@@ -41,8 +48,9 @@ final class TickTaskHandler implements CommandHandler
             throw new \InvalidArgumentException('Invalid command type');
         }
 
-        $taskId = TaskId::fromString($command->taskId());
-        $jobId = JobId::fromString($command->taskId());
+        $taskIdString = $command->taskId();
+        $taskId = TaskId::fromString($taskIdString);
+        $jobId = JobId::fromString($taskIdString);
 
         // Load task and pipeline state
         $task = $this->taskRepository->findById($taskId);
@@ -104,6 +112,26 @@ final class TickTaskHandler implements CommandHandler
             $this->pipelineStateRepository->save($pipelineState);
             $this->unitOfWork->commit();
 
+            // Audit: stage transition succeeded
+            $auditEvent = new AuditEvent(
+                id: $this->idGenerator->generate(),
+                ts: (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.u\Z'),
+                action: 'pipeline.stage.succeeded',
+                targetType: 'task',
+                targetId: $taskIdString,
+                data: [
+                    'stage' => $currentStage->value,
+                    'next_stage' => $pipelineState->isDone() ? null : $pipelineState->stage()->value,
+                ]
+            );
+            $this->auditLogger->record($auditEvent);
+
+            // Metrics: pipeline stage succeeded
+            $this->metricsEmitter->increment('pipeline.stage.succeeded', [
+                'stage' => $currentStage->value,
+                'task_id' => $taskIdString,
+            ]);
+
             return Result::success([
                 'status' => 'advanced',
                 'completed_stage' => $currentStage->value,
@@ -123,6 +151,27 @@ final class TickTaskHandler implements CommandHandler
             $this->taskRepository->save($task);
             $this->pipelineStateRepository->save($pipelineState);
             $this->unitOfWork->commit();
+
+            // Audit: stage transition failed
+            $auditEvent = new AuditEvent(
+                id: $this->idGenerator->generate(),
+                ts: (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.u\Z'),
+                action: 'pipeline.stage.failed',
+                targetType: 'task',
+                targetId: $taskIdString,
+                data: [
+                    'stage' => $currentStage->value,
+                    'error_kind' => $integrationResult->errorKind()?->value,
+                    'retryable' => $integrationResult->isRetryable(),
+                ]
+            );
+            $this->auditLogger->record($auditEvent);
+
+            // Metrics: pipeline stage failed
+            $this->metricsEmitter->increment('pipeline.stage.failed', [
+                'stage' => $currentStage->value,
+                'error_kind' => $integrationResult->errorKind()?->value ?? 'unknown',
+            ]);
 
             return Result::success([
                 'status' => 'failed',

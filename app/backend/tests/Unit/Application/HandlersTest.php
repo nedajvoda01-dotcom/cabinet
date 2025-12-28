@@ -14,6 +14,7 @@ use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAccessRequestRep
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryPipelineStateRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryTaskRepository;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryUserRepository;
+use Cabinet\Backend\Infrastructure\Persistence\InMemory\InMemoryAuditLogger;
 use Cabinet\Backend\Infrastructure\Persistence\InMemory\UuidIdGenerator;
 use Cabinet\Backend\Tests\TestCase;
 
@@ -23,7 +24,8 @@ final class HandlersTest extends TestCase
     {
         $repo = new InMemoryAccessRequestRepository();
         $idGen = new UuidIdGenerator();
-        $handler = new RequestAccessHandler($repo, $idGen);
+        $auditLogger = new InMemoryAuditLogger();
+        $handler = new RequestAccessHandler($repo, $idGen, $auditLogger);
 
         $command = new RequestAccessCommand('user@example.com');
         $result = $handler->handle($command);
@@ -37,15 +39,16 @@ final class HandlersTest extends TestCase
         $accessRequestRepo = new InMemoryAccessRequestRepository();
         $userRepo = new InMemoryUserRepository();
         $idGen = new UuidIdGenerator();
+        $auditLogger = new InMemoryAuditLogger();
 
         // First create an access request
-        $requestHandler = new RequestAccessHandler($accessRequestRepo, $idGen);
+        $requestHandler = new RequestAccessHandler($accessRequestRepo, $idGen, $auditLogger);
         $requestCommand = new RequestAccessCommand('user@example.com');
         $requestResult = $requestHandler->handle($requestCommand);
         $accessRequestId = $requestResult->value();
 
         // Now approve it
-        $approveHandler = new ApproveAccessHandler($accessRequestRepo, $userRepo, $idGen);
+        $approveHandler = new ApproveAccessHandler($accessRequestRepo, $userRepo, $idGen, $auditLogger);
         $approveCommand = new ApproveAccessCommand($accessRequestId, 'admin-123');
         $approveResult = $approveHandler->handle($approveCommand);
 
@@ -58,8 +61,9 @@ final class HandlersTest extends TestCase
         $accessRequestRepo = new InMemoryAccessRequestRepository();
         $userRepo = new InMemoryUserRepository();
         $idGen = new UuidIdGenerator();
+        $auditLogger = new InMemoryAuditLogger();
 
-        $handler = new ApproveAccessHandler($accessRequestRepo, $userRepo, $idGen);
+        $handler = new ApproveAccessHandler($accessRequestRepo, $userRepo, $idGen, $auditLogger);
         $command = new ApproveAccessCommand('non-existent-id', 'admin-123');
         $result = $handler->handle($command);
 
@@ -72,8 +76,9 @@ final class HandlersTest extends TestCase
         $taskRepo = new InMemoryTaskRepository();
         $pipelineRepo = new InMemoryPipelineStateRepository();
         $idGen = new UuidIdGenerator();
+        $auditLogger = new InMemoryAuditLogger();
 
-        $handler = new CreateTaskHandler($taskRepo, $pipelineRepo, $idGen);
+        $handler = new CreateTaskHandler($taskRepo, $pipelineRepo, $idGen, $auditLogger);
         $command = new CreateTaskCommand('actor-123', 'idempotency-key-1');
         $result = $handler->handle($command);
 
@@ -86,8 +91,9 @@ final class HandlersTest extends TestCase
         $taskRepo = new InMemoryTaskRepository();
         $pipelineRepo = new InMemoryPipelineStateRepository();
         $idGen = new UuidIdGenerator();
+        $auditLogger = new InMemoryAuditLogger();
 
-        $handler = new CreateTaskHandler($taskRepo, $pipelineRepo, $idGen);
+        $handler = new CreateTaskHandler($taskRepo, $pipelineRepo, $idGen, $auditLogger);
         
         // First creation
         $command1 = new CreateTaskCommand('actor-123', 'idempotency-key-1');
@@ -107,8 +113,9 @@ final class HandlersTest extends TestCase
         $taskRepo = new InMemoryTaskRepository();
         $pipelineRepo = new InMemoryPipelineStateRepository();
         $idGen = new UuidIdGenerator();
+        $auditLogger = new InMemoryAuditLogger();
 
-        $handler = new CreateTaskHandler($taskRepo, $pipelineRepo, $idGen);
+        $handler = new CreateTaskHandler($taskRepo, $pipelineRepo, $idGen, $auditLogger);
         
         // First creation by actor-123
         $command1 = new CreateTaskCommand('actor-123', 'idempotency-key-1');

@@ -24,6 +24,7 @@ final class MigrationsRunner
         $this->createIdempotencyKeysTable();
         $this->createTaskOutputsTable();
         $this->createJobsTable();
+        $this->createAuditEventsTable();
     }
 
     private function createUsersTable(): void
@@ -146,5 +147,36 @@ final class MigrationsRunner
         SQL;
 
         $this->pdo->exec($indexSql);
+    }
+
+    private function createAuditEventsTable(): void
+    {
+        $sql = <<<SQL
+        CREATE TABLE IF NOT EXISTS audit_events (
+            id TEXT PRIMARY KEY,
+            ts TEXT NOT NULL,
+            actor_id TEXT NULL,
+            actor_type TEXT NULL,
+            action TEXT NOT NULL,
+            target_type TEXT NOT NULL,
+            target_id TEXT NOT NULL,
+            request_id TEXT NULL,
+            data_json TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
+        SQL;
+
+        $this->pdo->exec($sql);
+
+        // Create indexes for efficient querying
+        $indexes = [
+            'CREATE INDEX IF NOT EXISTS idx_audit_events_ts ON audit_events (ts)',
+            'CREATE INDEX IF NOT EXISTS idx_audit_events_actor_id ON audit_events (actor_id)',
+            'CREATE INDEX IF NOT EXISTS idx_audit_events_action ON audit_events (action)',
+        ];
+
+        foreach ($indexes as $indexSql) {
+            $this->pdo->exec($indexSql);
+        }
     }
 }
