@@ -1,16 +1,10 @@
-# SECURITY-IMPLEMENTATION.md — CABINET SECURITY EXECUTION MODEL
+# SECURITY-IMPLEMENTATION.md — CABINET SECURITY EXECUTION MODEL (NORMATIVE)
 
-This document describes **how security is implemented, enforced, and executed**
+This document defines **how security is executed and enforced at runtime**
 inside the Cabinet system.
 
-It is written for:
-- internal developers
-- security engineers
-- auditors
-- AI agents (Codex)
-
-This is an **implementation document**, not a guideline.
-Deviation from this behavior is forbidden.
+This is an **implementation specification**.
+Deviation from this behavior is **forbidden**.
 
 ---
 
@@ -27,270 +21,262 @@ Security is:
 - structural
 - mandatory
 - layered
+- deterministic
 - fail-closed
 
-No request, command, or integration can bypass security.
+No request, command, job, or integration call may bypass security.
 
 ---
 
-## 2. SECURITY AS A PIPELINE
+## 2. SECURITY AS A PRE-EXECUTION PIPELINE
 
-Security in Cabinet is implemented as a **deterministic execution pipeline**.
+Security in Cabinet is implemented as a **deterministic execution pipeline**
+that runs **before any application logic**.
 
-This pipeline executes **before**:
-- command handling
+Security MUST execute before:
+- controller handling
+- command dispatch
 - pipeline scheduling
-- business orchestration
-- integration dispatch
+- job execution
+- integration calls
 
 If the security pipeline fails, **nothing else runs**.
 
----
-
-## 3. SECURITY PIPELINE LOCATION
-
-Security is implemented in:
-
-
-Specifically:
-- `Http/Security/Pipeline`
-- `Http/Security/Requirements`
-
-This separation is intentional and enforced.
+The order of pipeline steps is **fixed and MUST NOT be reordered**.
 
 ---
 
-## 4. ENDPOINT REQUIREMENTS MODEL
+## 3. SECURITY BOUNDARY
 
-### 4.1 Route Requirements
+The security boundary is defined as:
 
-Each HTTP endpoint declares **explicit security requirements**.
+> **Everything before the controller layer**
 
-These include:
-- authentication required or not
+Security ends only when:
+- request authenticity is proven
+- integrity is verified
+- replay protection is enforced
+- hierarchy and scopes are validated
+
+After the boundary:
+- code may assume a trusted, authenticated, authorized context
+- no cryptographic validation is repeated
+
+---
+
+## 4. SECURITY PIPELINE LOCATION (CODE)
+
+Security enforcement exists **only** in the following locations:
+
+- `Http/Security/Pipeline/*`
+- `Http/Security/Requirements/*`
+
+The pipeline is assembled exclusively by:
+- `SecurityPipelineMiddleware`
+
+No other component may construct or invoke security logic.
+
+---
+
+## 5. ENDPOINT REQUIREMENTS MODEL
+
+### 5.1 Route Requirements
+
+Each HTTP endpoint MUST declare explicit security requirements, including:
+- authentication required
 - encryption required
 - signature required
 - nonce required
-- scopes required
-- hierarchy level required
+- required scopes
+- required hierarchy level
 - rate limits
 
 Requirements are:
 - static
 - explicit
 - version-controlled
-- not inferred
+- never inferred
 
-### 4.2 Resolution Flow
+### 5.2 Resolution Flow
 
-1. Incoming request is matched to route
+1. Incoming request is matched to a route
 2. Route requirements are resolved
-3. Requirements are passed to the security pipeline
-4. Pipeline enforces requirements strictly
+3. Requirements are passed into the security pipeline
+4. Each pipeline step enforces its requirement
 
-No defaults are assumed.
-Missing requirements are treated as denial.
+Missing requirements MUST be treated as denial.
 
 ---
 
-## 5. SECURITY PIPELINE STEPS
+## 6. SECURITY PIPELINE STEPS (EXECUTION ORDER)
 
-Each step is a **single-purpose, fail-fast unit**.
+Each step is **single-purpose** and **fail-fast**.
 
-### 5.1 Authentication Step
-
+### 6.1 Authentication Step
 - Validates identity
-- Resolves actor (user / integration)
+- Resolves actor (user or integration)
 - Loads role and scopes
-- Fails if identity is unknown
-
-No implicit trust exists.
+- Rejects unknown or invalid identities
 
 ---
 
-### 5.2 Nonce Step
-
+### 6.2 Nonce Step
 - Validates nonce presence
-- Ensures nonce uniqueness
-- Rejects replayed requests
+- Enforces single-use semantics
+- Prevents replay
 - Records nonce atomically
 
-Nonce reuse is a hard failure.
+Nonce reuse is a **security violation**.
 
 ---
 
-### 5.3 Signature Step
-
+### 6.3 Signature Step
 - Canonicalizes request
 - Verifies cryptographic signature
-- Confirms key version
+- Confirms key version (kid)
 - Confirms identity binding
 
-Signature is verified **before decryption**.
+Signature verification MUST occur **before decryption**.
 
 ---
 
-### 5.4 Encryption Step
-
+### 6.4 Encryption Step
 - Validates encryption metadata
 - Decrypts payload
 - Confirms session validity
 - Rejects malformed ciphertext
 
-Decryption failure aborts execution.
+Decryption failure aborts execution immediately.
 
 ---
 
-### 5.5 Scope Step
-
+### 6.5 Scope Step
 - Validates declared scopes
 - Matches scopes against endpoint requirements
-- Rejects overreach
+- Rejects scope overreach
 
 Scopes do not imply hierarchy.
 
 ---
 
-### 5.6 Hierarchy Step
-
-- Validates user hierarchy
-- Enforces admin/super-admin boundaries
+### 6.6 Hierarchy Step
+- Enforces user hierarchy
 - Prevents privilege escalation
+- Applies admin/super-admin rules
 
-Hierarchy rules are enforced in code, not config.
+Hierarchy enforcement is **code-based**, not configuration-based.
 
 ---
 
-### 5.7 Rate Limit Step
-
+### 6.7 Rate Limit Step
 - Applies per-identity limits
 - Applies per-endpoint limits
 - Applies per-integration limits
 
-Rate limiting occurs **after authentication**, never before.
+Rate limiting occurs **after authentication**.
 
 ---
 
-## 6. PRECONDITIONS VS SECURITY
+## 7. SECURITY VS APPLICATION PRECONDITIONS
 
-Preconditions (Application layer) are **not security**.
+Security pipeline:
+- protects the system boundary
+- validates identity, integrity, authenticity
 
-Differences:
-- Security pipeline protects the system boundary
-- Preconditions protect internal consistency
+Application Preconditions:
+- protect internal consistency
+- validate business invariants
 
-Security always runs first.
-
----
-
-## 7. IDENTITY & ROLE ENFORCEMENT
-
-Roles are resolved during authentication.
-
-Rules:
-- Role changes require Super Admin
-- Admins cannot escalate roles
-- UI visibility does not imply permission
-
-Authorization is validated server-side only.
+Security MUST always run first.
+Preconditions MUST NOT replace security checks.
 
 ---
 
-## 8. AUDITING & TRACEABILITY
-
-Every security-relevant event is auditable:
-
-- failed authentication
-- invalid signature
-- nonce reuse
-- hierarchy violation
-- rate limit violation
-
-Audit data is:
-- immutable
-- timestamped
-- queryable
-- non-destructive
-
----
-
-## 9. LOGGING & REDACTION
-
-Security logs:
-- are structured
-- are redacted
-- never include secrets
-- never include raw payloads
-
-Sensitive data is:
-- hashed
-- masked
-- truncated
-
-Logging failure must not expose secrets.
-
----
-
-## 10. INTEGRATION SECURITY
+## 8. INTEGRATION SECURITY MODEL
 
 Integrations are treated as **untrusted actors**.
 
 Rules:
 - integrations authenticate explicitly
-- integrations have scoped permissions
-- integrations use the same security pipeline
-- fallbacks do not bypass security
+- integrations declare scopes
+- integrations pass through the same security pipeline
+- fallback adapters DO NOT bypass security
 
-There are no “trusted” integrations.
+Inbound (webhooks) and outbound (calls from Cabinet) interactions
+are both subject to security enforcement.
+
+There are no trusted integrations.
+
+---
+
+## 9. AUDIT & TRACEABILITY
+
+Every security-relevant event MUST be auditable:
+- authentication failure
+- invalid signature
+- nonce reuse
+- hierarchy violation
+- rate-limit violation
+
+Audit records are:
+- immutable
+- timestamped
+- correlated via trace id
+- queryable
+
+---
+
+## 10. LOGGING & REDACTION
+
+Security logs:
+- are structured
+- are redacted
+- never include secrets
+- never include decrypted payloads
+
+Sensitive data MUST:
+- be hashed
+- be masked
+- be truncated
+
+Logging MUST NOT introduce information leaks.
 
 ---
 
 ## 11. FAILURE BEHAVIOR
 
 Security failures:
+- abort execution
 - return deterministic errors
-- do not leak details
-- are logged internally
-- are auditable
+- do not reveal sensitive details
+- emit security audit events
 
 System behavior is **fail-closed**.
 
 ---
 
-## 12. TESTING & VERIFICATION
-
-Security is verified via:
-- unit tests
-- architecture tests
-- parity tests
-- replay tests
-- boundary tests
-
-Security regressions are build blockers.
-
----
-
-## 13. FORBIDDEN PRACTICES
+## 12. FORBIDDEN PRACTICES (HARD)
 
 The following are forbidden:
 
 - disabling security steps
+- reordering pipeline steps
 - conditional security bypasses
 - environment-based security weakening
-- trusting frontend validation
-- trusting integration input
+- performing cryptographic validation outside the pipeline
+- trusting frontend or integration input
+
+Violations are treated as defects.
 
 ---
 
 ## FINAL STATEMENT
 
-Security in Cabinet is **structural infrastructure**.
+Security in Cabinet is **runtime infrastructure**, not a feature.
 
-If a request reaches business logic, it has already passed
-**every mandatory security gate**.
+If a request reaches application logic,
+it has already passed **every mandatory security gate**.
 
 If security is unclear — deny.
 If validation fails — stop.
-If behavior deviates — treat as a defect.
-
-This document defines the only valid security execution model for Cabinet.
+If behavior deviates — fix immediately.
