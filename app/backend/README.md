@@ -1,206 +1,207 @@
-# cabinet/app/backend/README.md — Backend Entry Point & System Boundaries
+# Backend — Cabinet Runtime Core
 
 ## Location
 
-cabinet/app/backend/README.md
+app/backend/README.md
 
 ---
 
 ## Purpose
 
-This document defines the **backend system as a whole**.
+The backend is the **runtime core** of the Cabinet system.
 
-It explains:
-- what the backend is responsible for
-- how responsibilities are divided internally
-- where the system boundaries are
-- how the backend should be reasoned about
+It is responsible for:
+- enforcing security boundaries
+- accepting and validating commands
+- orchestrating execution pipelines
+- coordinating integrations
+- persisting state
+- providing observability
 
-This README is the **entry point into backend architecture**.
-
-It does **not** describe business logic details or code-level behavior.
-
----
-
-## Role of the Backend in Cabinet
-
-The backend is the **central control plane** of Cabinet.
-
-Its responsibilities are to:
-- accept and validate commands
-- enforce security and hierarchy
-- orchestrate pipelines
-- coordinate integrations
-- persist state
-- expose observability
-
-The backend does **not**:
-- implement business intelligence
-- make domain-specific decisions for integrations
-- contain UI logic
-- assume trusted clients
+The backend is **not a business application**.
+It is a **secure control plane**.
 
 ---
 
-## Architectural Style
+## Architectural Role
 
-The backend follows a **strict layered architecture**:
+The backend sits between:
+- external actors (users, integrations, automation)
+- internal execution mechanisms (pipeline, workers, storage)
 
-- Domain  
-- Application  
-- Infrastructure  
-- Http (transport)
-
-Each layer has:
-- a single responsibility
-- explicit dependency rules
-- enforced boundaries
-
-Violating layer boundaries is considered a defect.
+It guarantees that **nothing happens** unless:
+- the request is authenticated
+- the request is authorized
+- invariants are satisfied
+- execution is observable and auditable
 
 ---
 
 ## High-Level Structure
 
-The backend is structured as:
+app/backend
+├── public/ → HTTP entry point
+├── src/ → Backend source code
+├── tests/ → Unit and architecture tests
+└── README.md → This document
 
-- `public/`  
-  HTTP entry point
+yaml
+Копировать код
 
-- `src/`  
-  All backend code, strictly layered
+Each directory has a **strict responsibility**.
 
-- `tests/`  
-  Architecture, domain, security, and parity tests
+---
 
-- Configuration and tooling  
-  Composer, Docker, QA tools
+## Entry Point
+
+### `public/index.php`
+
+This is the **only HTTP entry point**.
+
+Responsibilities:
+- bootstrap the application
+- initialize the container
+- route HTTP requests
+- invoke the security pipeline
+
+No logic is allowed here beyond bootstrapping.
+
+---
+
+## Source Code (`src/`)
+
+The backend source code is divided into **explicit layers**:
+
+- `Application`  
+  Command handling, orchestration, policies, pipelines.
+
+- `Domain`  
+  Pure domain models, invariants, and value objects.
+
+- `Infrastructure`  
+  Persistence, integrations, queues, background jobs, security runtime.
+
+- `Http`  
+  Controllers, middleware, request validation, security pipeline wiring.
+
+- `Bootstrap`  
+  Application startup and dependency wiring.
+
+Each layer is isolated.
+Cross-layer shortcuts are forbidden.
+
+---
+
+## Security Model
+
+Security is:
+- mandatory
+- structural
+- fail-closed
+
+All HTTP requests pass through:
+- authentication
+- nonce validation
+- signature verification
+- encryption enforcement
+- scope and hierarchy checks
+- rate limiting
+
+If security fails — execution stops immediately.
 
 ---
 
 ## Execution Model
 
-The backend operates in two modes:
+The backend:
+- does not execute work synchronously
+- schedules work via the pipeline
+- delegates execution to workers
+- tracks state transitions explicitly
 
-### 1. Synchronous (HTTP)
+Execution is:
+- idempotent
+- resumable
+- observable
 
-Used for:
-- command submission
-- queries
-- authentication
-- administration
+---
+
+## Persistence
+
+Persistence is handled via:
+- repositories
+- explicit transactions
+- read models and projections
+
+The backend never:
+- exposes raw database access
+- leaks persistence details across layers
+
+---
+
+## Observability
+
+The backend provides:
+- structured logs
+- audit trails
+- metrics
 - health checks
+- tracing
 
-Every HTTP request:
-- passes through the security pipeline
-- is validated structurally
-- is authorized explicitly
+Silent failure is forbidden.
 
 ---
 
-### 2. Asynchronous (Workers)
+## Testing Strategy
 
-Used for:
-- pipeline stage execution
-- integration calls
-- retries
-- background maintenance
+Tests include:
+- unit tests
+- architecture boundary tests
+- contract parity tests
+- security regression tests
 
-Workers:
-- are deterministic
-- are idempotent
-- do not trust input
-- update state atomically
+Architecture violations are **build blockers**.
 
 ---
 
-## Security Positioning
+## Non-Goals (Critical)
 
-Security is **not optional** and **not configurable per environment**.
+The backend MUST NOT:
+- embed business intelligence
+- make domain decisions
+- trust frontend input
+- trust integrations
+- bypass security
+- optimize for convenience
 
-The backend:
-- enforces encryption and signatures
-- validates nonces and idempotency
-- applies scope and hierarchy checks
-- audits all security-relevant actions
-
-Security enforcement happens **before** any business logic.
-
----
-
-## Persistence Model
-
-The backend owns:
-- authoritative state
-- execution history
-- audit logs
-
-Persistence is:
-- explicit
-- transactional
-- versioned where required
-
-Read models and projections exist only for querying convenience.
+If logic appears “useful” but violates boundaries — it does not belong here.
 
 ---
 
-## Integration Model
+## Audience
 
-External systems are treated as:
-- untrusted
-- unreliable
-- replaceable
+This document is written for:
+- backend developers
+- system architects
+- security engineers
+- auditors
+- AI agents
 
-The backend:
-- communicates via ports
-- enforces contracts
-- applies fallbacks automatically
-- never embeds external logic
-
-Integrations are coordinated, not trusted.
+It is not an onboarding tutorial.
 
 ---
 
-## Testing Philosophy
+## Summary
 
-Backend tests enforce:
-- architectural boundaries
-- contract parity
-- security invariants
-- deterministic behavior
+The backend is the **enforcement engine** of Cabinet.
 
-Tests are not optional documentation —  
-they are **enforcement mechanisms**.
+It validates.
+It orchestrates.
+It enforces.
+It observes.
 
----
+It never assumes.
+It never trusts.
+It never guesses.
 
-## What This Document Is Not
-
-This README does **not**:
-- describe individual services
-- list all endpoints
-- explain crypto algorithms
-- document pipeline internals
-
-Those concerns live in **lower-level READMEs**.
-
----
-
-## Relationship to Other Documents
-
-Read next:
-- `app/backend/src/README.md` — layer responsibilities
-- `SECURITY-IMPLEMENTATION.md` — runtime security
-- `ENCRYPTION-SCHEME.md` — cryptographic model
-
-This file exists to **orient**, not to instruct line-by-line.
-
----
-
-## Final Statement
-
-The backend is the **authoritative execution environment** of Cabinet.
-
-If something bypasses the backend — it is invalid.  
-If something weakens backend guarantees — it is rejected.  
-If something is unclear — **stop and escalate**.
+If execution occurs — it was explicitly allowed.
