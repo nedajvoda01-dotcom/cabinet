@@ -1,219 +1,215 @@
-# cabinet/app/frontend/README.md — Frontend Architecture & Access Projection
+# Frontend — Cabinet Control Interface
 
 ## Location
 
-cabinet/app/frontend/README.md
+app/frontend/README.md
 
 ---
 
 ## Purpose
 
-This document defines the **frontend system of Cabinet**.
+The frontend is the **control interface** of the Cabinet system.
 
-It explains:
-- the role of the frontend in the overall system
-- architectural principles of the UI
-- how access control is reflected in the interface
-- how frontend security relates to backend security
-
-This README is **normative** for frontend structure and behavior.
-
----
-
-## Role of the Frontend in Cabinet
-
-The frontend is **not a decision-making component**.
-
-Its role is to:
+It exists to:
 - present system state
-- submit user commands
+- issue commands to the backend
 - reflect permissions and hierarchy
-- visualize pipeline execution and results
-- provide operational visibility
+- display pipeline progress
+- surface audit and observability data
 
-The frontend does **not**:
-- enforce security
-- decide permissions
-- contain business logic
-- bypass backend validation
-
-The backend is always authoritative.
+The frontend is **not** a business application.
+It is a **secured operator console**.
 
 ---
 
-## Interface Philosophy
+## Core Principle
 
-Cabinet has **one interface**.
-
-Principles:
-- UI is designed once, for Super Admin
-- lower roles see a **reduced projection** of the same UI
-- nothing is duplicated per role
-- no alternative role-specific layouts exist
-
-Access is reduced by:
-- permission filtering
-- capability checks
-- visibility gating
-
-Not by:
-- separate pages
-- forks of UI logic
-- conditional navigation trees
-
----
-
-## Role & Capability Model
-
-The frontend:
-- receives role and capability data from backend
-- never infers permissions locally
-- never hardcodes role logic
-
-Capabilities determine:
-- which actions are visible
-- which controls are enabled
-- which data is shown
-
-If a capability is missing:
-- the UI hides the control
-- the backend would reject it anyway
-
-UI visibility ≠ permission.
-
----
-
-## Architectural Style
-
-The frontend follows a **feature-oriented structure**:
-
-- `app/` — application bootstrap
-- `pages/` — routed screens
-- `features/` — user actions and workflows
-- `entities/` — domain-shaped UI state
-- `shared/` — cross-cutting utilities
-
-This structure exists to:
-- prevent coupling
-- isolate concerns
-- enable gradual extension
-
----
-
-## Security on the Frontend
-
-The frontend participates in the **security protocol**, but does not define it.
-
-Responsibilities include:
-- request canonicalization
-- nonce generation
-- request signing
-- payload encryption
-- key exchange
-
-These mechanisms:
-- mirror backend expectations
-- are validated by parity tests
-- must not be modified casually
-
-The frontend never:
-- skips security steps
-- weakens encryption
-- assumes trusted transport
-
----
-
-## API Interaction
-
-All API interaction goes through:
-shared/api/
-
-yaml
-Копировать код
+The frontend is a **projection** of backend capabilities.
 
 Rules:
-- generated clients are the source of truth
-- manual editing of generated code is forbidden
-- API requests must comply with contracts
+- backend is the single source of truth
+- frontend never decides permissions
+- frontend never infers security rules
+- frontend never bypasses protocol requirements
 
-If API schema changes:
-- regenerate clients
-- update parity tests
-- commit changes together
+If the backend disallows an action, the frontend cannot enable it.
 
 ---
 
-## Desktop-Only Policy
+## Design Philosophy
 
-Cabinet frontend is **desktop-only by design**.
+### Single Interface Model
+
+- There is exactly **one UI**
+- It is designed for **Super Admin**
+- Lower roles see a **restricted projection**
+- No role-specific UIs exist
+
+UI differences are produced by:
+- capability filtering
+- visibility constraints
+- disabled actions
+
+Not by duplication.
+
+---
+
+## Desktop-Only
+
+The frontend is:
+- desktop-first
+- desktop-only
 
 Rules:
 - no mobile layouts
 - no responsive breakpoints
-- no touch-first assumptions
+- no adaptive UI logic
 
 This is intentional and enforced.
 
 ---
 
-## State & Data Flow
+## High-Level Structure
 
-Frontend state:
-- mirrors backend read models
-- is disposable
-- is never authoritative
+app/frontend
+├── src/ → Frontend source code
+├── tests/ → Frontend tests
+└── README.md → This document
 
-If frontend state diverges:
-- refresh from backend
-- do not “fix” locally
+yaml
+Копировать код
 
 ---
 
-## Testing Philosophy
+## Source Structure (`src/`)
 
-Frontend tests focus on:
-- contract parity
-- security protocol correctness
-- permission-based visibility
-- deterministic rendering
+Frontend follows a **feature-oriented structure**:
 
-Visual polish is secondary to correctness.
+src/
+├── app/ → Application bootstrap
+├── pages/ → Route-level pages
+├── features/ → User interactions and actions
+├── entities/ → Domain representations (UI-only)
+├── shared/ → Cross-cutting utilities
+
+yaml
+Копировать код
+
+This structure prevents:
+- global state sprawl
+- cross-feature coupling
+- implicit dependencies
+
+---
+
+## Shared Layer
+
+The `shared/` directory includes:
+- API client
+- runtime security
+- access helpers
+- UI primitives
+- WebSocket client
+
+This is where frontend meets system infrastructure.
+
+---
+
+## Runtime Security
+
+The frontend implements:
+- canonical request building
+- request signing
+- payload encryption
+- nonce generation
+- key exchange
+
+The frontend **fully participates** in the security protocol.
+
+Rules:
+- no plaintext sensitive payloads
+- no unsigned requests
+- no reused nonces
+
+The browser is treated as an untrusted environment.
+
+---
+
+## API Client
+
+The API client:
+- is generated
+- matches shared contracts
+- is validated via parity tests
+
+Rules:
+- generated code is never edited manually
+- contracts define request and response shapes
+- breaking changes are detected automatically
+
+---
+
+## WebSocket Support
+
+The frontend:
+- subscribes to real-time updates
+- displays pipeline progress
+- reacts to system events
+
+WebSocket data is:
+- derived from backend events
+- permission-filtered
+- read-only
+
+---
+
+## Error Handling
+
+Errors are:
+- structured
+- classified
+- mapped from backend responses
+
+The frontend:
+- never invents error meanings
+- never suppresses critical failures
+- never retries forbidden actions
 
 ---
 
 ## Forbidden Practices
 
-The following are forbidden:
+The frontend MUST NOT:
+- store secrets
+- bypass backend validation
+- reimplement authorization logic
+- infer hidden capabilities
+- weaken the security protocol
 
-- implementing business rules in UI
-- trusting frontend validation
-- role-based branching logic in components
-- editing generated API code
-- storing secrets in frontend code
-
----
-
-## Relationship to Other Documents
-
-This README complements:
-
-- `shared/contracts/README.md`
-- `SECURITY-IMPLEMENTATION.md`
-- `ENCRYPTION-SCHEME.md`
-
-Frontend security exists to support backend enforcement.
+UI visibility does not equal permission.
 
 ---
 
-## Final Statement
+## Audience
 
-The frontend is a **secure operator console**, not an application brain.
+This document is written for:
+- frontend developers
+- system designers
+- auditors
+- AI agents
 
-If the UI can do something the backend forbids —  
-the UI is wrong.
+---
 
-If the UI hides something the backend allows —  
-the UI is incomplete.
+## Summary
 
-If behavior is unclear —  
-**ask the backend, not the UI**.
+The frontend is the **operator console** of Cabinet.
+
+It reflects.
+It submits.
+It displays.
+
+It never decides.
+It never trusts itself.
+It never shortcuts security.
+
+If an action is possible — the backend allowed it.
