@@ -22,7 +22,7 @@ export function PipelineStageView({ stages }: PipelineStageViewProps) {
       {stageOrder.map((stage, index) => {
         const stageState = stageMap.get(stage);
         return (
-          <div key={stage} style={{ flex: 1 }}>
+          <div key={stage} style={{ flex: 1, position: 'relative' }}>
             <div
               style={{
                 padding: '16px',
