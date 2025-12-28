@@ -34,9 +34,8 @@ final class ListTasksQuery
             $attempts = 0;
             
             if ($pipelineState !== null) {
-                $currentStage = $pipelineState->currentStage()->value;
-                $stageState = $pipelineState->getStageState($pipelineState->currentStage());
-                $attempts = $stageState->attemptCount();
+                $currentStage = $pipelineState->stage()->value;
+                $attempts = $pipelineState->attemptCount();
             }
             
             $result[] = [

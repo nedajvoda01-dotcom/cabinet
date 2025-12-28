@@ -37,6 +37,19 @@ final class InMemoryActorRegistry
                 [],
                 ['key-3' => 'limited-secret']
             ),
+            // Demo user for frontend development
+            'user:demo-user' => new ResolvedActor(
+                'demo-user',
+                ActorType::USER,
+                HierarchyRole::ADMIN,
+                [
+                    Scope::fromString('tasks.read')->value(),
+                    Scope::fromString('tasks.create')->value(),
+                    Scope::fromString('tasks.tick')->value(),
+                    Scope::fromString('admin.pipeline.retry')->value(),
+                ],
+                ['demo-key' => 'demo-secret']
+            ),
         ];
     }
 
