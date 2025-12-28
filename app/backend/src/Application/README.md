@@ -1,105 +1,143 @@
-# Application Layer — Command & Orchestration Boundary
+# Application Layer — Orchestration & Use Case Control
 
 ## Location
 
-app/backend/src/Application
+app/backend/src/Application/README.md
 
 ---
 
 ## Purpose
 
-The Application layer defines **how the system is used**.
+The Application layer defines **what the system is allowed to do**.
 
-It is the boundary between:
-- external intent (HTTP, integrations, operators)
-- internal execution (Domain, Pipeline, Infrastructure)
+It is the **orchestration brain** of Cabinet.
 
 This layer:
-- accepts commands
-- validates intent
+- receives validated commands
 - enforces policies
-- coordinates execution
-- delegates work to the pipeline or services
+- coordinates domain objects
+- schedules pipeline execution
+- calls external integrations via ports
 
-It does **not** contain business rules.
-It does **not** implement infrastructure.
-It does **not** expose persistence details.
-
----
-
-## Responsibilities
-
-The Application layer is responsible for:
-
-- Command handling
-- Query handling
-- Access and hierarchy enforcement
-- Precondition validation
-- Policy evaluation
-- Orchestration of pipelines
-- Coordination of integrations
-
-It answers the question:
-
-> “Is this action allowed, valid, and executable right now?”
+It does **not** implement low-level mechanics
+and does **not** contain infrastructure details.
 
 ---
 
-## Command Model
+## Core Responsibility
 
-Commands represent **explicit intent to change state**.
+The Application layer answers the question:
 
-Characteristics:
-- immutable
-- validated before execution
-- authorized before execution
-- idempotent where required
+> “Is this operation allowed, and what should happen next?”
+
+It is responsible for:
+- command handling
+- query handling
+- policy enforcement
+- precondition validation
+- pipeline coordination
+- integration orchestration
+
+---
+
+## High-Level Structure
+
+Application/
+├── Commands/ → Write operations (state changes)
+├── Queries/ → Read operations (state inspection)
+├── Services/ → Application services
+├── Pipeline/ → Asynchronous execution orchestration
+├── Integrations/ → Ports (interfaces) to external systems
+├── Policies/ → Authorization and behavior rules
+├── Preconditions/ → Input and state guards
+├── Security/ → Security-related service interfaces
+└── README.md → This document
+
+yaml
+Копировать код
+
+Each submodule has a **single, explicit role**.
+
+---
+
+## Commands
+
+Commands represent **intent to change state**.
+
+Rules:
+- Commands are explicit and immutable
+- Commands do not return data
+- Commands never bypass policies
+- Commands never talk directly to infrastructure
 
 Examples:
-- create task
-- trigger pipeline stage
-- retry job
-- cancel execution
+- CreateTask
+- TriggerParse
+- RetryJob
+- CancelJob
 
-Commands do not return domain objects.
-They return **execution acknowledgements**.
+A command answers:
+> “I want something to happen.”
 
 ---
 
-## Query Model
+## Queries
 
-Queries represent **read-only intent**.
+Queries represent **intent to read state**.
 
-Characteristics:
-- no side effects
-- permission-filtered
-- projection-based
-- optimized for reading
+Rules:
+- Queries never mutate state
+- Queries are side-effect free
+- Queries operate on read models
+- Queries respect access policies
 
-Queries must never:
-- mutate state
-- trigger pipeline execution
-- call integrations
+Examples:
+- GetTasks
+- GetQueueStatus
+- GetSecurityEvents
+
+A query answers:
+> “Show me what exists.”
+
+---
+
+## Services
+
+Application services:
+- coordinate multiple domain objects
+- apply policies
+- trigger pipelines
+- emit events
+
+Rules:
+- services are thin
+- services are deterministic
+- services never embed domain logic
+- services never call infrastructure directly
+
+Services bind:
+- Commands → Domain → Pipeline
 
 ---
 
 ## Policies
 
-Policies enforce **system-level rules**.
+Policies define **what is allowed**.
 
-Policies include:
-- access control
-- hierarchy constraints
-- rate limits
-- degradation behavior
+Examples:
+- access rules
+- hierarchy enforcement
+- rate and limit rules
 - data minimization
+- degradation behavior
 
-Policies:
-- are deterministic
-- are explicit
-- fail closed
+Rules:
+- policies are explicit
+- policies are enforced centrally
+- policies are testable
+- policies are not optional
 
-Policies are **not configurable by users**.
+Policies are **not security** — they are authorization and behavior rules.
 
 ---
 
@@ -108,89 +146,109 @@ Policies are **not configurable by users**.
 Preconditions protect **internal consistency**.
 
 They validate:
-- payload structure
-- references
-- stage validity
-- data boundaries
+- input shape
+- payload size
+- allowed stage transitions
+- asset references
+- URLs and identifiers
 
-Preconditions are:
-- not security
-- not authorization
-- not optional
+Rules:
+- preconditions run after security
+- preconditions fail fast
+- preconditions never perform authorization
 
-They execute **after security**, before orchestration.
-
----
-
-## Services
-
-Application services:
-- coordinate multiple actions
-- orchestrate calls to domain, pipeline, and integrations
-- do not own business rules
-
-Services must remain:
-- thin
-- explicit
-- predictable
-
-If logic grows complex — it belongs elsewhere.
+Preconditions prevent corruption — not attacks.
 
 ---
 
-## Integrations (Application View)
+## Pipeline Coordination
 
-The Application layer defines:
-- ports
-- contracts
-- expectations
+The Application layer:
+- defines pipeline stages
+- schedules jobs
+- handles retries and failures
+- enforces idempotency
 
-It never depends on:
+The pipeline is:
+- asynchronous
+- deterministic
+- observable
+- resilient
+
+Application decides **what stage comes next**.
+Infrastructure decides **how it runs**.
+
+---
+
+## Integrations (Ports)
+
+Application defines **ports**, not adapters.
+
+Ports:
+- describe required capabilities
+- are technology-agnostic
+- define contracts only
+
+Infrastructure provides:
 - real adapters
-- HTTP clients
-- storage drivers
+- fallback adapters
 
-All external interaction is abstracted.
+Application never knows:
+- how HTTP is done
+- how storage works
+- how encryption is implemented
 
 ---
 
-## Non-Goals (Critical)
+## Security Interfaces
+
+The Application layer declares interfaces for:
+- encryption services
+- signature services
+- nonce services
+- key services
+
+This ensures:
+- security is enforced consistently
+- runtime details remain isolated
+- testing is possible
+
+---
+
+## Forbidden Practices
 
 The Application layer MUST NOT:
+- talk directly to databases
+- use HTTP clients
+- access queues directly
+- implement cryptography
+- infer business meaning
 
-- contain business intelligence
-- contain persistence logic
-- contain cryptography
-- implement retries
-- bypass security
-- encode UI logic
-
-Violations are architectural defects.
+If something depends on “how” — it belongs to Infrastructure.
 
 ---
 
-## Enforcement
+## Audience
 
-Boundaries are enforced by:
-- directory structure
-- static analysis
-- architecture tests
-- explicit interfaces
-
-Code outside this layer must not depend on its internals.
+This document is written for:
+- backend developers
+- system designers
+- auditors
+- AI agents
 
 ---
 
 ## Summary
 
-The Application layer is the **control surface** of Cabinet.
+The Application layer is the **decision coordinator** of Cabinet.
 
-It validates intent.
-It enforces rules.
-It coordinates execution.
+It decides:
+- what is allowed
+- what happens next
+- how execution is orchestrated
 
-It does not decide meaning.
-It does not execute work.
-It does not store data.
+It never executes.
+It never stores.
+It never assumes.
 
-If intent is invalid — execution never begins.
+If something happens — Application explicitly allowed it.
