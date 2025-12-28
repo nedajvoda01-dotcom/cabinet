@@ -40,6 +40,18 @@ final class InMemoryActorRegistry
         ];
     }
 
+    public function registerUser(string $actorId, string $secretKey, array $scopes, HierarchyRole $role = HierarchyRole::USER): void
+    {
+        $key = sprintf('user:%s', $actorId);
+        $this->actors[$key] = new ResolvedActor(
+            $actorId,
+            ActorType::USER,
+            $role,
+            $scopes,
+            ['key-1' => $secretKey]
+        );
+    }
+
     public function find(ActorType $type, string $actorId): ?ResolvedActor
     {
         $key = sprintf('%s:%s', $type->value, $actorId);

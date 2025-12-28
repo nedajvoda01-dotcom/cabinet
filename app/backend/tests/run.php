@@ -19,8 +19,12 @@ use Cabinet\Backend\Tests\Unit\Domain\PipelineStateTest;
 use Cabinet\Backend\Tests\Unit\Application\ApplicationInfrastructureTest;
 use Cabinet\Backend\Tests\Unit\Application\HandlersTest;
 use Cabinet\Backend\Tests\Unit\Application\PipelineHandlersTest;
+use Cabinet\Backend\Tests\Unit\Application\IntegrationResultTest;
 use Cabinet\Backend\Tests\ApplicationEndpointsTest;
+use Cabinet\Backend\Tests\PipelineEndpointsTest;
 use Cabinet\Backend\Tests\Integration\SqlitePersistenceTest;
+use Cabinet\Backend\Tests\Integration\TaskOutputsRepositoryTest;
+use Cabinet\Backend\Tests\Integration\PipelineTickIntegrationTest;
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
@@ -42,8 +46,12 @@ $tests = [
     new ApplicationInfrastructureTest(),
     new HandlersTest(),
     new PipelineHandlersTest(),
+    new IntegrationResultTest(),
     new ApplicationEndpointsTest(),
+    new PipelineEndpointsTest(),
     new SqlitePersistenceTest(),
+    new TaskOutputsRepositoryTest(),
+    new PipelineTickIntegrationTest(),
 ];
 
 $failures = 0;
