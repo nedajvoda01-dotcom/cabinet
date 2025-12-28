@@ -1,326 +1,248 @@
-# cabinet/app/backend/src/Infrastructure/Security/README.md — Runtime Security Components & Responsibilities
+# Infrastructure Security — Cryptography & Runtime Enforcement
 
 ## Location
 
-cabinet/app/backend/src/Infrastructure/Security/README.md
+app/backend/src/Infrastructure/Security/README.md
 
 ---
 
 ## Purpose
 
-This document defines the **runtime security subsystem** of the Cabinet backend.
+This module implements the **runtime security mechanics** of Cabinet.
 
-It explains:
-- which security components exist at runtime
-- what each component is responsible for
-- how cryptographic and security operations are organized
-- how security rules defined elsewhere are executed in code
+It answers the question:
 
-This README is **normative** for runtime security implementation.
+> “How is security actually executed at runtime?”
 
----
+This layer contains:
+- cryptographic primitives
+- key management
+- nonce storage
+- signature verification
+- encryption enforcement
+- audit logging
+- attack protection
 
-## Position in the System
-
-Infrastructure/Security is the **execution layer** of security.
-
-It:
-- implements cryptographic operations
-- enforces protocol guarantees
-- manages keys, nonces, and certificates
-- supports the HTTP security pipeline
-
-It does **not**:
-- define security policy
-- define governance rules
-- decide who is allowed to change security behavior
-
-Policy lives elsewhere.  
-This layer **executes** it.
+This is **not policy**.
+This is **mechanical enforcement**.
 
 ---
 
-## Security Subsystems Overview
+## Security Is Structural
 
-Runtime security is decomposed into explicit subsystems.
+Security in Cabinet is:
+- mandatory
+- fail-closed
+- non-configurable
+- non-optional
+
+No code path may bypass this layer.
+
+If security enforcement fails — execution stops.
 
 ---
 
-### AttackProtection
+## High-Level Structure
 
-Location:
-Infrastructure/Security/AttackProtection
+Security/
+├── Encryption/ → Encryption engines and enforcers
+├── Signatures/ → Canonicalization and signature verification
+├── Nonce/ → Replay protection
+├── Keys/ → Key storage, rotation, exchange
+├── Identity/ → JWT, sessions, 2FA
+├── Certificates/ → Integration certificate handling
+├── Audit/ → Security audit logging
+├── AttackProtection/ → Rate limits, injection protection
+├── Vault/ → Secret management
+└── README.md → This document
 
 yaml
 Копировать код
+
+Each submodule performs **one security function only**.
+
+---
+
+## Encryption
 
 Responsibilities:
-- rate limiting
-- basic injection protection
-- request-level abuse prevention
+- decrypt incoming payloads
+- validate encryption metadata
+- enforce encryption requirements
+- reject malformed ciphertext
 
-This layer:
-- reduces blast radius
-- provides defensive hardening
-- complements, but does not replace, cryptography
+Properties:
+- authenticated encryption (AEAD)
+- session-bound keys
+- request-bound context
+- deterministic only where required
+
+Encryption failures are fatal.
 
 ---
 
-### Audit
-
-Location:
-Infrastructure/Security/Audit
-
-yaml
-Копировать код
+## Signatures
 
 Responsibilities:
-- recording security-relevant events
-- sensitive data redaction
-- immutable audit trails
+- canonicalize requests
+- verify cryptographic signatures
+- confirm key versions
+- ensure request integrity
 
-Audit events include:
-- authentication failures
-- nonce reuse
-- invalid signatures
-- hierarchy violations
-- rate limit breaches
+Rules:
+- verification happens before decryption
+- canonicalization is deterministic
+- signature mismatch aborts execution
 
-Audit must:
-- never block execution
-- never leak secrets
-- always be consistent
+Unsigned requests are rejected unless explicitly allowed.
 
 ---
 
-### Certificates
-
-Location:
-Infrastructure/Security/Certificates
-
-yaml
-Копировать код
+## Nonce (Replay Protection)
 
 Responsibilities:
-- managing integration certificates
-- validating presented certificates
-- binding certificates to identities
+- validate nonce format
+- enforce single-use semantics
+- store nonce atomically
+- cleanup expired nonces
 
-Certificates are:
-- explicit
-- versioned
-- validated before trust is granted
+Rules:
+- nonce reuse is a hard failure
+- nonce storage is atomic
+- TTL is enforced
 
-No implicit certificate trust exists.
-
----
-
-### Encryption
-
-Location:
-Infrastructure/Security/Encryption
-
-yaml
-Копировать код
-
-Responsibilities:
-- symmetric encryption
-- asymmetric encryption
-- hybrid encryption schemes
-- authenticated encryption enforcement
-
-This subsystem:
-- encrypts and decrypts payloads
-- validates encryption metadata
-- binds encryption to session context
-
-Algorithms and schemes must comply with:
-- `ENCRYPTION-SCHEME.md`
+Replay attempts are audited.
 
 ---
 
-### Identity
-
-Location:
-Infrastructure/Security/Identity
-
-yaml
-Копировать код
-
-Responsibilities:
-- JWT issuing and verification
-- session identity resolution
-- two-factor authentication support
-
-Identity code:
-- resolves *who* the actor is
-- does not decide *what* they may do
-
-Authorization happens elsewhere.
-
----
-
-### Keys
-
-Location:
-Infrastructure/Security/Keys
-
-yaml
-Копировать код
+## Keys
 
 Responsibilities:
 - key storage
 - key versioning
 - key rotation
 - session key exchange
+- identity binding
 
-Key management must ensure:
-- rotation without downtime
-- backward compatibility during transition
-- auditability of key usage
+Rules:
+- keys are versioned
+- rotations are auditable
+- session keys are short-lived
+- identity keys are never used for payload encryption
 
-Private keys must never:
-- be logged
-- be serialized
-- be exposed outside this subsystem
+Key misuse is treated as a security incident.
 
 ---
 
-### Nonce
-
-Location:
-Infrastructure/Security/Nonce
-
-yaml
-Копировать код
+## Identity
 
 Responsibilities:
-- nonce validation
-- replay protection
-- atomic nonce storage
-- cleanup of expired nonces
+- JWT issuing and verification
+- identity resolution
+- optional two-factor authentication
+- session validation
 
-Nonces:
-- are single-use
-- are time-bound
-- are enforced atomically
+Rules:
+- identity is resolved before authorization
+- tokens are never trusted blindly
+- identity data is minimal
 
-Nonce reuse is a **hard security failure**.
+UI identity does not imply permission.
 
 ---
 
-### Signatures
-
-Location:
-Infrastructure/Security/Signatures
-
-yaml
-Копировать код
+## Certificates
 
 Responsibilities:
-- request canonicalization
-- string-to-sign construction
-- signature verification
+- manage integration certificates
+- validate trust chains
+- bind integrations to identities
 
-Signatures:
-- are verified before decryption
-- bind requests to identities
-- guarantee integrity and ordering
-
-Canonicalization rules are shared with:
-- frontend runtime
-- shared contract vectors
+Integrations authenticate the same way users do.
+There are no “trusted” integrations.
 
 ---
 
-### Vault
+## Audit
 
-Location:
-Infrastructure/Security/Vault
+Responsibilities:
+- record security-relevant events
+- provide immutable audit trails
+- support forensic analysis
 
-yaml
-Копировать код
+Audited events include:
+- authentication failures
+- nonce reuse
+- signature mismatch
+- hierarchy violations
+- rate limit violations
+
+Audit logs are append-only.
+
+---
+
+## Attack Protection
+
+Includes:
+- rate limiting
+- SQL injection protection
+- XSS protection
+
+Rules:
+- protection is always enabled
+- failures are logged
+- limits are enforced post-authentication
+
+No endpoint is exempt.
+
+---
+
+## Vault
 
 Responsibilities:
 - secret retrieval
-- policy-based secret access
-- secure injection of secrets into runtime
+- secret injection
+- policy enforcement
 
-Secrets:
-- are not stored in configuration files
-- are not committed to code
-- are accessed via policy-controlled interfaces
+Rules:
+- secrets never live in code
+- secrets never appear in logs
+- vault failures block execution
 
----
-
-## Interaction with HTTP Security Pipeline
-
-This subsystem supports:
-- `Http/Security/Pipeline/*`
-
-The HTTP layer:
-- orchestrates security steps
-- decides *which* checks apply
-
-Infrastructure/Security:
-- performs the actual cryptographic and validation work
-
-Separation is intentional and enforced.
-
----
-
-## Dependency Rules
-
-Infrastructure/Security:
-- may depend on Domain value objects
-- must not depend on Application logic
-- must not depend on Http controllers
-
-Security code must be reusable outside HTTP context
-(e.g. workers, background jobs).
-
----
-
-## Failure Behavior
-
-Security failures must:
-- fail closed
-- be deterministic
-- produce auditable events
-- never leak sensitive details
-
-Partial success is forbidden.
+Environment variables are not a secret store.
 
 ---
 
 ## Forbidden Practices
 
-The following are forbidden:
+This layer MUST NOT:
+- define access policies
+- decide permissions
+- infer intent
+- weaken enforcement dynamically
+- expose secrets
 
-- implementing security decisions in controllers
-- skipping security checks for “internal” calls
-- environment-based weakening of crypto
-- logging secrets or raw ciphertext
-- duplicating cryptographic logic elsewhere
-
----
-
-## Relationship to Other Documents
-
-This README must be read together with:
-
-- `SECURITY-IMPLEMENTATION.md` — execution model
-- `ENCRYPTION-SCHEME.md` — cryptographic rules
-- `HIERARCHY-GUIDE.md` — authority and roles
-
-This file defines **how security is executed**, not why.
+Security behavior must be deterministic and explicit.
 
 ---
 
-## Final Statement
+## Audience
 
-Runtime security is **infrastructure**, not configuration.
+This document is written for:
+- security engineers
+- backend developers
+- auditors
+- AI agents
 
-If security logic is unclear — **deny**.  
-If crypto behavior diverges — **treat as a defect**.  
-If a shortcut is tempting — **it is forbidden**.
+---
+
+## Summary
+
+This module is the **enforcement engine** of Cabinet security.
+
+It encrypts.
+It verifies.
+It blocks.
+It audits.
+
+If execution continues — security has already passed.
