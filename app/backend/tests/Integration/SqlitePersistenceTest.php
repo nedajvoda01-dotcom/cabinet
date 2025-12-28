@@ -168,4 +168,46 @@ final class SqlitePersistenceTest extends TestCase
         // Should return the same task ID even after "restart"
         $this->assertEquals($taskId1, $taskId2, 'Should return same task ID after process restart');
     }
+
+    public function testApproveAccessCreatesPersistedUser(): void
+    {
+        $this->resetDatabase();
+        
+        $config = \Cabinet\Backend\Bootstrap\Config::fromEnvironment();
+        $clock = new \Cabinet\Backend\Bootstrap\Clock();
+        $container = new \Cabinet\Backend\Bootstrap\Container($config, $clock);
+
+        // First create an access request
+        $requestCommand = new \Cabinet\Backend\Application\Commands\Access\RequestAccessCommand('newuser@example.com');
+        $requestResult = $container->commandBus()->dispatch($requestCommand);
+        $this->assertTrue($requestResult->isSuccess(), 'Request access should succeed');
+        $accessRequestId = $requestResult->value();
+
+        // Now approve it
+        $approveCommand = new \Cabinet\Backend\Application\Commands\Access\ApproveAccessCommand(
+            $accessRequestId,
+            'approver-123'
+        );
+        $approveResult = $container->commandBus()->dispatch($approveCommand);
+        $this->assertTrue($approveResult->isSuccess(), 'Approve access should succeed');
+        $userId = $approveResult->value();
+
+        // Verify user is in database
+        $pdo = ConnectionFactory::create();
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE id = :id');
+        $stmt->execute([':id' => $userId]);
+        $userRow = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        $this->assertTrue($userRow !== false, 'User should be in database');
+        $this->assertEquals('user', $userRow['role'], 'User role should be user');
+        $this->assertEquals(1, (int)$userRow['is_active'], 'User should be active');
+
+        // Verify access request status is updated
+        $stmt = $pdo->prepare('SELECT * FROM access_requests WHERE id = :id');
+        $stmt->execute([':id' => $accessRequestId]);
+        $accessRow = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        $this->assertTrue($accessRow !== false, 'Access request should be in database');
+        $this->assertEquals('approved', $accessRow['status'], 'Access request should be approved');
+    }
 }
