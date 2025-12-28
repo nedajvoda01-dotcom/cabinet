@@ -21,6 +21,9 @@ It defines **ownership boundaries** and **entry points only**.
 ```
 cabinet/
 ├─ .github/
+│  └─ workflows/
+│     └─ ci.yml
+│
 ├─ backend/
 ├─ frontend/
 │
