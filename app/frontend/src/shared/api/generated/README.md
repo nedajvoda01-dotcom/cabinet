@@ -1,168 +1,157 @@
-# cabinet/app/frontend/src/shared/api/generated/README.md — Generated API Client & Contract Parity
+# Generated API Client — Parity & Immutability Rules
 
 ## Location
 
-cabinet/app/frontend/src/shared/api/generated/README.md
+app/frontend/src/shared/api/generated/README.md
 
 ---
 
 ## Purpose
 
-This document defines the rules and guarantees around the **generated API client**
-used by the Cabinet frontend.
+This directory contains the **generated API client** used by the Cabinet frontend.
 
-It explains:
-- why the client is generated
-- what guarantees it provides
-- how parity with backend contracts is enforced
-- what is strictly forbidden to modify
+It exists to guarantee:
+- stable request/response typing
+- consistent endpoint definitions
+- compatibility with backend contracts
+- automated detection of drift
 
-This README is **normative** for API client usage.
-
----
-
-## Role of the Generated Client
-
-The generated API client is the **only supported way**
-for the frontend to communicate with the backend.
-
-Its purpose is to:
-- guarantee schema consistency
-- enforce request/response typing
-- prevent drift between frontend and backend
-- surface breaking changes immediately
-
-The client is not a convenience layer.
-It is a **safety mechanism**.
+This is not handwritten application code.
 
 ---
 
 ## Source of Truth
 
-The generated client is derived from:
+The client is generated from the system’s authoritative definitions:
 
-- backend OpenAPI specification
-- shared contracts (`shared/contracts`)
-- explicit schema definitions
+- backend HTTP routes / OpenAPI output (if used)
+- shared contracts in `shared/contracts`
 
-The frontend **does not define** API shapes.
-It consumes them.
-
-If a shape is wrong:
-- the backend spec is wrong
-- or the contracts are wrong
-- or generation failed
-
-The frontend must not “fix” it locally.
+This directory is a **consumer** of those sources.
+It is not allowed to redefine types or behavior.
 
 ---
 
-## Generation Rules
+## Immutability (Critical)
 
-Generated code:
-- is produced automatically
-- is deterministic
-- must be committed to the repository
-- must not be edited manually
+Files in this directory are **generated artifacts**.
 
-Any manual change to generated files is forbidden.
+Rules:
+- DO NOT edit generated files manually
+- DO NOT patch generated output directly
+- DO NOT “hotfix” types here
+- DO NOT add helpers inside generated code
 
-If behavior needs to change:
-1. Update backend spec or contracts
-2. Regenerate client
-3. Commit changes together
+Any manual change here is considered:
+- invalid
+- non-reviewable
+- non-repeatable
+- a build integrity defect
 
----
-
-## Parity Guarantees
-
-Parity between frontend and backend is enforced via:
-
-- contract parity tests
-- OpenAPI parity tests
-- CI validation steps
-
-These tests ensure:
-- request fields match exactly
-- response fields match exactly
-- enum values are aligned
-- required/optional fields are consistent
-
-Parity failures are **build blockers**.
+All changes must be done at the source, then regenerated.
 
 ---
 
-## Usage Rules
+## Parity Guarantee
 
-Frontend code must:
+The frontend must remain compatible with backend expectations.
 
-- import API calls from the generated client
-- not duplicate request logic
-- not redefine types
-- not hardcode endpoints
+Parity means:
+- endpoint paths match
+- methods match
+- payload shapes match
+- error formats match
+- security-required headers match (where enforced)
 
-All API interaction flows through this layer.
-
----
-
-## Error Handling
-
-The generated client:
-- exposes structured error types
-- maps backend error kinds explicitly
-- avoids stringly-typed error handling
-
-Frontend code must:
-- handle errors by category
-- not inspect raw error payloads
-- not rely on message strings
+Drift is detected via parity tests.
 
 ---
 
-## Versioning & Updates
+## Testing
 
-When backend API changes:
-- the generated client must be regenerated
-- old generated artifacts must be removed
-- parity tests must be updated if required
+Parity is verified by tests located near this client:
 
-Partial updates are forbidden.
+- `openapi-parity.test.ts` (or equivalent)
+
+Rules:
+- parity tests are build blockers
+- failing parity means the frontend and backend have diverged
+- divergence must be resolved by regeneration, not manual edits
+
+---
+
+## Regeneration Workflow
+
+When backend API or contracts change:
+
+1. Update the authoritative source
+2. Regenerate this client
+3. Run parity tests
+4. Commit the regenerated output together with the source change
+
+The generated output must always be reproducible.
+
+---
+
+## Error Handling Contract
+
+Errors surfaced through the client must preserve:
+- backend error classification (`ErrorKind`, etc.)
+- structured response shape
+- deterministic mapping
+
+The client must not:
+- invent error semantics
+- convert errors into ambiguous strings
+- hide security failures
+
+---
+
+## Security Requirements
+
+This client must support the runtime security protocol by design.
+
+Rules:
+- requests must include required protocol headers
+- signing / encryption are applied outside generated code
+- generated code must remain compatible with canonicalization rules
+
+Security logic belongs to:
+- `app/frontend/src/shared/runtime/security`
+
+Generated code must remain clean and protocol-agnostic.
 
 ---
 
 ## Forbidden Practices
 
-The following are strictly forbidden:
+This directory MUST NOT contain:
+- business logic
+- UI logic
+- authorization rules
+- security implementation
+- hand-written fixes
 
-- editing generated files manually
-- copying generated code into other locations
-- bypassing the client with ad-hoc fetch calls
-- redefining API types locally
-- suppressing parity test failures
-
----
-
-## Relationship to Other Documents
-
-This README must be read together with:
-
-- `shared/contracts/README.md`
-- `app/frontend/README.md`
-- backend OpenAPI documentation
-
-This document defines **how API safety is enforced on the frontend**.
+If code is needed, it belongs outside `generated/`.
 
 ---
 
-## Final Statement
+## Audience
 
-The generated API client is a **hard boundary**, not a suggestion.
+This document is written for:
+- frontend developers
+- backend developers
+- auditors
+- AI agents
 
-If the client does not expose what you need —
-the backend must change.
+---
 
-If the client exposes something unexpected —
-treat it as a defect.
+## Summary
 
-If parity fails —
-**stop immediately**.
+This directory is a **generated boundary artifact**.
+
+It is immutable by policy.
+It is verified by parity tests.
+It must always match the system’s authoritative sources.
+
+If it diverges — regenerate, don’t patch.
