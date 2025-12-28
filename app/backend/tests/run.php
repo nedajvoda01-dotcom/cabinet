@@ -16,6 +16,7 @@ use Cabinet\Backend\Tests\Unit\Domain\AccessRequestTest;
 use Cabinet\Backend\Tests\Unit\Domain\UserTest;
 use Cabinet\Backend\Tests\Unit\Domain\TaskTest;
 use Cabinet\Backend\Tests\Unit\Domain\PipelineStateTest;
+use Cabinet\Backend\Tests\Unit\Application\ApplicationInfrastructureTest;
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
@@ -34,6 +35,7 @@ $tests = [
     new UserTest(),
     new TaskTest(),
     new PipelineStateTest(),
+    new ApplicationInfrastructureTest(),
 ];
 
 $failures = 0;
