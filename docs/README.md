@@ -1,181 +1,151 @@
-# cabinet/docs/README.md — Documentation Index & Governance
+# Documentation Index — Cabinet Platform
 
 ## Location
 
-cabinet/docs/README.md
+docs/README.md
 
 ---
 
 ## Purpose
 
-This document defines the **documentation system of Cabinet itself**.
+This directory contains **authoritative documentation** for understanding,
+operating, and extending the Cabinet system.
 
-It explains:
-- how documentation is structured
-- how it must be read
-- how it evolves
-- what is considered authoritative
+Documentation here exists to:
+- explain system intent
+- describe architectural decisions
+- define invariants and constraints
+- guide correct usage and extension
 
-This file is **not about the product**.  
-It is about **how the product is documented**.
-
----
-
-## Scope
-
-This README governs:
-- documentation layout
-- documentation responsibilities
-- documentation lifecycle
-- documentation authority rules
-
-It applies to:
-- developers
-- security reviewers
-- auditors
-- AI agents
-- maintainers
+It does **not** duplicate code.
+It explains **why the code exists in its current form**.
 
 ---
 
 ## Documentation Philosophy
 
-Cabinet documentation follows strict principles:
+Documentation in Cabinet follows strict principles:
 
-- Documentation explains **intent and invariants**
-- Code and tests enforce **behavior**
-- Documentation explains **why**, not **how**
-- Ambiguity is treated as a defect
+- Intent over implementation  
+- Constraints over examples  
+- Invariants over tutorials  
+- Clarity over completeness  
 
-If documentation and code diverge:
-> **Normative documentation wins**
-
----
-
-## Documentation Types
-
-Cabinet documentation is split into clearly separated categories.
-
-### 1. Overview Documents
-
-Purpose:
-- Explain what a subsystem is
-- Define boundaries and non-goals
-
-Examples:
-- `cabinet/README.md`
-- `app/backend/README.md`
-- `app/frontend/README.md`
-
----
-
-### 2. Implementation Documents (Normative)
-
-Purpose:
-- Define mandatory runtime behavior
-- Describe security and execution models
-
-Deviation is **forbidden**.
-
-Examples:
-- `SECURITY-IMPLEMENTATION.md`
-- `ENCRYPTION-SCHEME.md`
-- `HIERARCHY-GUIDE.md`
-
----
-
-### 3. Layer-Level READMEs
-
-Purpose:
-- Explain responsibilities of a specific layer
-- Define allowed dependencies
-- Protect architectural boundaries
-
-Examples:
-- `app/backend/src/README.md`
-- `app/backend/src/Infrastructure/README.md`
-- `shared/contracts/README.md`
-
----
-
-### 4. Generated / Derived Documentation
-
-Purpose:
-- Explain how generated artifacts are produced
-- Define regeneration rules
-- Forbid manual modification
-
-Examples:
-- `app/frontend/src/shared/api/generated/README.md`
+If behavior is enforced by code or tests, documentation explains **why**,
+not **how**.
 
 ---
 
 ## Reading Order
 
-Recommended reading order for new contributors:
+For new contributors, the recommended order is:
 
-1. `cabinet/README.md`  
-2. `cabinet/docs/README.md` (this file)  
-3. `app/backend/README.md`  
-4. `app/backend/src/README.md`  
-5. Infrastructure and security documents  
-6. Frontend documentation  
-7. Shared contracts documentation  
+1. **System Overview**  
+   `cabinet/README.md`  
+   High-level purpose, philosophy, and boundaries.
+
+2. **Backend Architecture**  
+   `app/backend/README.md`  
+   How the backend is structured and executed.
+
+3. **Application & Pipeline**  
+   `app/backend/src/Application/README.md`  
+   `app/backend/src/Application/Pipeline/README.md`  
+   Orchestration, execution model, and command handling.
+
+4. **Infrastructure & Integrations**  
+   `app/backend/src/Infrastructure/README.md`  
+   `app/backend/src/Infrastructure/Integrations/README.md`  
+
+5. **Frontend**  
+   `app/frontend/README.md`  
+   UI architecture and permission model.
+
+6. **Shared Contracts**  
+   `shared/contracts/README.md`  
+   Cross-language source of truth.
+
+7. **Security & Governance**  
+   `security/README.md`  
+   `SECURITY-IMPLEMENTATION.md`  
+   `ENCRYPTION-SCHEME.md`  
+   `HIERARCHY-GUIDE.md`
+
+---
+
+## Scope of This Directory
+
+This directory contains:
+- architectural explanations
+- system boundaries
+- extension guidelines
+- operational understanding
+
+It does not contain:
+- API references
+- SDK documentation
+- code-level comments
+- tutorials for end users
+
+---
+
+## Adding New Documents
+
+A new document should be added **only if**:
+
+- the subsystem has non-obvious invariants
+- incorrect usage may compromise security or integrity
+- the subsystem coordinates multiple layers
+- the subsystem is intended for extension
+
+If none apply — prefer code-level documentation.
 
 ---
 
 ## Source of Truth Rules
 
-There is **no duplicated authority**.
+There is **no duplicated authority**:
 
 - Contracts → `shared/contracts`
 - Runtime security → backend infrastructure
-- Governance → root-level security documents
-- Architecture → layer-level READMEs
+- Governance → `security/`
+- Execution model → Application & Pipeline
 
-If the same rule appears in two places:
-> One of them is wrong and must be removed.
-
----
-
-## When to Add New Documentation
-
-A new document may be added only if **at least one** is true:
-
-- The subsystem has non-obvious invariants
-- Incorrect usage may compromise security or integrity
-- The subsystem spans multiple layers
-- The subsystem is intended to be extended
-
-If none apply:
-> Use code comments or tests instead.
-
----
-
-## Forbidden Documentation Practices
-
-The following are forbidden:
-
-- Duplicating code behavior line-by-line
-- Restating contracts outside `shared/contracts`
-- Describing security implicitly
-- Leaving outdated documentation unmarked
-- Keeping “maybe” or “TODO” sections
+Documentation must reference the authoritative source,
+never redefine it.
 
 ---
 
 ## Maintenance Rules
 
-- Documentation evolves together with the system
-- Outdated documents must be updated or deleted
-- Documentation debt is treated as technical debt
+Documentation must be:
+- versioned
+- kept in sync with code
+- updated or removed when obsolete
+
+Outdated documentation is considered **technical debt**.
 
 ---
 
-## Final Statement
+## Audience
 
-Documentation is part of Cabinet’s control plane.
+This directory is written for:
+- internal developers
+- system operators
+- security reviewers
+- architects
+- AI agents
 
-If documentation is unclear — **stop**.  
-If documentation contradicts behavior — **fix one immediately**.  
-If documentation is missing — **treat it as a defect**.
+It is not intended for public users.
+
+---
+
+## Summary
+
+The `docs/` directory explains **how Cabinet should be understood**.
+
+If documentation and code disagree:
+- code defines behavior
+- documentation must be updated
+
+Ambiguity is not acceptable.
