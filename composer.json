@@ -1,18 +1,25 @@
 {
-  "name": "cabinet/backend",
+  "name": "cabinet/monorepo",
   "type": "project",
+  "description": "Cabinet Platform Monorepo - Secure orchestration and control plane",
   "require": {
     "php": "^8.1"
   },
   "autoload": {
     "psr-4": {
-      "Cabinet\\Backend\\": "app/backend/src/",
-      "Cabinet\\Contracts\\": "shared/contracts/implementations/php/"
+      "Cabinet\\Platform\\": "platform/src/",
+      "Cabinet\\Contracts\\": "shared/contracts/implementations/php/",
+      "Cabinet\\Adapters\\Parser\\": "adapters/parser/",
+      "Cabinet\\Adapters\\Photos\\": "adapters/photos/",
+      "Cabinet\\Adapters\\Robot\\": "adapters/robot/",
+      "Cabinet\\Adapters\\Storage\\": "adapters/storage/",
+      "Cabinet\\Adapters\\BrowserContext\\": "adapters/browser-context/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Cabinet\\Backend\\Tests\\": "app/backend/tests/"
+      "Cabinet\\Platform\\Tests\\": "platform/tests/",
+      "Cabinet\\Tests\\": "tests/"
     }
   }
 }
