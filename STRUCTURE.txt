@@ -1,481 +1,175 @@
 cabinet/
-├─ app
-│  ├─ backend
-│  │  ├─ public
-│  │  │  └─ index.php
-│  │  ├─ src
-│  │  │  ├─ Application
-│  │  │  │  ├─ Commands
-│  │  │  │  │  ├─ Admin
-│  │  │  │  │  │  ├─ CancelJobCommand.php
-│  │  │  │  │  │  ├─ ForceCleanupCommand.php
-│  │  │  │  │  │  └─ RetryJobCommand.php
-│  │  │  │  │  ├─ Auth
-│  │  │  │  │  │  ├─ LoginCommand.php
-│  │  │  │  │  │  ├─ LogoutCommand.php
-│  │  │  │  │  │  └─ RefreshTokenCommand.php
-│  │  │  │  │  └─ Tasks
-│  │  │  │  │     ├─ CreateTaskCommand.php
-│  │  │  │  │     ├─ DeleteTaskCommand.php
-│  │  │  │  │     ├─ TriggerParseCommand.php
-│  │  │  │  │     ├─ TriggerPhotosCommand.php
-│  │  │  │  │     ├─ TriggerPublishCommand.php
-│  │  │  │  │     └─ UpdateTaskCommand.php
-│  │  │  │  ├─ Integrations
-│  │  │  │  │  ├─ BrowserContext
-│  │  │  │  │  ├─ Parser
-│  │  │  │  │  ├─ PhotoProcessor
-│  │  │  │  │  ├─ Robot
-│  │  │  │  │  └─ Storage
-│  │  │  │  │     └─ StoragePort.php
-│  │  │  │  ├─ Pipeline
-│  │  │  │  │  ├─ Drivers
-│  │  │  │  │  │  ├─ CleanupDriver.php
-│  │  │  │  │  │  ├─ ExportDriver.php
-│  │  │  │  │  │  ├─ ParserDriver.php
-│  │  │  │  │  │  ├─ PhotosDriver.php
-│  │  │  │  │  │  ├─ PublishDriver.php
-│  │  │  │  │  │  └─ StageDriverInterface.php
-│  │  │  │  │  ├─ Events
-│  │  │  │  │  │  ├─ EventEmitter.php
-│  │  │  │  │  │  └─ PipelineEvent.php
-│  │  │  │  │  ├─ Idempotency
-│  │  │  │  │  ├─ Jobs
-│  │  │  │  │  ├─ Locks
-│  │  │  │  │  ├─ Retry
-│  │  │  │  │  └─ Workers
-│  │  │  │  │     ├─ ExportWorker.php
-│  │  │  │  │     ├─ ParserWorker.php
-│  │  │  │  │     ├─ PhotosWorker.php
-│  │  │  │  │     ├─ PublishWorker.php
-│  │  │  │  │     ├─ RobotStatusWorker.php
-│  │  │  │  │     └─ WorkerDaemon.php
-│  │  │  │  ├─ Policies
-│  │  │  │  │  ├─ AccessPolicy.php
-│  │  │  │  │  ├─ DataMinimizationPolicy.php
-│  │  │  │  │  ├─ DegradePolicy.php
-│  │  │  │  │  ├─ HierarchyPolicy.php
-│  │  │  │  │  ├─ LimitsPolicy.php
-│  │  │  │  │  ├─ NoncePolicy.php
-│  │  │  │  │  ├─ RateLimitPolicy.php
-│  │  │  │  │  └─ SignaturePolicy.php
-│  │  │  │  ├─ Preconditions
-│  │  │  │  │  ├─ AssetRefGuard.php
-│  │  │  │  │  ├─ CommandGuard.php
-│  │  │  │  │  ├─ DataPrivacyGuard.php
-│  │  │  │  │  ├─ PayloadSizeGuard.php
-│  │  │  │  │  ├─ StageGuard.php
-│  │  │  │  │  └─ UrlGuard.php
-│  │  │  │  ├─ Queries
-│  │  │  │  │  ├─ Admin
-│  │  │  │  │  ├─ Integrations
-│  │  │  │  │  ├─ Security
-│  │  │  │  │  │  ├─ GetNonceUsageQuery.php
-│  │  │  │  │  │  ├─ GetSecurityEventsQuery.php
-│  │  │  │  │  │  └─ GetSignatureAuditQuery.php
-│  │  │  │  │  └─ Tasks
-│  │  │  │  ├─ Security
-│  │  │  │  │  ├─ Encryption
-│  │  │  │  │  │  └─ EncryptionServiceInterface.php
-│  │  │  │  │  ├─ Keys
-│  │  │  │  │  ├─ Nonce
-│  │  │  │  │  └─ Signatures
-│  │  │  │  └─ Services
-│  │  │  │     ├─ AdminService.php
-│  │  │  │     ├─ AuthService.php
-│  │  │  │     ├─ CapabilitiesService.php
-│  │  │  │     ├─ EncryptionService.php
-│  │  │  │     ├─ IntegrationsStatusService.php
-│  │  │  │     ├─ KeyRotationOrchestrator.php
-│  │  │  │     ├─ KeyService.php
-│  │  │  │     ├─ NonceService.php
-│  │  │  │     ├─ SecurityService.php
-│  │  │  │     ├─ SignatureService.php
-│  │  │  │     ├─ TasksService.php
-│  │  │  │     └─ UsersService.php
-│  │  │  ├─ Bootstrap
-│  │  │  │  ├─ AppKernel.php
-│  │  │  │  ├─ Clock.php
-│  │  │  │  ├─ Config.php
-│  │  │  │  └─ Container.php
-│  │  │  ├─ Domain
-│  │  │  │  ├─ Pipeline
-│  │  │  │  │  ├─ PipelineState.php
-│  │  │  │  │  ├─ Stage.php
-│  │  │  │  │  └─ StageTransitionRules.php
-│  │  │  │  ├─ Shared
-│  │  │  │  │  ├─ Enum
-│  │  │  │  │  │  ├─ TaskStatus.php
-│  │  │  │  │  │  └─ UserRole.php
-│  │  │  │  │  ├─ Exceptions
-│  │  │  │  │  │  ├─ DomainException.php
-│  │  │  │  │  │  ├─ InvariantViolation.php
-│  │  │  │  │  │  ├─ NonceReuseException.php
-│  │  │  │  │  │  └─ SecurityException.php
-│  │  │  │  │  └─ ValueObject
-│  │  │  │  │     ├─ Email.php
-│  │  │  │  │     ├─ EncryptedPayload.php
-│  │  │  │  │     ├─ Nonce.php
-│  │  │  │  │     └─ Ulid.php
-│  │  │  │  ├─ Tasks
-│  │  │  │  │  ├─ Task.php
-│  │  │  │  │  ├─ TaskId.php
-│  │  │  │  │  ├─ TaskInvariants.php
-│  │  │  │  │  └─ TaskSnapshot.php
-│  │  │  │  └─ Users
-│  │  │  │     ├─ AccessRole.php
-│  │  │  │     ├─ AccessScope.php
-│  │  │  │     ├─ PermissionMatrix.php
-│  │  │  │     ├─ User.php
-│  │  │  │     ├─ UserHierarchy.php
-│  │  │  │     └─ UserId.php
-│  │  │  ├─ Http
-│  │  │  │  ├─ Controllers
-│  │  │  │  │  ├─ AdminController.php
-│  │  │  │  │  ├─ AuthController.php
-│  │  │  │  │  ├─ ExportController.php
-│  │  │  │  │  ├─ HealthController.php
-│  │  │  │  │  ├─ IntegrationsController.php
-│  │  │  │  │  ├─ KeyExchangeController.php
-│  │  │  │  │  ├─ ParserController.php
-│  │  │  │  │  ├─ PhotosController.php
-│  │  │  │  │  ├─ PublishController.php
-│  │  │  │  │  ├─ SecurityController.php
-│  │  │  │  │  ├─ TasksController.php
-│  │  │  │  │  └─ UsersController.php
-│  │  │  │  ├─ Middleware
-│  │  │  │  │  ├─ BodySizeLimitMiddleware.php
-│  │  │  │  │  ├─ CorsMiddleware.php
-│  │  │  │  │  ├─ ErrorHandlerMiddleware.php
-│  │  │  │  │  ├─ JsonBodyMiddleware.php
-│  │  │  │  │  ├─ TraceIdMiddleware.php
-│  │  │  │  │  └─ WebhookAuthMiddleware.php
-│  │  │  │  ├─ Responses
-│  │  │  │  │  ├─ ApiErrorMapper.php
-│  │  │  │  │  ├─ ApiResponse.php
-│  │  │  │  │  └─ ProblemDetails.php
-│  │  │  │  ├─ Routes
-│  │  │  │  ├─ Security
-│  │  │  │  │  ├─ Pipeline
-│  │  │  │  │  │  ├─ AuthStep.php
-│  │  │  │  │  │  ├─ EncryptionStep.php
-│  │  │  │  │  │  ├─ HierarchyStep.php
-│  │  │  │  │  │  ├─ NonceStep.php
-│  │  │  │  │  │  ├─ RateLimitStep.php
-│  │  │  │  │  │  ├─ ScopeStep.php
-│  │  │  │  │  │  ├─ SecurityPipelineMiddleware.php
-│  │  │  │  │  │  └─ SignatureStep.php
-│  │  │  │  │  └─ Requirements
-│  │  │  │  │     ├─ EndpointRequirementsResolver.php
-│  │  │  │  │     ├─ RouteRequirements.php
-│  │  │  │  │     └─ RouteRequirementsMap.php
-│  │  │  │  └─ Validation
-│  │  │  │     ├─ Protocol
-│  │  │  │     │  ├─ CommandStructureValidator.php
-│  │  │  │     │  ├─ IdempotencyKeyValidator.php
-│  │  │  │     │  └─ NonceFormatValidator.php
-│  │  │  │     └─ Request
-│  │  │  │        ├─ IncludeFieldsValidator.php
-│  │  │  │        ├─ PaginationValidator.php
-│  │  │  │        └─ RequestSchemaValidator.php
-│  │  │  ├─ Infrastructure
-│  │  │  │  ├─ BackgroundTasks
-│  │  │  │  │  ├─ KeyRotationJob.php
-│  │  │  │  │  ├─ KeyRotator.php
-│  │  │  │  │  ├─ NonceCleanupJob.php
-│  │  │  │  │  ├─ OldDataCleaner.php
-│  │  │  │  │  └─ QueueOptimizer.php
-│  │  │  │  ├─ Cache
-│  │  │  │  │  ├─ CacheWarmer.php
-│  │  │  │  │  ├─ QueryCache.php
-│  │  │  │  │  └─ RedisCache.php
-│  │  │  │  ├─ Integrations
-│  │  │  │  │  ├─ BrowserContext
-│  │  │  │  │  │  ├─ Fallback
-│  │  │  │  │  │  │  ├─ FallbackBrowserContextAdapter.php
-│  │  │  │  │  │  │  └─ FallbackBrowserContextPool.php
-│  │  │  │  │  │  ├─ Real
-│  │  │  │  │  │  │  └─ BrowserContextHttpAdapter.php
-│  │  │  │  │  │  └─ BrowserContextIntegration.php
-│  │  │  │  │  ├─ Parser
-│  │  │  │  │  │  ├─ Fallback
-│  │  │  │  │  │  │  ├─ FallbackParserAdapter.php
-│  │  │  │  │  │  │  └─ FallbackParserFixtures.php
-│  │  │  │  │  │  ├─ Real
-│  │  │  │  │  │  │  └─ ParserHttpAdapter.php
-│  │  │  │  │  │  └─ ParserIntegration.php
-│  │  │  │  │  ├─ PhotoProcessor
-│  │  │  │  │  │  ├─ Fallback
-│  │  │  │  │  │  │  ├─ FallbackPhotoPipeline.php
-│  │  │  │  │  │  │  └─ FallbackPhotoProcessorAdapter.php
-│  │  │  │  │  │  ├─ Real
-│  │  │  │  │  │  │  └─ PhotoProcessorHttpAdapter.php
-│  │  │  │  │  │  └─ PhotoProcessorIntegration.php
-│  │  │  │  │  ├─ Registry
-│  │  │  │  │  │  ├─ CertificateRegistry.php
-│  │  │  │  │  │  ├─ IntegrationDescriptorInterface.php
-│  │  │  │  │  │  └─ IntegrationRegistry.php
-│  │  │  │  │  ├─ Robot
-│  │  │  │  │  │  ├─ Fallback
-│  │  │  │  │  │  │  ├─ FallbackRobotAdapter.php
-│  │  │  │  │  │  │  └─ FallbackRobotScenario.php
-│  │  │  │  │  │  ├─ Real
-│  │  │  │  │  │  │  ├─ RobotHttpAdapter.php
-│  │  │  │  │  │  │  ├─ RobotMessages.php
-│  │  │  │  │  │  │  └─ RobotWebhookHandler.php
-│  │  │  │  │  │  └─ RobotIntegration.php
-│  │  │  │  │  ├─ Shared
-│  │  │  │  │  │  ├─ CircuitBreaker.php
-│  │  │  │  │  │  ├─ ConfigGuard.php
-│  │  │  │  │  │  ├─ ContractValidator.php
-│  │  │  │  │  │  ├─ EncryptionWrapper.php
-│  │  │  │  │  │  ├─ ErrorMapper.php
-│  │  │  │  │  │  ├─ FallbackPort.php
-│  │  │  │  │  │  ├─ Headers.php
-│  │  │  │  │  │  ├─ HealthCache.php
-│  │  │  │  │  │  ├─ HttpClient.php
-│  │  │  │  │  │  ├─ IntegrationException.php
-│  │  │  │  │  │  ├─ NonceGenerator.php
-│  │  │  │  │  │  └─ SignedRequest.php
-│  │  │  │  │  ├─ Storage
-│  │  │  │  │  │  ├─ Fallback
-│  │  │  │  │  │  │  ├─ FallbackStorageAdapter.php
-│  │  │  │  │  │  │  └─ FallbackStorageFs.php
-│  │  │  │  │  │  ├─ Real
-│  │  │  │  │  │  │  └─ S3StorageAdapter.php
-│  │  │  │  │  │  └─ StorageIntegration.php
-│  │  │  │  │  └─ README.md
-│  │  │  │  ├─ Observability
-│  │  │  │  │  ├─ Audit
-│  │  │  │  │  │  └─ AuditService.php
-│  │  │  │  │  ├─ Health
-│  │  │  │  │  │  ├─ DatabaseHealthCheck.php
-│  │  │  │  │  │  ├─ health.php
-│  │  │  │  │  │  ├─ HealthChecker.php
-│  │  │  │  │  │  └─ RedisHealthCheck.php
-│  │  │  │  │  ├─ Logging
-│  │  │  │  │  │  ├─ DbLogger.php
-│  │  │  │  │  │  ├─ Redactor.php
-│  │  │  │  │  │  ├─ SecureLogger.php
-│  │  │  │  │  │  ├─ SentryLogger.php
-│  │  │  │  │  │  └─ StructuredLogger.php
-│  │  │  │  │  ├─ Metrics
-│  │  │  │  │  │  ├─ exporters
-│  │  │  │  │  │  │  └─ PrometheusExporter.php
-│  │  │  │  │  │  ├─ BusinessMetrics.php
-│  │  │  │  │  │  └─ PrometheusMetrics.php
-│  │  │  │  │  └─ Tracing
-│  │  │  │  │     ├─ OpenTelemetryAdapter.php
-│  │  │  │  │     └─ Tracer.php
-│  │  │  │  ├─ Persistence
-│  │  │  │  │  └─ PDO
-│  │  │  │  │     ├─ Repositories
-│  │  │  │  │     │  ├─ AuditRepository.php
-│  │  │  │  │     │  ├─ DlqRepository.php
-│  │  │  │  │     │  ├─ IdempotencyRepository.php
-│  │  │  │  │     │  ├─ LockRepository.php
-│  │  │  │  │     │  ├─ NonceRepository.php
-│  │  │  │  │     │  ├─ QueueRepository.php
-│  │  │  │  │     │  ├─ SecurityEventRepository.php
-│  │  │  │  │     │  ├─ TasksRepository.php
-│  │  │  │  │     │  └─ UsersRepository.php
-│  │  │  │  │     ├─ ConnectionFactory.php
-│  │  │  │  │     └─ MigrationsRunner.php
-│  │  │  │  ├─ Queue
-│  │  │  │  │  ├─ DlqService.php
-│  │  │  │  │  ├─ QueueMetrics.php
-│  │  │  │  │  └─ QueueService.php
-│  │  │  │  ├─ ReadModels
-│  │  │  │  │  ├─ Projections
-│  │  │  │  │  │  ├─ SecurityProjection.php
-│  │  │  │  │  │  └─ TaskProjection.php
-│  │  │  │  │  └─ TaskReadModel.php
-│  │  │  │  ├─ Security
-│  │  │  │  │  ├─ AttackProtection
-│  │  │  │  │  │  ├─ RateLimiter.php
-│  │  │  │  │  │  ├─ SQLInjectionProtection.php
-│  │  │  │  │  │  └─ XSSProtection.php
-│  │  │  │  │  ├─ Audit
-│  │  │  │  │  │  ├─ SecurityAuditService.php
-│  │  │  │  │  │  └─ SensitiveDataLogger.php
-│  │  │  │  │  ├─ Certificates
-│  │  │  │  │  │  ├─ AdapterCertificate.php
-│  │  │  │  │  │  ├─ CertificateManager.php
-│  │  │  │  │  │  └─ CertificateValidator.php
-│  │  │  │  │  ├─ Encryption
-│  │  │  │  │  │  ├─ AsymmetricEncryption.php
-│  │  │  │  │  │  ├─ DataEncryption.php
-│  │  │  │  │  │  ├─ EncryptionEnforcer.php
-│  │  │  │  │  │  ├─ HybridEncryption.php
-│  │  │  │  │  │  └─ SymmetricEncryption.php
-│  │  │  │  │  ├─ Identity
-│  │  │  │  │  │  ├─ JwtIssuer.php
-│  │  │  │  │  │  ├─ JwtVerifier.php
-│  │  │  │  │  │  └─ TwoFactorAuth.php
-│  │  │  │  │  ├─ Keys
-│  │  │  │  │  │  ├─ KeyManagement.php
-│  │  │  │  │  │  ├─ KeyRotationEngine.php
-│  │  │  │  │  │  ├─ KeyStore.php
-│  │  │  │  │  │  ├─ KeyVersionManager.php
-│  │  │  │  │  │  └─ SessionKeyExchangeEngine.php
-│  │  │  │  │  ├─ Nonce
-│  │  │  │  │  │  ├─ _internal
-│  │  │  │  │  │  │  ├─ AtomicNonceStore.php
-│  │  │  │  │  │  │  ├─ NonceCleanupRunner.php
-│  │  │  │  │  │  │  └─ NonceLockKey.php
-│  │  │  │  │  │  └─ NonceValidator.php
-│  │  │  │  │  ├─ Signatures
-│  │  │  │  │  │  ├─ SignatureCanonicalizer.php
-│  │  │  │  │  │  ├─ SignatureVerifier.php
-│  │  │  │  │  │  └─ StringToSignBuilder.php
-│  │  │  │  │  ├─ Vault
-│  │  │  │  │  │  ├─ PolicyManager.php
-│  │  │  │  │  │  ├─ SecretInjector.php
-│  │  │  │  │  │  └─ VaultClient.php
-│  │  │  │  │  └─ README.md
-│  │  │  │  ├─ Ws
-│  │  │  │  │  ├─ WsEmitter.php
-│  │  │  │  │  └─ WsServer.php
-│  │  │  │  └─ README.md
-│  │  │  └─ README.md
-│  │  ├─ tests
-│  │  │  ├─ Feature
-│  │  │  │  └─ .gitkeep
-│  │  │  └─ Unit
-│  │  │     ├─ Architecture
-│  │  │     │  ├─ BoundariesTest.php
-│  │  │     │  ├─ ContractParityTest.php
-│  │  │     │  ├─ IncludeFieldsLimitsTest.php
-│  │  │     │  ├─ NonceInternalSealedTest.php
-│  │  │     │  └─ SingleNonceRepositoryImplementationTest.php
-│  │  │     ├─ Domain
-│  │  │     │  └─ .gitkeep
-│  │  │     ├─ Integrations
-│  │  │     │  └─ .gitkeep
-│  │  │     ├─ Pipeline
-│  │  │     │  └─ .gitkeep
-│  │  │     └─ Security
-│  │  │        └─ .gitkeep
-│  │  └─ README.md
-│  └─ frontend
-│     ├─ src
-│     │  ├─ app
-│     │  │  └─ .gitkeep
-│     │  ├─ entities
-│     │  │  └─ .gitkeep
-│     │  ├─ features
-│     │  │  └─ .gitkeep
-│     │  ├─ pages
-│     │  │  └─ .gitkeep
-│     │  ├─ shared
-│     │  │  ├─ access
-│     │  │  │  └─ .gitkeep
-│     │  │  ├─ api
-│     │  │  │  ├─ generated
-│     │  │  │  │  ├─ openapi-parity.test.ts
-│     │  │  │  │  └─ README.md
-│     │  │  │  ├─ client.ts
-│     │  │  │  ├─ endpoints.ts
-│     │  │  │  ├─ errors.ts
-│     │  │  │  └─ includeFields.ts
-│     │  │  ├─ auth
-│     │  │  │  └─ .gitkeep
-│     │  │  ├─ runtime
-│     │  │  │  └─ security
-│     │  │  │     ├─ canonicalizer.ts
-│     │  │  │     ├─ encryption.ts
-│     │  │  │     ├─ index.ts
-│     │  │  │     ├─ keyExchange.ts
-│     │  │  │     ├─ keyStore.ts
-│     │  │  │     ├─ nonce.ts
-│     │  │  │     └─ signature.ts
-│     │  │  ├─ security
-│     │  │  │  └─ .gitkeep
-│     │  │  ├─ trace
-│     │  │  │  └─ .gitkeep
-│     │  │  ├─ ui
-│     │  │  │  └─ .gitkeep
-│     │  │  └─ ws
-│     │  │     └─ .gitkeep
-│     │  └─ tests
-│     │     └─ .gitkeep
-│     └─ README.md
-├─ automation
-│  └─ .gitkeep
-├─ config
-│  └─ .gitkeep
-├─ dev
-│  └─ .gitkeep
-├─ docs
-│  └─ README.md
-├─ governance
-│  └─ .gitkeep
-├─ platform
-│  └─ .gitkeep
-├─ scripts
-│  └─ .gitkeep
-├─ security
-│  └─ README.md
-├─ shared
-│  ├─ canonicalization
-│  │  └─ .gitkeep
-│  ├─ contracts
-│  │  ├─ implementations
-│  │  │  ├─ php
-│  │  │  │  ├─ AssetRef.php
-│  │  │  │  ├─ CapabilitySet.php
-│  │  │  │  ├─ Error.php
-│  │  │  │  ├─ ErrorKind.php
-│  │  │  │  ├─ IntegrationHealth.php
-│  │  │  │  ├─ Status.php
-│  │  │  │  └─ TraceContext.php
-│  │  │  └─ typescript
-│  │  │     ├─ assetRef.ts
-│  │  │     ├─ capabilitySet.ts
-│  │  │     ├─ errorKind.ts
-│  │  │     ├─ status.ts
-│  │  │     └─ traceContext.ts
-│  │  ├─ primitives
-│  │  │  ├─ AssetRef.md
-│  │  │  ├─ CapabilitySet.md
-│  │  │  ├─ ErrorKind.md
-│  │  │  ├─ Status.md
-│  │  │  └─ TraceContext.md
-│  │  ├─ README.md
-│  │  └─ vectors
-│  │     ├─ encryption-vectors.json
-│  │     ├─ nonce-vectors.json
-│  │     └─ signature-vectors.json
-│  └─ crypto
-│     └─ .gitkeep
-├─ tests
-│  ├─ e2e
-│  │  └─ .gitkeep
-│  ├─ integration
-│  │  └─ .gitkeep
-│  └─ security
-│     └─ .gitkeep
-├─ tools
-│  └─ .gitkeep
-├─ .editorconfig
-├─ .env.example
-├─ .gitattributes
-├─ .gitignore
-├─ AGENT.md
-├─ commitlint.config.js
-├─ composer.json
-├─ docker-compose.yml
-├─ ENCRYPTION-SCHEME.md
-├─ eslint.config.js
-├─ HIERARCHY-GUIDE.md
-├─ Makefile
-├─ package.json
-├─ phpcs.xml
-├─ phpmd.xml
-├─ phpstan.neon
-├─ psalm.xml
-├─ README.md
-├─ SECURITY-IMPLEMENTATION.md
-├─ security-rules.xml
-├─ STRUCTURE.txt
-└─ stylelint.config.js
+├── app/ — основное приложение (frontend + backend)
+│   ├── backend/ — серверная часть: контрольная плоскость, API, оркестрация
+│   │   ├── bin/ — исполняемые скрипты (worker daemon)
+│   │   │   └── worker.php
+│   │   ├── public/ — HTTP точка входа
+│   │   │   └── index.php
+│   │   ├── src/ — исходный код бэкенда
+│   │   │   ├── Application/ — слой приложения: команды, queries, сервисы, пайплайн
+│   │   │   │   ├── Bus/ — шина команд и событий
+│   │   │   │   ├── Commands/ — команды приложения (Auth, Admin, Pipeline, Access)
+│   │   │   │   ├── Handlers/ — обработчики команд
+│   │   │   │   ├── Integrations/ — порты для внешних интеграций
+│   │   │   │   │   ├── BrowserContext/ — порт для контекста браузера
+│   │   │   │   │   ├── Parser/ — порт для парсера данных
+│   │   │   │   │   ├── PhotoProcessor/ — порт для обработки фото
+│   │   │   │   │   ├── Robot/ — порт для робота-исполнителя
+│   │   │   │   │   └── Storage/ — порт для хранилища данных
+│   │   │   │   ├── Observability/ — наблюдаемость на уровне приложения
+│   │   │   │   ├── Pipeline/ — оркестрация этапов выполнения задач
+│   │   │   │   │   ├── Drivers/ — драйверы этапов (Parse, Photos, Publish, Export, Cleanup)
+│   │   │   │   │   ├── Events/ — события пайплайна
+│   │   │   │   │   └── Workers/ — воркеры для асинхронной обработки этапов
+│   │   │   │   ├── Policies/ — политики безопасности и доступа
+│   │   │   │   ├── Ports/ — интерфейсы для внешних зависимостей
+│   │   │   │   ├── Preconditions/ — проверки предусловий (guards)
+│   │   │   │   ├── Queries/ — запросы на чтение (Admin, Security, Tasks, Integrations)
+│   │   │   │   ├── Security/ — security-абстракции приложения
+│   │   │   │   │   └── Encryption/ — интерфейс сервиса шифрования
+│   │   │   │   ├── Services/ — доменные сервисы приложения
+│   │   │   │   └── Shared/ — общие компоненты приложения
+│   │   │   ├── Bootstrap/ — инициализация: контейнер, конфиг, ядро, clock
+│   │   │   ├── Domain/ — доменный слой: сущности, value objects, правила
+│   │   │   │   ├── Pipeline/ — доменная модель пайплайна и переходов
+│   │   │   │   ├── Shared/ — общие доменные компоненты
+│   │   │   │   │   ├── Enum/ — перечисления (TaskStatus, UserRole)
+│   │   │   │   │   ├── Exceptions/ — доменные исключения
+│   │   │   │   │   └── ValueObject/ — объекты-значения (Email, Nonce, Ulid, EncryptedPayload)
+│   │   │   │   ├── Tasks/ — доменная модель задач
+│   │   │   │   └── Users/ — доменная модель пользователей и прав доступа
+│   │   │   ├── Http/ — HTTP-слой: контроллеры, middleware, роутинг, валидация
+│   │   │   │   ├── Controllers/ — контроллеры API endpoints
+│   │   │   │   ├── Kernel/ — ядро HTTP-обработки
+│   │   │   │   ├── Middleware/ — middleware (CORS, JSON, TraceId, ErrorHandler, BodySizeLimit, WebhookAuth)
+│   │   │   │   ├── Responses/ — обработка и форматирование ответов API
+│   │   │   │   ├── Routing/ — определение маршрутов
+│   │   │   │   ├── Security/ — security pipeline для HTTP-запросов
+│   │   │   │   │   ├── Pipeline/ — этапы security pipeline (Auth, Nonce, Signature, Encryption, Hierarchy, Scope, RateLimit)
+│   │   │   │   │   └── Requirements/ — определение требований безопасности для endpoints
+│   │   │   │   └── Validation/ — валидация запросов и протокола
+│   │   │   │       ├── Protocol/ — валидация структуры команд, nonce, idempotency
+│   │   │   │       └── Request/ — валидация HTTP-запросов (schema, pagination, includeFields)
+│   │   │   ├── Infrastructure/ — инфраструктурный слой: БД, кэш, security, интеграции
+│   │   │   │   ├── BackgroundTasks/ — фоновые задачи (ротация ключей, cleanup nonce, оптимизация очереди)
+│   │   │   │   ├── Cache/ — кэширование (Redis, QueryCache, CacheWarmer)
+│   │   │   │   ├── Integrations/ — реализация адаптеров интеграций
+│   │   │   │   │   ├── BrowserContext/ — адаптеры контекста браузера (Real + Fallback)
+│   │   │   │   │   ├── Parser/ — адаптеры парсера (Real + Fallback)
+│   │   │   │   │   ├── PhotoProcessor/ — адаптеры обработки фото (Real + Fallback)
+│   │   │   │   │   ├── Registry/ — регистр интеграций и сертификатов
+│   │   │   │   │   ├── Robot/ — адаптеры робота-исполнителя (Real + Fallback)
+│   │   │   │   │   ├── Shared/ — общая инфраструктура интеграций (CircuitBreaker, HttpClient, SignedRequest)
+│   │   │   │   │   └── Storage/ — адаптеры хранилища (S3 + Fallback)
+│   │   │   │   ├── Observability/ — наблюдаемость: логи, метрики, трассировка, audit, health
+│   │   │   │   │   ├── Audit/ — аудит действий
+│   │   │   │   │   ├── Health/ — health checks (Database, Redis)
+│   │   │   │   │   ├── Logging/ — логирование (Structured, Secure, Sentry, Db, Redactor)
+│   │   │   │   │   ├── Metrics/ — метрики (Prometheus, Business)
+│   │   │   │   │   └── Tracing/ — распределенная трассировка (OpenTelemetry)
+│   │   │   │   ├── Persistence/ — слой персистентности
+│   │   │   │   │   └── PDO/ — реализация на PDO
+│   │   │   │   │       ├── Repositories/ — репозитории (Tasks, Users, Audit, Queue, Nonce, Security, Idempotency, Lock, DLQ)
+│   │   │   │   │       ├── ConnectionFactory.php — фабрика подключений к БД
+│   │   │   │   │       └── MigrationsRunner.php — запуск миграций
+│   │   │   │   ├── Queue/ — очередь задач (QueueService, DLQ, Metrics)
+│   │   │   │   ├── ReadModels/ — read models для запросов
+│   │   │   │   │   └── Projections/ — проекции данных (Security, Task)
+│   │   │   │   ├── Security/ — реализация инфраструктуры безопасности
+│   │   │   │   │   ├── AttackProtection/ — защита от атак (RateLimiter, SQLInjection, XSS)
+│   │   │   │   │   ├── Audit/ — аудит безопасности
+│   │   │   │   │   ├── Certificates/ — управление сертификатами
+│   │   │   │   │   ├── Encryption/ — реализация шифрования (Symmetric, Asymmetric, Hybrid, DataEncryption)
+│   │   │   │   │   ├── Identity/ — идентификация (JWT, 2FA)
+│   │   │   │   │   ├── Keys/ — управление криптоключами (KeyStore, KeyRotation, KeyExchange)
+│   │   │   │   │   ├── Nonce/ — валидация и управление nonce
+│   │   │   │   │   │   └── _internal/ — внутренние компоненты (AtomicStore, Cleanup, LockKey)
+│   │   │   │   │   ├── Signatures/ — подписи запросов (Verifier, Canonicalizer, StringToSign)
+│   │   │   │   │   └── Vault/ — работа с Vault для секретов
+│   │   │   │   └── Ws/ — WebSocket сервер и эмиттер событий
+│   │   │   └── README.md
+│   │   ├── tests/ — тесты бэкенда
+│   │   │   ├── Architecture/ — архитектурные тесты (границы слоев, контракты)
+│   │   │   ├── Feature/ — функциональные тесты
+│   │   │   ├── Integration/ — интеграционные тесты
+│   │   │   ├── Unit/ — юнит-тесты (Domain, Integrations, Pipeline, Security)
+│   │   │   └── run.php — запуск тестов
+│   │   └── README.md
+│   └── frontend/ — клиентская часть: operator control panel (desktop-only UI)
+│       ├── src/ — исходный код фронтенда
+│       │   ├── api/ — API клиент
+│       │   ├── app/ — конфигурация приложения
+│       │   ├── components/ — UI компоненты
+│       │   ├── contracts/ — контракты протокола
+│       │   ├── entities/ — бизнес-сущности (Feature-Sliced Design)
+│       │   ├── features/ — фичи приложения (Feature-Sliced Design)
+│       │   ├── pages/ — страницы приложения
+│       │   ├── shared/ — общие модули
+│       │   │   ├── access/ — контроль доступа
+│       │   │   ├── api/ — API-клиент и endpoints
+│       │   │   ├── auth/ — аутентификация
+│       │   │   ├── runtime/ — runtime-компоненты
+│       │   │   │   └── security/ — криптография на клиенте (encryption, nonce, signature, keyExchange)
+│       │   │   ├── security/ — security utilities
+│       │   │   ├── trace/ — трассировка
+│       │   │   ├── ui/ — UI-компоненты
+│       │   │   └── ws/ — WebSocket клиент
+│       │   ├── tests/ — тесты фронтенда
+│       │   ├── types/ — TypeScript типы
+│       │   ├── index.css — глобальные стили
+│       │   └── main.tsx — точка входа приложения
+│       ├── index.html — HTML entry point
+│       ├── package.json — зависимости фронтенда
+│       ├── tsconfig.json — конфигурация TypeScript
+│       ├── vite.config.ts — конфигурация Vite
+│       ├── SETUP.md — инструкция по настройке
+│       └── README.md
+├── automation/ — автоматизация (зарезервировано)
+├── config/ — конфигурационные файлы (зарезервировано)
+├── dev/ — инструменты разработки (зарезервировано)
+├── docs/ — документация проекта
+│   └── README.md
+├── governance/ — правила управления проектом (зарезервировано)
+├── platform/ — платформенные компоненты (зарезервировано)
+├── scripts/ — утилитарные скрипты (зарезервировано)
+├── security/ — документация по безопасности
+│   └── README.md
+├── shared/ — общие ресурсы между backend и frontend
+│   ├── canonicalization/ — канонизация данных (зарезервировано)
+│   ├── contracts/ — единый источник истины для протокола: типы, enums, векторы тестирования
+│   │   ├── implementations/ — реализации контрактов
+│   │   │   ├── php/ — PHP реализация контрактов (AssetRef, CapabilitySet, ErrorKind, Status, TraceContext)
+│   │   │   └── ts/ — TypeScript реализация контрактов
+│   │   ├── primitives/ — описание примитивов протокола (Actor, ErrorKind, Scope, Status, TraceContext, PipelineStage)
+│   │   ├── tests/ — тесты паритета реализаций (PHP ↔ TypeScript)
+│   │   ├── tools/ — инструменты генерации контрактов
+│   │   ├── vectors/ — test vectors для криптографии и протокола (encryption, nonce, signature, headers, scopes, actors)
+│   │   └── README.md
+│   └── crypto/ — общие криптографические компоненты (зарезервировано)
+├── tests/ — тесты на уровне всей системы
+│   ├── e2e/ — end-to-end тесты
+│   ├── integration/ — интеграционные тесты
+│   └── security/ — security тесты
+├── tools/ — утилиты проекта
+│   └── text_audit.php
+├── .editorconfig — настройки редактора
+├── .env.example — пример конфигурации окружения
+├── .gitattributes — атрибуты git
+├── .gitignore — игнорируемые файлы
+├── commitlint.config.js — настройки проверки commit-сообщений
+├── composer.json — зависимости PHP проекта
+├── docker-compose.yml — конфигурация Docker
+├── ENCRYPTION-SCHEME.md — документация схемы шифрования
+├── eslint.config.js — настройки ESLint для JavaScript/TypeScript
+├── HIERARCHY-GUIDE.md — руководство по иерархии доступа
+├── Makefile — команды сборки и управления
+├── package.json — зависимости Node.js проекта (root)
+├── phpcs.xml — настройки PHP CodeSniffer
+├── phpmd.xml — настройки PHP Mess Detector
+├── phpstan.neon — настройки PHPStan
+├── psalm.xml — настройки Psalm
+├── README.md — основное описание проекта
+├── SECURITY-IMPLEMENTATION.md — документация реализации безопасности
+├── security-rules.xml — правила безопасности
+├── STRUCTURE.txt — данный файл: структура проекта
+└── stylelint.config.js — настройки линтера стилей
