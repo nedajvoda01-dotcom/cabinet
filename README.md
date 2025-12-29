@@ -1,218 +1,289 @@
-# Cabinet — Internal Control & Orchestration Platform
+# Cabinet — Secure Orchestration & Control Plane
 
-Cabinet is an **internal control plane and orchestration system**.
+Cabinet is an **internal control plane** designed to **safely accept commands, enforce authority, and orchestrate deterministic execution across external systems**.
 
-It is designed to securely accept commands, enforce authorization,
-and orchestrate execution across multiple external and internal services
-without embedding business-specific intelligence into the core.
+It is **not** a business application.  
+It is **not** a workflow editor.  
+It is **not** a SaaS product.
 
-Cabinet is a **platform component**, not an end-user product.
+Cabinet is **infrastructure**.
 
 ---
 
 ## What Cabinet Is
 
-Cabinet is:
+In simple terms:
 
-- an internal orchestration and execution control system
-- a secure command routing layer
-- a pipeline-based task executor
-- an integration hub for external services
-- an auditable, observable control plane
+> **Cabinet is a high-security command router and execution orchestrator.**
 
-Cabinet exists to ensure that execution across systems is:
+It sits **between humans/automation and machines**, ensuring that:
 
-- authorized
-- ordered
-- resilient
-- observable
-- recoverable
-- secure by default
+- only authorized actors can issue commands
+- every request is authenticated, signed, and non-replayable
+- execution order is deterministic
+- retries and failures are handled safely
+- nothing runs twice by accident
+- every action is observable and auditable
 
-Cabinet **does not care** what business logic is executed.
-It only guarantees that execution happens **correctly and safely**.
+Cabinet **coordinates work** — it does not perform business logic itself.
 
 ---
 
 ## What Cabinet Is NOT
 
-Cabinet is **not**:
+Cabinet does **not**:
 
-- a public SaaS
-- a self-service platform
-- a business-logic engine
-- a workflow designer
-- a place to encode domain intelligence
-- a UI-driven system of record
+- understand business entities (cars, photos, listings, etc.)
+- parse data formats
+- call marketplaces directly
+- scrape websites
+- make business decisions
 
-If a feature requires understanding *what* the data means,
-it likely does **not** belong in Cabinet.
+All such logic lives **outside** Cabinet, behind integrations.
 
 ---
 
-## Core Philosophy
+## Mental Model
 
-### Frozen Core
+Human / Automation
+↓
+Secure HTTP Boundary
+↓
+Cabinet Core
+↓
+Deterministic Pipeline
+↓
+External Integrations
 
-The core of Cabinet is intentionally **frozen**.
+yaml
+Копировать код
 
-This includes:
-- security model
-- pipeline execution logic
-- retry and failure semantics
-- idempotency guarantees
-- locking and concurrency rules
-
-The core should remain stable and predictable.
-
----
-
-### Extensibility via Integrations
-
-All extensibility happens **outside** the core via integrations.
-
-Cabinet connects to:
-- external services
-- internal tools
-- automation systems
-- analytical or processing engines
-
-through **explicit ports and adapters**.
-
-Cabinet orchestrates.
-Integrations execute.
+> Cabinet is the **brainstem**, not the brain.
 
 ---
 
-## Access & Usage Model
+## Core Principles
 
-Cabinet is an **internal system**.
+### 1. Frozen Core
+The orchestration core is **intentionally conservative**.
 
-- Users cannot self-register and start using the system.
-- Registration creates an **access request**, not an account.
-- Access requests require **manual approval** by a Super Admin.
+- pipeline mechanics
+- retries
+- DLQ rules
+- idempotency
+- security enforcement
+- hierarchy rules
 
-All users share:
-- a single interface
-- a single execution model
-
-Differences between users are enforced via:
-- hierarchy
-- scopes
-- permissions
-- visibility filtering
-
-There are no role-specific UIs.
+These are treated as **infrastructure**, not features.
 
 ---
 
-## High-Level Architecture
+### 2. Fail-Closed Security
+Security is **structural**, not optional.
 
-Cabinet is composed of the following major parts:
+- requests pass a deterministic security pipeline
+- endpoints without explicit requirements are denied
+- no trusted integrations
+- no implicit permissions
 
-- **Backend**
-  - HTTP boundary
-  - security enforcement
-  - orchestration and pipelines
-  - integrations and infrastructure
-
-- **Frontend**
-  - controlled UI
-  - permission-based visibility
-  - client-side security participation
-
-- **Shared Contracts**
-  - cross-language primitives
-  - security vectors
-  - generated types
-
-- **Security & Governance**
-  - cryptographic schemes
-  - hierarchy rules
-  - enforcement models
-
-Each part has **strict boundaries**.
-Crossing boundaries incorrectly is considered a defect.
+If security fails, execution **never begins**.
 
 ---
 
-## Security First
+### 3. Determinism & Idempotency
+Cabinet guarantees:
 
-Security in Cabinet is:
+- deterministic pipeline transitions
+- idempotent command handling
+- safe retries
+- resumable execution
+- crash-safe behavior
 
-- mandatory
-- layered
-- fail-closed
-- enforced structurally, not optionally
-
-No request reaches application logic without passing
-the full security pipeline.
-
-Security is not configurable per developer or environment.
+This enables reliable automation at scale.
 
 ---
 
-## Documentation Map
+### 4. Ports & Adapters
+Cabinet grows **only through integrations**.
 
-This repository contains structured documentation.
+- Application defines ports
+- Infrastructure provides adapters
+- real adapters are optional
+- fallback adapters are mandatory
 
-Start here, then follow the index:
-
-- `docs/README.md` — documentation index and reading order
-
-Normative security documents:
-- `SECURITY-IMPLEMENTATION.md`
-- `ENCRYPTION-SCHEME.md`
-- `HIERARCHY-GUIDE.md`
-
-Shared contracts:
-- `shared/contracts/README.md`
-
-Each document defines **intent and constraints**, not code duplication.
+This allows safe degradation and demo operation.
 
 ---
 
-## Source of Truth Rules
+## Architecture Overview
 
-There is **no duplicated source of truth**:
+Cabinet is strictly layered:
 
-- Architecture rules live in code structure and architecture tests
-- Runtime security behavior lives in backend infrastructure
-- Cross-language data definitions live in `shared/contracts`
-- Governance rules live in root-level security documents
+app/backend
+├── Domain # Pure business rules & invariants (NO IO)
+├── Application # Use-cases, commands, orchestration
+├── Infrastructure # DB, queue, crypto, integrations
+├── Http # Routing, controllers, security boundary
+├── Bootstrap # Container & runtime wiring
 
-If two sources conflict:
-> the more **normative** document wins.
+yaml
+Копировать код
 
----
-
-## Intended Audience
-
-This repository is written for:
-
-- internal developers
-- platform engineers
-- security engineers
-- auditors
-- AI agents operating on the codebase
-
-It is **not** written as a tutorial.
+Cross-layer shortcuts are **forbidden**.
 
 ---
 
-## Final Note
+## Pipeline Execution
 
-Cabinet is a **control plane**, not a playground.
+Cabinet executes work through a **stage-based pipeline**:
 
-If something feels unclear:
-- consult documentation
-- inspect tests
-- follow existing patterns
+Parse → Photos → Publish → Export → Cleanup
 
-If something violates documented constraints:
-- do not implement it
+yaml
+Копировать код
 
-Predictability, safety, and correctness
-are more important than convenience.
+Each stage is:
+
+- deterministic
+- asynchronous
+- retry-aware
+- DLQ-protected
+- observable
+
+Cabinet never understands *what* is being processed — only *that* a stage succeeded or failed.
 
 ---
+
+## Integrations (Tentacles)
+
+Each integration consists of:
+
+- Application Port
+- Infrastructure Interface
+- Real Adapter (optional)
+- Fallback Adapter (mandatory)
+
+Fallback adapters ensure the system remains operational even when services are unavailable.
+
+Cabinet ships with a **demo brain**: deterministic fallback integrations that allow the full pipeline to execute without external systems.
+
+---
+
+## Runtime Components
+
+### Persistence
+- SQLite (dev/demo)
+- idempotent migrations
+- transactional repositories
+- exact-once semantics via persistence
+
+### Queue & Worker
+- persisted job queue
+- atomic job claiming
+- retry with backoff
+- DLQ routing
+- standalone worker runtime
+
+### Observability
+- structured JSON logging
+- persisted audit trail
+- metrics as log events
+- no silent failures
+
+---
+
+## Frontend (Control Panel)
+
+Cabinet includes a **desktop-only control panel**:
+
+- read-heavy
+- contract-driven
+- no business logic
+- no authority decisions
+- reflects backend state only
+
+The UI is an **operator console**, not an application frontend.
+
+---
+
+## Quick Start (Demo Mode)
+
+### Backend
+```bash
+php -S localhost:8080 -t app/backend/public app/backend/public/index.php
+Worker
+bash
+Копировать код
+php app/backend/bin/worker.php
+Frontend
+bash
+Копировать код
+cd app/frontend
+npm install
+npm run dev
+Open: http://localhost:3000
+
+The system runs end-to-end using fallback integrations.
+
+Repository Structure
+graphql
+Копировать код
+app/
+  backend/     # Control plane backend
+  frontend/    # Operator UI (desktop-only)
+shared/
+  contracts/   # Single source of truth for enums & types
+docs/
+  architecture/
+  security/
+  pipeline/
+  integrations/
+Who This Is For
+Cabinet is designed for teams that need:
+
+strong security boundaries
+
+deterministic orchestration
+
+safe automation
+
+auditability
+
+operational confidence
+
+It is not intended for rapid prototyping or ad-hoc scripting.
+
+Status
+Cabinet is feature-complete at the core level:
+
+security boundary ✅
+
+pipeline orchestration ✅
+
+persistence & idempotency ✅
+
+worker runtime ✅
+
+observability & audit ✅
+
+demo integrations ✅
+
+control panel UI ✅
+
+Further development focuses on:
+
+real integrations
+
+operational tooling
+
+governance & key management
+
+Philosophy
+Infrastructure must be boring.
+Predictability beats cleverness.
+Safety beats speed.
+
+Cabinet is intentionally strict — because infrastructure must be trusted.
+
+markdown
+Копировать код
