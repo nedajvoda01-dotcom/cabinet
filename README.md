@@ -45,18 +45,17 @@ All such logic lives **outside** Cabinet, behind integrations.
 
 ## Mental Model
 
+```
 Human / Automation
-↓
-Secure HTTP Boundary
-↓
-Cabinet Core
-↓
-Deterministic Pipeline
-↓
-External Integrations
-
-yaml
-Копировать код
+        ↓
+ Secure HTTP Boundary
+        ↓
+     Cabinet Core
+        ↓
+ Deterministic Pipeline
+        ↓
+ External Integrations
+```
 
 > Cabinet is the **brainstem**, not the brain.
 
@@ -119,15 +118,14 @@ This allows safe degradation and demo operation.
 
 Cabinet is strictly layered:
 
+```
 app/backend
-├── Domain # Pure business rules & invariants (NO IO)
-├── Application # Use-cases, commands, orchestration
-├── Infrastructure # DB, queue, crypto, integrations
-├── Http # Routing, controllers, security boundary
-├── Bootstrap # Container & runtime wiring
-
-yaml
-Копировать код
+├── Domain           # Pure business rules & invariants (NO IO)
+├── Application      # Use-cases, commands, orchestration
+├── Infrastructure   # DB, queue, crypto, integrations
+├── Http             # Routing, controllers, security boundary
+├── Bootstrap        # Container & runtime wiring
+```
 
 Cross-layer shortcuts are **forbidden**.
 
@@ -137,10 +135,9 @@ Cross-layer shortcuts are **forbidden**.
 
 Cabinet executes work through a **stage-based pipeline**:
 
+```
 Parse → Photos → Publish → Export → Cleanup
-
-yaml
-Копировать код
+```
 
 Each stage is:
 
@@ -211,23 +208,29 @@ The UI is an **operator console**, not an application frontend.
 ### Backend
 ```bash
 php -S localhost:8080 -t app/backend/public app/backend/public/index.php
-Worker
-bash
-Копировать код
+```
+
+### Worker
+```bash
 php app/backend/bin/worker.php
-Frontend
-bash
-Копировать код
+```
+
+### Frontend
+```bash
 cd app/frontend
 npm install
 npm run dev
+```
+
 Open: http://localhost:3000
 
 The system runs end-to-end using fallback integrations.
 
-Repository Structure
-graphql
-Копировать код
+---
+
+## Repository Structure
+
+```
 app/
   backend/     # Control plane backend
   frontend/    # Operator UI (desktop-only)
@@ -238,52 +241,47 @@ docs/
   security/
   pipeline/
   integrations/
-Who This Is For
+```
+
+---
+
+## Who This Is For
+
 Cabinet is designed for teams that need:
 
-strong security boundaries
+- strong security boundaries
+- deterministic orchestration
+- safe automation
+- auditability
+- operational confidence
 
-deterministic orchestration
+It is **not** intended for rapid prototyping or ad-hoc scripting.
 
-safe automation
+---
 
-auditability
+## Status
 
-operational confidence
+Cabinet is **feature-complete at the core level**:
 
-It is not intended for rapid prototyping or ad-hoc scripting.
-
-Status
-Cabinet is feature-complete at the core level:
-
-security boundary ✅
-
-pipeline orchestration ✅
-
-persistence & idempotency ✅
-
-worker runtime ✅
-
-observability & audit ✅
-
-demo integrations ✅
-
-control panel UI ✅
+- security boundary ✅
+- pipeline orchestration ✅
+- persistence & idempotency ✅
+- worker runtime ✅
+- observability & audit ✅
+- demo integrations ✅
+- control panel UI ✅
 
 Further development focuses on:
+- real integrations
+- operational tooling
+- governance & key management
 
-real integrations
+---
 
-operational tooling
+## Philosophy
 
-governance & key management
+> Infrastructure must be boring.  
+> Predictability beats cleverness.  
+> Safety beats speed.
 
-Philosophy
-Infrastructure must be boring.
-Predictability beats cleverness.
-Safety beats speed.
-
-Cabinet is intentionally strict — because infrastructure must be trusted.
-
-markdown
-Копировать код
+Cabinet is intentionally strict — because **infrastructure must be trusted**.
