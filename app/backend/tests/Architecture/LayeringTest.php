@@ -31,9 +31,9 @@ final class LayeringTest extends TestCase
             'forbidden' => [
                 'Cabinet\Backend\Infrastructure\\',
             ],
-            'excluded_paths' => [
-                'Http/Security/Pipeline',
-                'Http/Kernel',
+            'included_paths' => [
+                'Http/Controllers',
+                'Http/Routing',
             ],
         ],
     ];
@@ -75,16 +75,16 @@ final class LayeringTest extends TestCase
         foreach ($files as $file) {
             $relativeFile = str_replace(self::BASE_PATH . '/', '', $file);
             
-            // Check if this file is in an excluded path
-            if (isset($rules['excluded_paths'])) {
-                $excluded = false;
-                foreach ($rules['excluded_paths'] as $excludedPath) {
-                    if (str_starts_with($relativeFile, $excludedPath)) {
-                        $excluded = true;
+            // If there are included_paths, only check files within those paths
+            if (isset($rules['included_paths'])) {
+                $included = false;
+                foreach ($rules['included_paths'] as $includedPath) {
+                    if (str_starts_with($relativeFile, $includedPath)) {
+                        $included = true;
                         break;
                     }
                 }
-                if ($excluded) {
+                if (!$included) {
                     continue;
                 }
             }
