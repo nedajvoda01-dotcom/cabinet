@@ -43,58 +43,32 @@ Ambiguity is forbidden.
 
 ### 1. System Overview
 
-- `cabinet/README.md`  
-  High-level explanation of what Cabinet is and what it is not.
+- `README.md`  
+  Internal system overview and run instructions.
 
 ---
 
-### 2. Backend Architecture
+### 2. Backend Runtime
 
 - `app/backend/README.md`  
-  Backend role, runtime responsibilities, and structure.
-
-- `app/backend/src/Application/README.md`  
-  Application layer orchestration and use cases.
-
-- `app/backend/src/Application/Pipeline/README.md`  
-  Asynchronous pipeline execution model.
+  Backend server, worker, database, audit.
 
 ---
 
-### 3. Infrastructure & Integrations
-
-- `app/backend/src/Infrastructure/README.md`  
-  Runtime infrastructure responsibilities.
-
-- `app/backend/src/Infrastructure/Integrations/README.md`  
-  External system adapters and fallback model.
-
-- `app/backend/src/Infrastructure/Security/README.md`  
-  Runtime cryptography and enforcement.
-
----
-
-### 4. Frontend
-
-- `app/frontend/README.md`  
-  UI philosophy and runtime security participation.
-
-- `app/frontend/src/shared/api/generated/README.md`  
-  Generated API client rules and parity guarantees.
-
----
-
-### 5. Cross-Language Contracts
+### 3. Contracts
 
 - `shared/contracts/README.md`  
-  Shared primitives, generated implementations, and vectors.
+  Contract authority and regeneration rules.
+
+- `shared/contracts/primitives/README.md`  
+  Core domain primitives.
 
 ---
 
-### 6. Security & Governance
+### 4. Security & Governance
 
 - `security/README.md`  
-  Security governance and non-runtime rules.
+  Security governance rules.
 
 - `SECURITY-IMPLEMENTATION.md`  
   Runtime security execution model.
@@ -122,14 +96,15 @@ If none apply, prefer code-level documentation.
 
 ## Single Source of Truth
 
-There is no duplicated authority:
+Core documentation locations:
 
 | Topic | Source |
 |----|------|
-| Contracts | `shared/contracts` |
-| Runtime Security | `Infrastructure/Security` |
-| Governance | `security/` |
-| Architecture | this directory |
+| System overview | `/README.md` |
+| Backend runtime | `/app/backend/README.md` |
+| Contracts | `/shared/contracts/` |
+| Security governance | `/security/` |
+| Architecture | `/docs/` |
 
 If two documents disagree — the system is inconsistent.
 
