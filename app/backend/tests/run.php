@@ -30,10 +30,12 @@ use Cabinet\Backend\Tests\Integration\JobQueueTest;
 use Cabinet\Backend\Tests\Integration\WorkerIntegrationTest;
 use Cabinet\Backend\Tests\Integration\AuditTrailIntegrationTest;
 use Cabinet\Backend\Tests\Integration\MetricsIntegrationTest;
+use Cabinet\Backend\Tests\Architecture\LayeringTest;
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
 $tests = [
+    new LayeringTest(),
     new HealthEndpointTest(),
     new ReadinessEndpointTest(),
     new VersionEndpointTest(),
