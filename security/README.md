@@ -1,206 +1,31 @@
-# Security Governance — Non-Runtime Rules & Standards
+# Security Governance
 
-## Location
+Defines security governance rules for Cabinet.
 
-security/README.md
+## Core Principles
 
----
+- Networks are hostile
+- Integrations are untrusted
+- Security is structural, not optional
+- Fail-closed behavior mandatory
+- No implicit trust anywhere
 
-## Purpose
+## Invariants
 
-This directory defines **security governance rules** for the Cabinet system.
+**Trust requirements:**
+- Explicit authentication
+- Explicit authorization
+- Auditable actions
 
-It documents:
-- security principles
-- non-runtime constraints
-- organizational rules
-- enforcement expectations
+**Forbidden practices:**
+- Disabling security for convenience
+- Environment-based weakening
+- Undocumented bypasses
+- Trusting frontend validation
+- Assuming integration correctness
 
-This directory does **not** contain executable code.
+## References
 
-It defines **how security must be treated**, not how it is implemented.
-
----
-
-## Scope
-
-This document applies to:
-- backend runtime security
-- frontend runtime security
-- integrations
-- operational processes
-- audits and reviews
-- AI agents interacting with the repository
-
-It complements, but does not replace:
-- `SECURITY-IMPLEMENTATION.md`
-- `ENCRYPTION-SCHEME.md`
-- runtime security code
-
----
-
-## Security Philosophy
-
-Cabinet is built under the assumption that:
-
-- networks are hostile
-- integrations are untrusted
-- clients are fallible
-- configuration can be wrong
-- humans make mistakes
-
-Therefore:
-- security is structural
-- security is explicit
-- security is enforced in code
-- security failures are fail-closed
-
-Convenience is never prioritized over security.
-
----
-
-## Governance vs Runtime Security
-
-| Aspect | Governance | Runtime |
-|-----|-----------|--------|
-| Purpose | Rules & intent | Enforcement |
-| Location | `security/` | `Infrastructure/Security` |
-| Executable | ❌ | ✅ |
-| Change frequency | Low | Medium |
-| Audience | Humans & auditors | System |
-
-Governance defines **what must be true**.  
-Runtime ensures **it actually is**.
-
----
-
-## Key Governance Rules
-
-### No Implicit Trust
-
-- No trusted networks
-- No trusted integrations
-- No trusted environments
-- No trusted UI
-
-Trust must be:
-- explicit
-- authenticated
-- authorized
-- auditable
-
----
-
-### Fail-Closed Behavior
-
-If something is unclear:
-- deny
-- stop
-- log
-- audit
-
-Never guess.
-Never fallback silently.
-
----
-
-### Least Privilege
-
-Access must be:
-- minimal
-- scoped
-- revocable
-- hierarchical
-
-Visibility is not permission.
-
----
-
-### Determinism
-
-Security behavior must be:
-- deterministic
-- reproducible
-- testable
-- observable
-
-Environment-dependent security is forbidden.
-
----
-
-## Change Management
-
-Security changes require:
-- explicit documentation update
-- code review
-- parity test updates (if applicable)
-- audit consideration
-
-Undocumented security changes are invalid.
-
----
-
-## AI Agent Rules
-
-Any AI agent interacting with this repository:
-
-- must read this directory
-- must respect security invariants
-- must not weaken security
-- must stop if unsure
-
-Security shortcuts are treated as defects.
-
----
-
-## Forbidden Practices
-
-The following are forbidden at the governance level:
-
-- disabling security for development convenience
-- environment-based weakening of security
-- undocumented bypasses
-- trusting frontend validation
-- assuming integration correctness
-
-Violations must be treated as incidents.
-
----
-
-## Relationship to Other Documents
-
-This document:
-- defines expectations
-- sets boundaries
-- provides context
-
-Implementation details live in:
-- `SECURITY-IMPLEMENTATION.md`
-- `ENCRYPTION-SCHEME.md`
-
-Hierarchy rules live in:
-- `HIERARCHY-GUIDE.md`
-
----
-
-## Audience
-
-This document is written for:
-- security engineers
-- system architects
-- auditors
-- technical leadership
-- AI agents
-
----
-
-## Summary
-
-This directory defines **how security is governed** in Cabinet.
-
-Security is not optional.
-Security is not configurable.
-Security is not negotiable.
-
-If something feels unsafe —
-it probably is.
+Implementation: `SECURITY-IMPLEMENTATION.md`  
+Encryption: `ENCRYPTION-SCHEME.md`  
+Hierarchy: `HIERARCHY-GUIDE.md`

@@ -185,13 +185,12 @@ This document is written for:
 - system architects
 - security engineers
 - auditors
-- AI agents
 
 It is not an onboarding tutorial.
 
 ---
 
-## Summary
+## Core Responsibilities
 
 The backend is the **enforcement engine** of Cabinet.
 

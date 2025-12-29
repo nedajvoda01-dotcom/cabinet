@@ -8,8 +8,7 @@ It is **normative** and applies to:
 - Frontend visibility filtering
 - API access control
 - Pipeline and administrative operations
-- AI agents (Codex)
-- Auditors and security reviewers
+- Auditors and security auditors
 
 Deviation from this guide is **forbidden** unless explicitly approved.
 

@@ -26,7 +26,7 @@ final class ApplicationInfrastructureTest extends TestCase
         $unitOfWork = new NoOpUnitOfWork();
         $idGenerator = new UuidIdGenerator();
 
-        $this->assertTrue(true, 'Repositories instantiated successfully');
+        $this->assertTrue(true, 'Repositories instantiated');
     }
 
     public function testIdGeneratorProducesValidUuids(): void
@@ -43,7 +43,7 @@ final class ApplicationInfrastructureTest extends TestCase
     public function testCommandBusCanBeCreated(): void
     {
         $bus = new CommandBus();
-        $this->assertTrue(true, 'CommandBus instantiated successfully');
+        $this->assertTrue(true, 'CommandBus instantiated');
     }
 
     public function testResultCanRepresentSuccess(): void

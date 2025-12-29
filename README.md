@@ -3,7 +3,7 @@
 Cabinet is an **internal control plane** designed to **safely accept commands, enforce authority, and orchestrate deterministic execution across external systems**.
 
 It is **not** a business application.  
-It is **not** a workflow editor.  
+It is **not** a process editor.  
 It is **not** a SaaS product.
 
 Cabinet is **infrastructure**.
@@ -245,9 +245,9 @@ docs/
 
 ---
 
-## Who This Is For
+## Use Cases
 
-Cabinet is designed for teams that need:
+Cabinet is designed for environments requiring:
 
 - strong security boundaries
 - deterministic orchestration
@@ -259,26 +259,21 @@ It is **not** intended for rapid prototyping or ad-hoc scripting.
 
 ---
 
-## Status
+## System Components
 
-Cabinet is **feature-complete at the core level**:
+Cabinet provides:
 
-- security boundary ✅
-- pipeline orchestration ✅
-- persistence & idempotency ✅
-- worker runtime ✅
-- observability & audit ✅
-- demo integrations ✅
-- control panel UI ✅
-
-Further development focuses on:
-- real integrations
-- operational tooling
-- governance & key management
+- Security boundary enforcement
+- Pipeline orchestration
+- Persistence with idempotency guarantees
+- Worker runtime
+- Observability and audit trail
+- Fallback integration adapters
+- Control panel interface
 
 ---
 
-## Philosophy
+## Design Principles
 
 > Infrastructure must be boring.  
 > Predictability beats cleverness.  
