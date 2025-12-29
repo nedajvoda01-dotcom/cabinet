@@ -12,7 +12,7 @@ echo "║  Cabinet Platform Monorepo - Acceptance Test Suite            ║\n";
 echo "╚════════════════════════════════════════════════════════════════╝\n";
 echo "\n";
 
-$projectRoot = __DIR__;
+$projectRoot = dirname(__DIR__);
 $allPassed = true;
 
 // Test 1: Architectural Boundary Tests
