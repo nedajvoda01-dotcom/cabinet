@@ -1,0 +1,79 @@
+# Main CI Pipeline
+# This pipeline runs on every pull request and commit
+
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  # Platform build and test
+  platform-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+      - name: Install dependencies
+        run: composer install
+      - name: Run platform tests
+        run: php platform/tests/run.php
+
+  # UI build and test
+  ui-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm install
+      - name: Build UI
+        run: npm run build --workspace=ui/desktop
+      - name: Test UI
+        run: npm run test --workspace=ui/desktop
+
+  # Contract validation
+  contract-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+      - name: Generate contracts
+        run: php shared/contracts/tools/generate.php
+      - name: Run parity tests
+        run: php tests/contracts/parity-tests.php
+      - name: Contract smoke tests
+        run: php tests/contracts/smoke-tests.php
+
+  # Architectural tests
+  architecture-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+      - name: Run architecture tests
+        run: php tests/architecture/boundary-tests.php
+
+  # Security scan
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run security scan
+        run: |
+          # Add security scanning tools here
+          echo "Security scan placeholder"

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Platform HTTP API
+  platform:
+    image: php:8.1-cli
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./platform:/app/platform
+      - ./shared:/app/shared
+      - ./config:/app/config
+    working_dir: /app
+    environment:
+      - ENVIRONMENT=development
+      - DB_PATH=/app/data/cabinet.db
+    command: php -S 0.0.0.0:8080 -t /app/platform/public /app/platform/public/index.php
+    networks:
+      - cabinet-network
+
+  # Platform Worker
+  worker:
+    image: php:8.1-cli
+    volumes:
+      - ./platform:/app/platform
+      - ./shared:/app/shared
+      - ./config:/app/config
+    working_dir: /app
+    environment:
+      - ENVIRONMENT=development
+      - DB_PATH=/app/data/cabinet.db
+    command: php /app/platform/bin/worker.php
+    networks:
+      - cabinet-network
+
+  # Desktop UI
+  ui-desktop:
+    image: node:18
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./ui/desktop:/app
+    working_dir: /app
+    environment:
+      - VITE_API_URL=http://platform:8080
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - platform
+    networks:
+      - cabinet-network
+
+networks:
+  cabinet-network:
+    driver: bridge
+
+volumes:
+  cabinet-data:
