@@ -194,11 +194,10 @@ This document is written for:
 - integration developers
 - security engineers
 - auditors
-- AI agents
 
 ---
 
-## Summary
+## Core Responsibilities
 
 Integrations are **tentacles**, not brains.
 

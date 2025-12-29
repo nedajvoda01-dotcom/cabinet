@@ -234,11 +234,10 @@ This document is written for:
 - backend developers
 - system designers
 - auditors
-- AI agents
 
 ---
 
-## Summary
+## Core Responsibilities
 
 The Application layer is the **decision coordinator** of Cabinet.
 

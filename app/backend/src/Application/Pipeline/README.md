@@ -243,11 +243,10 @@ This document is written for:
 - infrastructure engineers
 - SREs
 - auditors
-- AI agents
 
 ---
 
-## Summary
+## Core Responsibilities
 
 The Pipeline is the **execution backbone** of Cabinet.
 

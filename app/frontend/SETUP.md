@@ -148,6 +148,6 @@ To integrate real authentication:
 4. Add login/logout functionality
 5. Handle token refresh
 
-## Support
+## Documentation
 
-For issues or questions, see the main project README or AGENT.md.
+For additional information, see the main project README.

@@ -78,7 +78,7 @@ Primitives are extremely sensitive to change.
 
 Rules:
 - breaking changes are rare and deliberate
-- semantic changes require full review
+- semantic changes require full audit
 - naming stability is mandatory
 - backward compatibility is preferred
 
@@ -92,7 +92,7 @@ Primitives are **not code**.
 
 They are used to:
 - generate implementations
-- review correctness
+- audit correctness
 - validate parity
 - onboard new engineers
 

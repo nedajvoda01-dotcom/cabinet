@@ -115,7 +115,7 @@ Vectors are not examples — they are **verification artifacts**.
 
 ---
 
-## Workflow
+## Modification Process
 
 ### Modifying an Existing Contract
 
@@ -173,11 +173,10 @@ This document is written for:
 - frontend developers
 - security engineers
 - auditors
-- AI agents
 
 ---
 
-## Summary
+## Core Responsibilities
 
 `shared/contracts` is the **linguistic foundation** of Cabinet.
 

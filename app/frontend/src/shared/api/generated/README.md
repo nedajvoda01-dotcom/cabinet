@@ -80,7 +80,7 @@ Rules:
 
 ---
 
-## Regeneration Workflow
+## Regeneration Process
 
 When backend API or contracts change:
 
@@ -142,11 +142,10 @@ This document is written for:
 - frontend developers
 - backend developers
 - auditors
-- AI agents
 
 ---
 
-## Summary
+## Core Principle
 
 This directory is a **generated boundary artifact**.
 

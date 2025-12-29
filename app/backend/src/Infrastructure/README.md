@@ -230,11 +230,10 @@ This document is written for:
 - DevOps engineers
 - security engineers
 - auditors
-- AI agents
 
 ---
 
-## Summary
+## Core Responsibilities
 
 Infrastructure is the **execution machinery** of Cabinet.
 

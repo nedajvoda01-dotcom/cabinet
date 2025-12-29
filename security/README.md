@@ -29,8 +29,7 @@ This document applies to:
 - frontend runtime security
 - integrations
 - operational processes
-- audits and reviews
-- AI agents interacting with the repository
+- audits
 
 It complements, but does not replace:
 - `SECURITY-IMPLEMENTATION.md`
@@ -132,24 +131,11 @@ Environment-dependent security is forbidden.
 
 Security changes require:
 - explicit documentation update
-- code review
+- code audit
 - parity test updates (if applicable)
 - audit consideration
 
 Undocumented security changes are invalid.
-
----
-
-## AI Agent Rules
-
-Any AI agent interacting with this repository:
-
-- must read this directory
-- must respect security invariants
-- must not weaken security
-- must stop if unsure
-
-Security shortcuts are treated as defects.
 
 ---
 
@@ -190,11 +176,10 @@ This document is written for:
 - system architects
 - auditors
 - technical leadership
-- AI agents
 
 ---
 
-## Summary
+## Core Principle
 
 This directory defines **how security is governed** in Cabinet.
 

@@ -139,14 +139,13 @@ If two documents disagree — the system is inconsistent.
 
 This documentation is written for:
 - engineers
-- security reviewers
+- security auditors
 - auditors
 - technical leadership
-- AI agents
 
 ---
 
-## Summary
+## Purpose
 
 This directory is the **map of the system**.
 

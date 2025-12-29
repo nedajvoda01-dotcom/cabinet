@@ -232,11 +232,10 @@ This document is written for:
 - security engineers
 - backend developers
 - auditors
-- AI agents
 
 ---
 
-## Summary
+## Core Responsibilities
 
 This module is the **enforcement engine** of Cabinet security.
 

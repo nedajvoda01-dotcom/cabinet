@@ -196,11 +196,10 @@ This document is written for:
 - frontend developers
 - system designers
 - auditors
-- AI agents
 
 ---
 
-## Summary
+## Core Responsibilities
 
 The frontend is the **operator console** of Cabinet.
 
