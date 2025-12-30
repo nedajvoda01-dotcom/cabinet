@@ -51,6 +51,11 @@
 - Test verifies adapters have no published ports
 - Test documented as required for merge
 
+**CI Behavior Note**:
+- CI sandbox blocks Docker internal DNS (127.0.0.11) by design
+- Network isolation validated via topology inspection, not live DNS
+- This does not affect real deployment behavior
+
 **Files Modified**:
 - `scripts/verify-mvp.sh` - Added network isolation test reference
 - `scripts/ci-verify.sh` - Added network isolation test execution
