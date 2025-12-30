@@ -80,6 +80,12 @@
 - ✅ Added to MVP verification: scripts/verify-mvp.sh
 - ✅ Documented as required test
 
+**CI Sandbox Behavior Note:**
+- CI environment blocks access to Docker internal DNS (127.0.0.11) by design
+- Network isolation guarantees are validated through Docker topology inspection and architectural enforcement tests
+- This does not affect runtime behavior in real deployments
+- Validation methods: container topology, config inspection, published ports check, architectural rules
+
 ### Step 7: Key MVP Scenarios ✅
 
 **7.1: UI → Capabilities List**
@@ -195,6 +201,12 @@
 - Adapters cannot reach each other (mesh isolation)
 - Adapters cannot reach UI (network segregation)
 - No published ports on adapters (external isolation)
+
+**Note on CI Testing:**
+CI sandbox intentionally blocks Docker internal DNS (127.0.0.11) for security.
+Network isolation is verified via topology inspection and configuration validation,
+not live DNS resolution. This approach is architecturally sound and does not affect
+real deployment behavior.
 
 ### Communication Through Core ✅
 - All capability invocations through CapabilityExecutor
