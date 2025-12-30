@@ -166,13 +166,13 @@ class CapabilityExecutor {
      * Phase 6.2: Validate capability access with chain context
      * 
      * This method checks:
-     * 1. UI access (from registry)
+     * 1. UI access (from registry with profile support)
      * 2. Role scopes (from policy)
      * 3. Internal capability chain validation (e.g., storage.listings.upsert_batch only allowed from import.run)
      */
     private function validateCapabilityAccess(string $capability, string $ui, string $role, array $context): bool {
         // Check UI access (unless it's an internal/system call)
-        if ($ui !== 'internal' && !$this->policy->validateUIAccess($ui, $capability, $this->uiConfig)) {
+        if ($ui !== 'internal' && !$this->validateUIAccessWithProfiles($ui, $role, $capability)) {
             return false;
         }
         
@@ -197,6 +197,32 @@ class CapabilityExecutor {
         }
         
         return true;
+    }
+    
+    /**
+     * Validate UI access with profile support
+     * This handles the unified UI model where different roles get different profiles
+     */
+    private function validateUIAccessWithProfiles(string $ui, string $role, string $capability): bool {
+        if (!isset($this->uiConfig['ui'][$ui])) {
+            return false;
+        }
+        
+        $uiEntry = $this->uiConfig['ui'][$ui];
+        
+        // Check if UI has profile-based structure (new unified UI)
+        if (isset($uiEntry['profiles'])) {
+            // Determine profile based on role
+            $profile = $role === 'admin' ? 'admin' : 'public';
+            $profileConfig = $uiEntry['profiles'][$profile] ?? $uiEntry['profiles']['public'];
+            
+            $allowedCapabilities = $profileConfig['allowed_capabilities'] ?? [];
+        } else {
+            // Legacy format (single allowed_capabilities list)
+            $allowedCapabilities = $uiEntry['allowed_capabilities'] ?? [];
+        }
+        
+        return in_array($capability, $allowedCapabilities);
     }
     
     /**
