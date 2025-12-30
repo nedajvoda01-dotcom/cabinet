@@ -14,7 +14,13 @@
         "price.rule.list",
         "workflow.execute",
         "workflow.status",
-        "workflow.list"
+        "workflow.list",
+        "import.run",
+        "catalog.filters.get",
+        "catalog.listings.search",
+        "catalog.listing.get",
+        "catalog.photos.list",
+        "catalog.listing.use"
       ],
       "scopes": [
         "admin",
@@ -29,7 +35,11 @@
         "car.list",
         "car.read",
         "price.calculate",
-        "workflow.status"
+        "workflow.status",
+        "catalog.filters.get",
+        "catalog.listings.search",
+        "catalog.listing.get",
+        "catalog.photos.list"
       ],
       "scopes": [
         "read"
