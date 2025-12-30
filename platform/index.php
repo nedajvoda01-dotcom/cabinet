@@ -41,13 +41,16 @@ function loadConfig($path) {
     throw new Exception("Config not found or YAML extension not available: $path");
 }
 
+// Get registry path from environment or use relative path as fallback
+$registryPath = getenv('REGISTRY_PATH') ?: __DIR__ . '/../registry';
+
 // Initialize components
 $storage = new Storage(getenv('STORAGE_PATH') ?: '/var/lib/cabinet/storage');
-$policy = new Policy(__DIR__ . '/../registry/policy.yaml');
-$uiConfig = loadConfig(__DIR__ . '/../registry/ui.yaml');
+$policy = new Policy($registryPath . '/policy.yaml');
+$uiConfig = loadConfig($registryPath . '/ui.yaml');
 $router = new Router(
-    __DIR__ . '/../registry/adapters.yaml',
-    __DIR__ . '/../registry/capabilities.yaml'
+    $registryPath . '/adapters.yaml',
+    $registryPath . '/capabilities.yaml'
 );
 
 $limits = new Limits($policy, $storage, [

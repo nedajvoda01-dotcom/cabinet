@@ -9,10 +9,11 @@ services:
       - "${PLATFORM_PORT:-8080}:80"
     volumes:
       - ./platform:/var/www/html
-      - ./registry:/var/www/registry
+      - ./registry:/app/registry
       - ./storage:/var/lib/cabinet/storage
     environment:
       - STORAGE_PATH=/var/lib/cabinet/storage
+      - REGISTRY_PATH=/app/registry
       - DEFAULT_RATE_LIMIT=${DEFAULT_RATE_LIMIT:-100}
       - DEFAULT_TIMEOUT=${DEFAULT_TIMEOUT:-30}
       - MAX_REQUEST_SIZE=${MAX_REQUEST_SIZE:-10485760}
