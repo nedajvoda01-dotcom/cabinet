@@ -1,0 +1,337 @@
+### Cabinet Platform Security Tests (Phase 5 & 6)
+### Use with HTTP client like REST Client (VS Code) or curl
+
+### Variables
+@baseUrl = http://localhost:8080
+@apiUrl = {{baseUrl}}/api/invoke
+@adminKey = admin_secret_key_12345
+@publicKey = public_secret_key_67890
+
+### ============================================================================
+### PHASE 5.1 - AUTHENTICATION TESTS
+### ============================================================================
+
+### Test Auth 1: Request without API key (should fail with 401)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "capability": "car.list",
+  "payload": {}
+}
+
+###
+
+### Test Auth 2: Request with invalid API key (should fail with 401)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: invalid_key_12345
+
+{
+  "capability": "car.list",
+  "payload": {}
+}
+
+###
+
+### Test Auth 3: Request with valid admin API key (should succeed)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "capability": "car.list",
+  "payload": {}
+}
+
+###
+
+### Test Auth 4: Request with valid public API key (should succeed)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{publicKey}}
+
+{
+  "capability": "car.list",
+  "payload": {}
+}
+
+###
+
+### ============================================================================
+### PHASE 5.2 - AUTHORIZATION TESTS (Deny by Default)
+### ============================================================================
+
+### Test Authz 1: Public UI trying to create car (should fail - not in allowed_capabilities)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{publicKey}}
+
+{
+  "capability": "car.create",
+  "payload": {
+    "brand": "Toyota",
+    "model": "Camry"
+  }
+}
+
+###
+
+### Test Authz 2: Admin UI creating car (should succeed)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "capability": "car.create",
+  "payload": {
+    "brand": "BMW",
+    "model": "X5",
+    "year": 2024
+  }
+}
+
+###
+
+### Test Authz 3: Guest role trying admin capability (should fail - missing admin scope)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{publicKey}}
+
+{
+  "capability": "price.rule.create",
+  "payload": {
+    "rule_name": "Test Rule"
+  }
+}
+
+###
+
+### Test Authz 4: Admin deleting car (should succeed - has delete scope)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "capability": "car.delete",
+  "payload": {
+    "id": "test_car_1"
+  }
+}
+
+###
+
+### ============================================================================
+### PHASE 5.3 - LIMITS TESTS
+### ============================================================================
+
+### Test Limits 1: Large payload (within limit - should succeed)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "capability": "car.create",
+  "payload": {
+    "brand": "Mercedes",
+    "model": "S-Class",
+    "description": "{{$randomLoremText}}",
+    "features": [
+      "feature1", "feature2", "feature3", "feature4", "feature5"
+    ]
+  }
+}
+
+###
+
+### Test Limits 2: Rate limiting test - Send multiple requests quickly
+### Note: car.create has rate_limit: 10 per minute for this capability
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "capability": "car.create",
+  "payload": {
+    "brand": "Audi",
+    "model": "A8"
+  }
+}
+
+###
+
+### ============================================================================
+### PHASE 5.4 - AUDIT LOGGING TESTS
+### ============================================================================
+
+### Test Audit 1: Successful operation (check logs for complete audit trail)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "capability": "workflow.list",
+  "payload": {}
+}
+
+###
+
+### Test Audit 2: Failed operation (check logs for error audit entry)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "capability": "invalid.capability",
+  "payload": {}
+}
+
+###
+
+### ============================================================================
+### PHASE 6 - RESULTGATE TESTS
+### ============================================================================
+
+### Test ResultGate 1: Field filtering with allowlist
+### Should only return allowed fields from capabilities.yaml
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{publicKey}}
+
+{
+  "capability": "car.read",
+  "payload": {
+    "id": "test_car_1"
+  }
+}
+
+###
+
+### Test ResultGate 2: Price calculation (should only return allowed fields)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{publicKey}}
+
+{
+  "capability": "price.calculate",
+  "payload": {
+    "brand": "Toyota",
+    "year": 2020,
+    "base_price": 35000
+  }
+}
+
+###
+
+### Test ResultGate 3: Sensitive field removal (non-admin should not see sensitive data)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{publicKey}}
+
+{
+  "capability": "car.list",
+  "payload": {}
+}
+
+###
+
+### Test ResultGate 4: Admin sees more data (admin scope)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "capability": "car.list",
+  "payload": {}
+}
+
+###
+
+### ============================================================================
+### INTEGRATION TESTS
+### ============================================================================
+
+### Integration Test 1: Complete flow with admin
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "capability": "car.create",
+  "payload": {
+    "brand": "Tesla",
+    "model": "Model 3",
+    "year": 2024,
+    "price": 45000
+  }
+}
+
+###
+
+### Integration Test 2: Complete flow with public user
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{publicKey}}
+
+{
+  "capability": "price.calculate",
+  "payload": {
+    "brand": "Tesla",
+    "year": 2024,
+    "base_price": 45000
+  }
+}
+
+###
+
+### Integration Test 3: Workflow execution by admin
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "capability": "workflow.execute",
+  "payload": {
+    "workflow_id": "car_onboarding"
+  }
+}
+
+###
+
+### ============================================================================
+### EDGE CASES
+### ============================================================================
+
+### Edge Case 1: Empty payload
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "capability": "car.list",
+  "payload": {}
+}
+
+###
+
+### Edge Case 2: Missing capability field
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{
+  "payload": {
+    "test": "data"
+  }
+}
+
+###
+
+### Edge Case 3: Malformed JSON (should fail gracefully)
+POST {{apiUrl}}
+Content-Type: application/json
+X-API-Key: {{adminKey}}
+
+{"capability":"car.list","payload":{"malformed":
+
+###

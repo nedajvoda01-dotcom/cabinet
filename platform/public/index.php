@@ -76,7 +76,13 @@ $policy = new Policy($registryPath . '/policy.yaml');
 $limits = new Limits($policy, $storage, [
     'default_timeout' => (int)(getenv('DEFAULT_TIMEOUT') ?: 30)
 ]);
-$resultGate = new ResultGate($policy);
+
+// Phase 6: Pass capabilities config and limits to ResultGate
+$resultGateConfig = [
+    'max_response_size' => (int)(getenv('MAX_RESPONSE_SIZE') ?: 10485760), // 10MB
+    'max_array_size' => (int)(getenv('MAX_ARRAY_SIZE') ?: 1000)
+];
+$resultGate = new ResultGate($policy, $capabilitiesConfig, $resultGateConfig);
 
 // Initialize Phase 4 component - Adapter Client
 $adapterClient = new AdapterClient();
