@@ -1,6 +1,21 @@
 #!/bin/bash
 # Phase 6.1 Network Isolation Test
 # Tests that adapters are isolated from each other and only accessible to platform
+#
+# NOTE: CI/GitHub Actions Sandbox Behavior
+# ========================================
+# Docker internal DNS (127.0.0.11) is not reachable in CI sandbox environments.
+# This is intentional security behavior and NOT a bug.
+#
+# Network isolation is validated via:
+# - Container topology inspection (docker network inspect)
+# - Configuration verification (docker inspect)
+# - Published ports check (Ports: null)
+# - Architectural enforcement tests (scripts/check-architecture.sh)
+#
+# CI sandbox intentionally blocks Docker internal DNS; network isolation is
+# verified through topology and configuration inspection, not live DNS resolution.
+# This does not affect runtime behavior in real deployments.
 
 set -e
 
