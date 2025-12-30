@@ -162,14 +162,27 @@ class Router {
      * Start router (listen to hash changes)
      */
     start() {
-        window.addEventListener('hashchange', () => {
+        // Store bound handler for cleanup
+        this._hashChangeHandler = () => {
             const path = window.location.hash.substring(1) || '/';
             this.navigate(path, true);
-        });
+        };
+        
+        window.addEventListener('hashchange', this._hashChangeHandler);
         
         // Handle initial load
         const path = window.location.hash.substring(1) || '/';
         this.navigate(path, true);
+    }
+    
+    /**
+     * Stop router (cleanup event listeners)
+     */
+    stop() {
+        if (this._hashChangeHandler) {
+            window.removeEventListener('hashchange', this._hashChangeHandler);
+            this._hashChangeHandler = null;
+        }
     }
 }
 

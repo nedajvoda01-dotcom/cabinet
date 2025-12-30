@@ -84,18 +84,19 @@ function displayListings(listings) {
     `;
     
     listings.forEach(listing => {
+        const canUse = can('catalog.listing.use') && listing.status === 'available';
         html += `
             <tr>
-                <td>${listing.id}</td>
-                <td>${listing.brand}</td>
-                <td>${listing.model}</td>
+                <td>${escapeHtml(listing.id)}</td>
+                <td>${escapeHtml(listing.brand)}</td>
+                <td>${escapeHtml(listing.model)}</td>
                 <td>${listing.year}</td>
                 <td>$${listing.price?.toLocaleString() || 'N/A'}</td>
                 <td><span class="badge badge-${getStatusClass(listing.status)}">${listing.status || 'unknown'}</span></td>
                 <td>
-                    <a href="#/car/${listing.id}" class="btn btn-primary btn-sm">View</a>
-                    ${can('catalog.listing.use') && listing.status === 'available' ? `
-                        <button class="btn btn-success btn-sm ml-sm" onclick="window.useListing('${listing.id}')">Use</button>
+                    <a href="#/car/${encodeURIComponent(listing.id)}" class="btn btn-primary btn-sm">View</a>
+                    ${canUse ? `
+                        <button class="btn btn-success btn-sm ml-sm use-listing-btn" data-listing-id="${escapeHtml(listing.id)}">Use</button>
                     ` : ''}
                 </td>
             </tr>
@@ -137,6 +138,20 @@ function displayListings(listings) {
     ` + html;
     
     resultDiv.innerHTML = html;
+    
+    // Attach event listeners to use buttons using event delegation
+    resultDiv.querySelectorAll('.use-listing-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const listingId = e.target.getAttribute('data-listing-id');
+            await handleUseListing(listingId);
+        });
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function getStatusClass(status) {
@@ -149,8 +164,7 @@ function getStatusClass(status) {
     return statusMap[status] || 'available';
 }
 
-// Global function for use listing button
-window.useListing = async function(listingId) {
+async function handleUseListing(listingId) {
     if (!can('catalog.listing.use')) {
         alert('You don\'t have permission to use listings');
         return;
@@ -168,9 +182,9 @@ window.useListing = async function(listingId) {
         alert('Listing marked as used successfully!');
         
         // Reload listings
-        loadListings();
+        await loadListings();
         
     } catch (error) {
         alert(`Error: ${error.message}`);
     }
-};
+}

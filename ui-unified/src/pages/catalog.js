@@ -111,8 +111,8 @@ async function loadFilters() {
 
 function populateSelect(id, options) {
     const select = document.getElementById(id);
-    const firstOption = select.options[0].value;
-    select.innerHTML = `<option value="">${select.options[0].text}</option>`;
+    const firstOptionText = select.options[0].text;  // Save before clearing
+    select.innerHTML = `<option value="">${firstOptionText}</option>`;
     
     options.forEach(opt => {
         const option = document.createElement('option');

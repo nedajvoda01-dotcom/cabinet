@@ -207,6 +207,11 @@ input:focus, select:focus, textarea:focus {
     background: #333333;
 }
 
+.btn-sm {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+}
+
 /* Cards */
 .card {
     background: var(--color-bg-light);
