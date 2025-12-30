@@ -132,6 +132,57 @@
         <div id="workflowResult"></div>
     </div>
 
+    <div class="section">
+        <h2>Catalog Search</h2>
+        <button class="btn" onclick="loadFilters()">Load Filters</button>
+        <div id="filtersContainer" style="display:none; margin-top: 15px;">
+            <div class="form-group">
+                <label>Brand:</label>
+                <select id="filterBrand">
+                    <option value="">All Brands</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Model:</label>
+                <select id="filterModel">
+                    <option value="">All Models</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Year:</label>
+                <select id="filterYear">
+                    <option value="">All Years</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Min Price:</label>
+                <input type="number" id="filterMinPrice" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>Max Price:</label>
+                <input type="number" id="filterMaxPrice" placeholder="100000">
+            </div>
+            <button class="btn" onclick="searchListings()">Search</button>
+        </div>
+        <div id="searchResult"></div>
+    </div>
+
+    <div class="section">
+        <h2>CSV Import</h2>
+        <div class="form-group">
+            <label>Filename:</label>
+            <input type="text" id="importFilename" placeholder="cars.csv">
+        </div>
+        <div class="form-group">
+            <label>CSV Data:</label>
+            <textarea id="importCsvData" rows="5" placeholder="external_id,brand,model,year,price
+EXT001,Toyota,Camry,2020,25000
+EXT002,Honda,Accord,2021,28000"></textarea>
+        </div>
+        <button class="btn" onclick="runImport()">Import CSV</button>
+        <div id="importResult"></div>
+    </div>
+
     <script src="src/app.js"></script>
 </body>
 </html>

@@ -207,6 +207,7 @@ class CapabilityExecutor {
             'storage.imports.register',
             'storage.imports.mark_done',
             'parser.calculate_hash',
+            'parser.parse_csv',
         ];
         
         return in_array($capability, $internalCapabilities);
@@ -220,6 +221,7 @@ class CapabilityExecutor {
         $allowedChains = [
             'import.run' => [
                 'parser.calculate_hash',
+                'parser.parse_csv',
                 'storage.imports.register',
                 'storage.listings.upsert_batch',
                 'storage.imports.mark_done',
