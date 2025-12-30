@@ -1,0 +1,98 @@
+<?php
+/**
+ * Registry Loader
+ * Reads and caches registry YAML files
+ * Phase 3: Registry as source of truth
+ */
+
+namespace Platform\Registry;
+
+class RegistryLoader {
+    private string $registryPath;
+    private array $cache = [];
+    private bool $devMode;
+    
+    public function __construct(string $registryPath, bool $devMode = false) {
+        $this->registryPath = $registryPath;
+        $this->devMode = $devMode;
+    }
+    
+    /**
+     * Load a registry file
+     */
+    public function load(string $filename): array {
+        $cacheKey = $filename;
+        
+        // In dev mode, always reload. In production, use cache
+        if (!$this->devMode && isset($this->cache[$cacheKey])) {
+            return $this->cache[$cacheKey];
+        }
+        
+        $path = $this->registryPath . '/' . $filename;
+        $data = $this->loadConfig($path);
+        
+        // Cache the loaded data
+        $this->cache[$cacheKey] = $data;
+        
+        return $data;
+    }
+    
+    /**
+     * Load config from YAML or JSON
+     */
+    private function loadConfig(string $path): array {
+        // Support both YAML and JSON
+        $jsonPath = str_replace('.yaml', '.json', $path);
+        
+        if (file_exists($jsonPath)) {
+            $content = file_get_contents($jsonPath);
+            return json_decode($content, true) ?? [];
+        }
+        
+        if (!file_exists($path)) {
+            throw new \Exception("Registry file not found: $path or $jsonPath");
+        }
+        
+        // Try YAML if available
+        if (function_exists('yaml_parse_file')) {
+            return yaml_parse_file($path) ?? [];
+        }
+        
+        throw new \Exception("YAML extension not available and JSON config not found");
+    }
+    
+    /**
+     * Reload all cached registry files (hot reload)
+     */
+    public function reload(): void {
+        $this->cache = [];
+    }
+    
+    /**
+     * Get adapters configuration
+     */
+    public function getAdapters(): array {
+        return $this->load('adapters.yaml');
+    }
+    
+    /**
+     * Get capabilities configuration
+     */
+    public function getCapabilities(): array {
+        return $this->load('capabilities.yaml');
+    }
+    
+    /**
+     * Get UI configuration
+     */
+    public function getUI(): array {
+        return $this->load('ui.yaml');
+    }
+    
+    /**
+     * Get policy configuration
+     */
+    public function getPolicy(): array {
+        return $this->load('policy.yaml');
+    }
+}
