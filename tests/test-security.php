@@ -107,6 +107,10 @@ test("Authentication validates API key correctly", function() {
     putenv('ENABLE_AUTH=true');
     $_ENV['ENABLE_AUTH'] = 'true';
     
+    // Configure API key
+    putenv('API_KEY_ADMIN=admin_secret_key_12345|admin|admin|admin_user');
+    $_ENV['API_KEY_ADMIN'] = 'admin_secret_key_12345|admin|admin|admin_user';
+    
     // Simulate valid API key header
     $_SERVER['HTTP_X_API_KEY'] = 'admin_secret_key_12345';
     
