@@ -2,7 +2,86 @@
 
 This guide demonstrates how to add new adapters and UIs to the Cabinet platform **without modifying platform code**.
 
-## Adding a New Adapter
+## Quick Start: Developer Scripts
+
+Cabinet provides convenient scripts to scaffold new components:
+
+### Create a New Adapter
+
+```bash
+./scripts/new-adapter.sh my-service
+```
+
+This creates:
+- `adapters/my-service/` directory
+- `invoke.php` with capability routing template
+- `README.md` with integration instructions
+
+### Add a New Capability
+
+```bash
+./scripts/new-capability.sh storage.backup storage-adapter
+```
+
+This prompts for:
+- Description
+- Internal-only flag
+- Allowed parent capabilities (if internal)
+- Automatically adds to `registry/capabilities.yaml`
+
+### Run Smoke Tests
+
+```bash
+./scripts/run-smoke.sh
+```
+
+Wrapper over tests/run-smoke-tests.sh with proper configuration.
+
+### Validate Architecture
+
+```bash
+./scripts/check-architecture.sh
+```
+
+Checks for:
+- Direct adapter URLs in UI code (blocked)
+- JSON files in registry (warning)
+- Legacy Router usage (blocked)
+- Adapter-to-adapter HTTP calls (blocked)
+- Hardcoded chain rules (blocked)
+
+### Validate Registry
+
+```bash
+./scripts/validate-registry.sh
+```
+
+Validates:
+- Required files exist
+- YAML syntax
+- Cross-references (adapter → capability → UI)
+- Internal-only capabilities have allowed_parents
+
+### Run All CI Checks
+
+```bash
+./scripts/ci-verify.sh
+```
+
+Runs all merge-blocker tests:
+- Registry validation
+- Architecture rules
+- Security tests
+- Integration tests
+- Capability chain tests
+- Result profile tests
+- Import idempotency tests
+- Network isolation tests
+- MVP verification
+
+---
+
+## Manual Process: Adding a New Adapter
 
 ### Example: Adding a "Notification" Adapter
 

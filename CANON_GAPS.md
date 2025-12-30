@@ -151,26 +151,64 @@ private function isAllowedChain(string $parentCapability, string $childCapabilit
 
 ## Summary: Fix Order
 
-1. **CRITICAL: Remove legacy Router from invoke path**
-   - Update InvokeController to use CapabilityExecutor
-   - Update platform/public/index.php to instantiate CapabilityExecutor
-   - Remove Router.php usage from invoke endpoint
+1. **✅ CRITICAL: Remove legacy Router from invoke path**
+   - Update InvokeController to use CapabilityExecutor ✓
+   - Update platform/public/index.php to instantiate CapabilityExecutor ✓
+   - Remove Router.php usage from invoke endpoint ✓
 
-2. **CRITICAL: Move chain rules to registry**
-   - Add internal_only and allowed_parents to capabilities.yaml
-   - Update CapabilityExecutor to read from registry
-   - Remove hardcoded arrays
+2. **✅ CRITICAL: Move chain rules to registry**
+   - Add internal_only and allowed_parents to capabilities.yaml ✓
+   - Update CapabilityExecutor to read from registry ✓
+   - Remove hardcoded arrays ✓
 
-3. **HIGH: YAML as source of truth**
-   - Remove JSON files or make them generated
-   - Update Router.php (if still needed) to read YAML only
-   - Create validation script
+3. **✅ HIGH: YAML as source of truth**
+   - Remove JSON files or make them generated ✓
+   - Update Router.php (if still needed) to read YAML only ✓
+   - Create validation script ✓
 
-4. **HIGH: Result profiles in ui.yaml**
-   - Add result_profile field to each UI in ui.yaml
-   - Ensure ResultGate reads from result_profiles.yaml
-   - Verify end-to-end filtering
+4. **✅ HIGH: Result profiles in ui.yaml**
+   - Add result_profile field to each UI in ui.yaml ✓
+   - Ensure ResultGate reads from result_profiles.yaml ✓
+   - Verify end-to-end filtering ✓
 
-5. **LOW: Verify single entrypoint**
-   - Already done (platform/index.php is thin wrapper)
-   - Just verify and document
+5. **✅ LOW: Verify single entrypoint**
+   - Already done (platform/index.php is thin wrapper) ✓
+   - Just verify and document ✓
+
+---
+
+## Additional MVP Requirements Completed
+
+6. **✅ Network Isolation (Step 6.1 & 6.2)**
+   - Docker networks configured (edge + mesh) ✓
+   - Adapters isolated in mesh network ✓
+   - Test script created: test-network-isolation.sh ✓
+   - Documented as merge-blocker ✓
+
+7. **✅ Key MVP Scenarios (Step 7)**
+   - GET /api/capabilities returns filtered list ✓
+   - Catalog search capabilities implemented ✓
+   - Import orchestration through core ✓
+   - Idempotency enforced ✓
+
+8. **✅ Developer Ergonomics (Step 8)**
+   - Created scripts/new-adapter.sh ✓
+   - Created scripts/new-capability.sh ✓
+   - Created scripts/run-smoke.sh ✓
+   - Created scripts/check-architecture.sh (grep checks) ✓
+   - Created scripts/ci-verify.sh (all merge-blockers) ✓
+
+---
+
+## Status: 100% MVP COMPLETE ✓
+
+All CANON_GAPS have been addressed and verified. The platform now has:
+- ✓ Single canonical code path for all invocations
+- ✓ Registry-driven configuration (YAML only)
+- ✓ Chain rules in data (not code)
+- ✓ Result profiles applied
+- ✓ Network isolation enforced
+- ✓ Developer-friendly tooling
+- ✓ Comprehensive test coverage
+- ✓ All merge-blocker tests passing
+
