@@ -55,6 +55,18 @@ class Authentication {
      */
     private function getApiKeyFromHeaders(): ?string {
         // Check X-API-Key header (case insensitive)
+        
+        // In CLI/test mode, check $_SERVER directly
+        if (php_sapi_name() === 'cli' || !function_exists('getallheaders')) {
+            foreach ($_SERVER as $name => $value) {
+                if (strtolower($name) === 'http_x_api_key') {
+                    return $value;
+                }
+            }
+            return null;
+        }
+        
+        // In web context, use getallheaders
         $headers = getallheaders();
         if (!$headers) {
             return null;

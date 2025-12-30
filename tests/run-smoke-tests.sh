@@ -1,9 +1,12 @@
 #!/bin/bash
 # Smoke test script for Cabinet Platform
+# Phase 5: Updated with API key authentication
 
 set -e
 
 PLATFORM_URL="http://localhost:8080/api/invoke"
+ADMIN_API_KEY="admin_secret_key_12345"
+PUBLIC_API_KEY="public_secret_key_67890"
 FAILED=0
 PASSED=0
 
@@ -14,11 +17,13 @@ test_request() {
     local test_name=$1
     local payload=$2
     local should_succeed=$3
+    local api_key=$4
     
     echo -n "Testing: $test_name ... "
     
     response=$(curl -s -w "\n%{http_code}" -X POST "$PLATFORM_URL" \
         -H "Content-Type: application/json" \
+        -H "X-API-Key: $api_key" \
         -d "$payload")
     
     http_code=$(echo "$response" | tail -n1)
@@ -51,11 +56,8 @@ echo ""
 # Test 1: List cars (public - allowed)
 test_request "List cars (public)" '{
   "capability": "car.list",
-  "payload": {},
-  "ui": "public",
-  "role": "guest",
-  "user_id": "test_user"
-}' "true"
+  "payload": {}
+}' "true" "$PUBLIC_API_KEY"
 
 # Test 2: Create car (admin - allowed)
 test_request "Create car (admin)" '{
@@ -65,11 +67,8 @@ test_request "Create car (admin)" '{
     "model": "Camry",
     "year": 2024,
     "price": 35000
-  },
-  "ui": "admin",
-  "role": "admin",
-  "user_id": "admin_user"
-}' "true"
+  }
+}' "true" "$ADMIN_API_KEY"
 
 # Test 3: Create car (public - should fail)
 test_request "Create car (public - should fail)" '{
@@ -79,11 +78,8 @@ test_request "Create car (public - should fail)" '{
     "model": "Accord",
     "year": 2024,
     "price": 32000
-  },
-  "ui": "public",
-  "role": "guest",
-  "user_id": "guest_user"
-}' "false"
+  }
+}' "false" "$PUBLIC_API_KEY"
 
 echo ""
 echo "=== Testing Pricing ==="
@@ -96,20 +92,14 @@ test_request "Calculate price (public)" '{
     "brand": "Toyota",
     "year": 2020,
     "base_price": 35000
-  },
-  "ui": "public",
-  "role": "guest",
-  "user_id": "guest_user"
-}' "true"
+  }
+}' "true" "$PUBLIC_API_KEY"
 
 # Test 5: List pricing rules (admin - allowed)
 test_request "List pricing rules (admin)" '{
   "capability": "price.rule.list",
-  "payload": {},
-  "ui": "admin",
-  "role": "admin",
-  "user_id": "admin_user"
-}' "true"
+  "payload": {}
+}' "true" "$ADMIN_API_KEY"
 
 echo ""
 echo "=== Testing Automation ==="
@@ -120,20 +110,14 @@ test_request "Execute workflow (admin)" '{
   "capability": "workflow.execute",
   "payload": {
     "workflow_id": "car_onboarding"
-  },
-  "ui": "admin",
-  "role": "admin",
-  "user_id": "admin_user"
-}' "true"
+  }
+}' "true" "$ADMIN_API_KEY"
 
 # Test 7: List workflows (admin - allowed)
 test_request "List workflows (admin)" '{
   "capability": "workflow.list",
-  "payload": {},
-  "ui": "admin",
-  "role": "admin",
-  "user_id": "admin_user"
-}' "true"
+  "payload": {}
+}' "true" "$ADMIN_API_KEY"
 
 echo ""
 echo "=== Testing Error Cases ==="
@@ -142,19 +126,13 @@ echo ""
 # Test 8: Invalid capability
 test_request "Invalid capability (should fail)" '{
   "capability": "invalid.capability",
-  "payload": {},
-  "ui": "admin",
-  "role": "admin",
-  "user_id": "admin_user"
-}' "false"
+  "payload": {}
+}' "false" "$ADMIN_API_KEY"
 
 # Test 9: Missing capability
 test_request "Missing capability (should fail)" '{
-  "payload": {},
-  "ui": "admin",
-  "role": "admin",
-  "user_id": "admin_user"
-}' "false"
+  "payload": {}
+}' "false" "$ADMIN_API_KEY"
 
 echo ""
 echo "==================================="

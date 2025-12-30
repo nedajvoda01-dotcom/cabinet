@@ -314,9 +314,220 @@ All changes are backward compatible:
    - Actor tracking for audit trails
    - Consistent error handling
 
+4. **Phase 5:**
+   - X-API-Key authentication (fail-closed by default)
+   - Policy-based authorization with deny-by-default
+   - Request/response size limits and rate limiting
+   - Comprehensive audit logging
+
+5. **Phase 6:**
+   - Field allowlists per capability
+   - Response size limits
+   - Dangerous content blocking (HTML/JS)
+   - Large array limiting
+
+## Phase 5: MVP Security (Fail-Closed)
+
+### 5.1 Authentication
+
+X-API-Key authentication is now required by default.
+
+**Configuration:**
+```bash
+ENABLE_AUTH=true
+API_KEY_ADMIN=admin_secret_key_12345|admin|admin|admin_user
+API_KEY_PUBLIC=public_secret_key_67890|public|guest|public_user
+```
+
+**Usage:**
+```bash
+curl -X POST http://localhost:8080/api/invoke \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: admin_secret_key_12345" \
+  -d '{"capability": "car.list", "payload": {}}'
+```
+
+**Behavior:**
+- If `ENABLE_AUTH=true`: All requests must include valid X-API-Key header
+- If `ENABLE_AUTH=false`: Development mode, authentication bypassed
+- Missing/invalid key: Returns HTTP 401 Unauthorized
+
+### 5.2 Authorization (Deny by Default)
+
+Authorization is managed through `registry/policy.yaml`:
+
+```yaml
+roles:
+  admin:
+    scopes: [admin, read, write, delete]
+    
+capability_policies:
+  car.create:
+    required_scopes: [write]
+```
+
+**Authorization Flow:**
+1. Authenticate request (get actor's role and UI)
+2. Check if UI is allowed to use capability (via `registry/ui.yaml`)
+3. Check if role has required scopes for capability
+4. **Deny by default** if any check fails
+
+### 5.3 Limits
+
+**Request Size Limits:**
+```yaml
+roles:
+  admin:
+    max_request_size: 10485760  # 10MB
+  guest:
+    max_request_size: 524288    # 512KB
+```
+
+**Rate Limiting:**
+```yaml
+capability_policies:
+  car.create:
+    rate_limit: 10  # requests per minute
+```
+
+**Timeouts:**
+```bash
+DEFAULT_TIMEOUT=30  # seconds
+```
+
+### 5.4 Audit Logging
+
+All capability invocations are logged with full context:
+
+```json
+{
+  "run_id": "run_abc123",
+  "event": "capability_invocation_success",
+  "capability": "car.create",
+  "adapter": "car-storage",
+  "ui": "admin",
+  "user_id": "admin_user",
+  "role": "admin",
+  "result": "ok",
+  "timestamp": 1234567890,
+  "ip": "192.168.1.1"
+}
+```
+
+**Logged Events:**
+- `authentication_failed` - Failed authentication attempt
+- `capability_invocation_start` - Capability invocation initiated
+- `capability_invocation_success` - Successful execution
+- `capability_invocation_error` - Failed execution
+
+**Storage:** `$STORAGE_PATH/audit/YYYY-MM-DD.log`
+
+## Phase 6: ResultGate Enhancement
+
+### 6.1 Field Allowlists
+
+Each capability defines which fields are allowed in responses:
+
+```yaml
+capabilities:
+  car.read:
+    adapter: car-storage
+    allowed_fields:
+      - id
+      - brand
+      - model
+      - year
+      - price
+```
+
+Only fields in `allowed_fields` are returned to UI. Unlisted fields are stripped.
+
+### 6.2 Response Size Limits
+
+```bash
+MAX_RESPONSE_SIZE=10485760  # 10MB
+```
+
+Prevents memory exhaustion from large adapter responses.
+
+### 6.3 Dangerous Content Blocking
+
+Blocks HTML/JS that could cause XSS:
+- `<script>` tags
+- `<iframe>` tags
+- `javascript:` protocol
+- Event handlers (`onclick`, `onload`, etc.)
+
+Dangerous strings are replaced with `[BLOCKED: Dangerous content detected]`
+
+### 6.4 Large Array Limiting
+
+```bash
+MAX_ARRAY_SIZE=1000  # items
+```
+
+Arrays exceeding the limit are truncated with metadata:
+```json
+{
+  "items": [...],
+  "items_truncated": true,
+  "items_total_count": 5000
+}
+```
+
+## Security Pipeline
+
+Every request flows through:
+
+```
+1. Authentication (X-API-Key) → 401 if fails
+2. Authorization Check → 403 if fails
+3. Limits Check → 429/413 if fails
+4. Adapter Invocation (with timeout)
+5. ResultGate Filtering
+6. Audit Logging
+7. Return Filtered Response
+```
+
+## Testing Phase 5 & 6
+
+### Run Unit Tests
+```bash
+php tests/test-security.php
+```
+
+### Run Smoke Tests
+```bash
+cd tests
+./run-smoke-tests.sh
+```
+
+### Manual Security Tests
+```bash
+# Test without API key (should fail)
+curl -X POST http://localhost:8080/api/invoke \
+  -H "Content-Type: application/json" \
+  -d '{"capability": "car.list", "payload": {}}'
+
+# Test with valid key (should succeed)
+curl -X POST http://localhost:8080/api/invoke \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: admin_secret_key_12345" \
+  -d '{"capability": "car.list", "payload": {}}'
+```
+
+See `tests/security.http` for comprehensive security test cases.
+
+## Documentation
+
+Detailed security model documentation: `platform/README.md`
+
 ## Future Enhancements
 
 - Full migration to CapabilityRouter (Phase 3 component)
 - Additional control plane endpoints
 - Enhanced monitoring and metrics
 - GraphQL API support
+- JWT/Session authentication
+- OAuth2 integration
+- PII detection and redaction
