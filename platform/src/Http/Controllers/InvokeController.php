@@ -39,6 +39,11 @@ class InvokeController {
             throw new \Exception('Capability is required');
         }
         
+        // Set globals for actor context (Phase 4)
+        $GLOBALS['current_user_id'] = $userId;
+        $GLOBALS['current_role'] = $role;
+        $GLOBALS['current_ui'] = $ui;
+        
         // Generate run ID
         $runId = uniqid('run_', true);
         

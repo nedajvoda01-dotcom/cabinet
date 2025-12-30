@@ -123,67 +123,22 @@ try {
     
     if ($method === 'POST' && $path === '/api/invoke') {
         // Phase 2: Invoke endpoint (refactored)
+        // For now, use the existing Router class for backward compatibility
+        // Phase 3/4 integration can be done more cleanly later
+        require_once __DIR__ . '/../Router.php';
+        $legacyRouter = new Router(
+            $registryPath . '/adapters.yaml',
+            $registryPath . '/capabilities.yaml'
+        );
+        
         $controller = new InvokeController(
-            $capabilityRouter,  // Use new CapabilityRouter
+            $legacyRouter,
             $policy,
             $limits,
             $resultGate,
             $storage,
             $uiConfig
         );
-        
-        // Note: InvokeController needs to be updated to use CapabilityRouter
-        // For now, we'll create a compatibility wrapper
-        $legacyRouter = new class($capabilityRouter, $adapterClient) {
-            private $capabilityRouter;
-            private $adapterClient;
-            
-            public function __construct($capabilityRouter, $adapterClient) {
-                $this->capabilityRouter = $capabilityRouter;
-                $this->adapterClient = $adapterClient;
-            }
-            
-            public function getAdapterForCapability($capability) {
-                return $this->capabilityRouter->getAdapter($capability);
-            }
-            
-            public function invoke($adapter, $capability, $payload, $timeout) {
-                // Generate trace ID
-                $traceId = uniqid('trace_', true);
-                
-                // Extract actor from global context (if available)
-                $actor = [
-                    'user_id' => $GLOBALS['current_user_id'] ?? 'anonymous',
-                    'role' => $GLOBALS['current_role'] ?? 'guest',
-                    'ui' => $GLOBALS['current_ui'] ?? 'unknown'
-                ];
-                
-                // Use Phase 4 AdapterClient with standardized protocol
-                $result = $this->adapterClient->invoke(
-                    $adapter,
-                    $capability,
-                    $payload,
-                    $traceId,
-                    $actor,
-                    $timeout
-                );
-                
-                // If using new protocol (ok field present), extract data
-                if (isset($result['ok'])) {
-                    if (!$result['ok']) {
-                        throw new Exception($result['error']['message'] ?? 'Adapter error');
-                    }
-                    return $result['data'] ?? [];
-                }
-                
-                return $result;
-            }
-        };
-        
-        // Set globals for actor context
-        $GLOBALS['current_user_id'] = $requestData['user_id'] ?? 'anonymous';
-        $GLOBALS['current_role'] = $requestData['role'] ?? 'guest';
-        $GLOBALS['current_ui'] = $requestData['ui'] ?? 'public';
         
         $response = $controller->handle($requestData, $input);
         http_response_code(200);
