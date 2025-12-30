@@ -24,6 +24,7 @@ services:
       - ./platform:/var/www/html
       - ./registry:/app/registry
       - ./storage:/var/lib/cabinet/storage
+      - ./ui-unified:/var/www/html/ui
       - ./platform/apache-config.conf:/etc/apache2/sites-available/000-default.conf
     environment:
       - STORAGE_PATH=/var/lib/cabinet/storage
@@ -97,33 +98,9 @@ services:
         apache2-foreground
       "
 
-  # UI - Admin
-  # Connected to edge network (can only reach platform)
-  ui-admin:
-    image: nginx:alpine
-    container_name: cabinet-ui-admin
-    ports:
-      - "${UI_ADMIN_PORT:-3000}:80"
-    networks:
-      - edge
-    volumes:
-      - ./ui/admin:/usr/share/nginx/html
-    depends_on:
-      - platform
-
-  # UI - Public
-  # Connected to edge network (can only reach platform)
-  ui-public:
-    image: nginx:alpine
-    container_name: cabinet-ui-public
-    ports:
-      - "${UI_PUBLIC_PORT:-3001}:80"
-    networks:
-      - edge
-    volumes:
-      - ./ui/public:/usr/share/nginx/html
-    depends_on:
-      - platform
+  # UI - Unified Cabinet UI
+  # Served directly by platform, no separate container needed
+  # The unified UI is capability-aware and adapts based on user role
 
 volumes:
   storage:

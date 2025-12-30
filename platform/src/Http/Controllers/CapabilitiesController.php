@@ -19,17 +19,36 @@ class CapabilitiesController {
     
     /**
      * Get capabilities filtered by UI and policy
-     * GET /api/capabilities?ui=admin
+     * GET /api/capabilities?ui=cabinet&role=admin
      */
     public function handle(array $params): array {
-        $ui = $params['ui'] ?? 'public';
+        $ui = $params['ui'] ?? 'cabinet';
         $role = $params['role'] ?? 'guest';
+        
+        // Get UI configuration
+        $uiEntry = $this->uiConfig['ui'][$ui] ?? null;
+        if (!$uiEntry) {
+            // Fallback to old config format for backwards compatibility
+            $allowedCapabilities = [];
+            $uiProfile = 'public';
+        } else {
+            // New unified UI with profiles
+            if (isset($uiEntry['profiles'])) {
+                // Determine profile based on role
+                $profile = $role === 'admin' ? 'admin' : 'public';
+                $profileConfig = $uiEntry['profiles'][$profile] ?? $uiEntry['profiles']['public'];
+                
+                $allowedCapabilities = $profileConfig['allowed_capabilities'] ?? [];
+                $uiProfile = $profileConfig['ui_profile'] ?? $profile;
+            } else {
+                // Legacy format
+                $allowedCapabilities = $uiEntry['allowed_capabilities'] ?? [];
+                $uiProfile = $ui;
+            }
+        }
         
         // Get all capabilities from registry
         $allCapabilities = $this->capabilitiesConfig['capabilities'] ?? [];
-        
-        // Get allowed capabilities for UI
-        $allowedCapabilities = $this->uiConfig['ui'][$ui]['allowed_capabilities'] ?? [];
         
         // Get scopes for role
         $scopes = $this->policy->getScopesForRole($role);
@@ -57,6 +76,7 @@ class CapabilitiesController {
         return [
             'ui' => $ui,
             'role' => $role,
+            'ui_profile' => $uiProfile,
             'scopes' => $scopes,
             'capabilities' => array_values($filtered),
             'count' => count($filtered)
