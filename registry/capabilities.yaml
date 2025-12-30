@@ -129,3 +129,41 @@ capabilities:
       - name
       - description
       - status
+  
+  # Phase 6.4: Import capabilities
+  import.run:
+    adapter: car-storage
+    description: "Run CSV import with idempotency"
+    allowed_fields:
+      - import_id
+      - status
+      - filename
+      - records_created
+      - records_updated
+      - records_failed
+      - message
+  
+  # Phase 6.4: Storage internal capabilities (internal-only)
+  storage.imports.register:
+    adapter: car-storage
+    description: "Register import attempt (internal only)"
+    allowed_fields:
+      - import_id
+      - status
+      - message
+  
+  storage.imports.mark_done:
+    adapter: car-storage
+    description: "Mark import as completed (internal only)"
+    allowed_fields:
+      - import_id
+      - status
+  
+  storage.listings.upsert_batch:
+    adapter: car-storage
+    description: "Batch upsert listings (internal only)"
+    allowed_fields:
+      - created
+      - updated
+      - failed
+      - errors

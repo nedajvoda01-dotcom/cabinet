@@ -1,12 +1,26 @@
 version: '3.8'
 
+# Phase 6.1: Network Isolation
+# edge network: public access (platform + UI)
+# mesh network: private adapter communication (platform + adapters only)
+networks:
+  edge:
+    driver: bridge
+  mesh:
+    driver: bridge
+    internal: false  # Allow outbound internet for external adapters if needed
+
 services:
   # Platform - Thin Core
+  # Connected to BOTH edge (for UI) and mesh (for adapters)
   platform:
     image: php:8.2-apache
     container_name: cabinet-platform
     ports:
       - "${PLATFORM_PORT:-8080}:80"
+    networks:
+      - edge
+      - mesh
     volumes:
       - ./platform:/var/www/html
       - ./registry:/app/registry
@@ -34,11 +48,15 @@ services:
       - adapter-automation
 
   # Adapters - Business Logic
+  # Connected ONLY to mesh (private network)
+  # NO published ports (not accessible from outside)
   adapter-car-storage:
     image: php:8.2-apache
     container_name: cabinet-adapter-car-storage
-    ports:
-      - "8081:80"
+    networks:
+      - mesh
+    expose:
+      - "80"
     volumes:
       - ./adapters/car-storage:/var/www/html
     command: >
@@ -50,8 +68,10 @@ services:
   adapter-pricing:
     image: php:8.2-apache
     container_name: cabinet-adapter-pricing
-    ports:
-      - "8082:80"
+    networks:
+      - mesh
+    expose:
+      - "80"
     volumes:
       - ./adapters/pricing:/var/www/html
     command: >
@@ -63,8 +83,10 @@ services:
   adapter-automation:
     image: php:8.2-apache
     container_name: cabinet-adapter-automation
-    ports:
-      - "8083:80"
+    networks:
+      - mesh
+    expose:
+      - "80"
     volumes:
       - ./adapters/automation:/var/www/html
     command: >
@@ -74,22 +96,28 @@ services:
       "
 
   # UI - Admin
+  # Connected to edge network (can only reach platform)
   ui-admin:
     image: nginx:alpine
     container_name: cabinet-ui-admin
     ports:
       - "${UI_ADMIN_PORT:-3000}:80"
+    networks:
+      - edge
     volumes:
       - ./ui/admin:/usr/share/nginx/html
     depends_on:
       - platform
 
   # UI - Public
+  # Connected to edge network (can only reach platform)
   ui-public:
     image: nginx:alpine
     container_name: cabinet-ui-public
     ports:
       - "${UI_PUBLIC_PORT:-3001}:80"
+    networks:
+      - edge
     volumes:
       - ./ui/public:/usr/share/nginx/html
     depends_on:

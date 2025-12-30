@@ -127,11 +127,12 @@ class InvokeController {
             }, $timeout);
             
             // 8. Apply ResultGate - filter results (Phase 6)
+            // Phase 6.3: Pass UI to apply result profile
             if (!$this->resultGate->validate($result)) {
                 throw new \Exception('Invalid adapter response');
             }
             
-            $filtered = $this->resultGate->filter($result, $capability, $scopes);
+            $filtered = $this->resultGate->filter($result, $capability, $scopes, $ui);
             
             // 9. Save run record
             $this->storage->saveRun($runId, [

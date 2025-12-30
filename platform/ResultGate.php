@@ -10,27 +10,72 @@ class ResultGate {
     private array $capabilitiesConfig;
     private int $maxResponseSize;
     private int $maxArraySize;
+    private array $resultProfiles;
     
     public function __construct(Policy $policy, array $capabilitiesConfig = [], array $config = []) {
         $this->policy = $policy;
         $this->capabilitiesConfig = $capabilitiesConfig;
         $this->maxResponseSize = $config['max_response_size'] ?? 10485760; // 10MB default
         $this->maxArraySize = $config['max_array_size'] ?? 1000; // 1000 items default
+        
+        // Phase 6.3: Load result profiles configuration
+        $this->resultProfiles = $this->loadResultProfiles($config['registry_path'] ?? null);
+    }
+    
+    /**
+     * Phase 6.3: Load result profiles from registry
+     */
+    private function loadResultProfiles(?string $registryPath): array {
+        if (!$registryPath) {
+            return [];
+        }
+        
+        $profilePath = $registryPath . '/result_profiles.yaml';
+        
+        // Support both YAML and JSON
+        $jsonPath = str_replace('.yaml', '.json', $profilePath);
+        
+        if (file_exists($jsonPath)) {
+            $content = file_get_contents($jsonPath);
+            return json_decode($content, true) ?? [];
+        }
+        
+        if (!file_exists($profilePath)) {
+            return [];
+        }
+        
+        // Try YAML if available
+        if (function_exists('yaml_parse_file')) {
+            return yaml_parse_file($profilePath) ?? [];
+        }
+        
+        return [];
     }
     
     /**
      * Filter result based on scopes and permissions
      * Phase 6: Enhanced with allowlist fields and size limits
+     * Phase 6.3: Enhanced with UI-specific result profiles
      */
-    public function filter(array $result, string $capability, array $scopes): array {
+    public function filter(array $result, string $capability, array $scopes, string $ui = 'public'): array {
         // Phase 6: Check response size before processing
         $this->checkResponseSize($result);
         
         // Apply scope-based filtering
         $filtered = $result;
         
+        // Phase 6.3: Apply result profile filtering based on UI
+        $filtered = $this->applyResultProfile($filtered, $ui);
+        
         // Phase 6: Apply allowlist fields if configured
-        $filtered = $this->applyAllowlist($filtered, $capability);
+        // Skip capability allowlist if result profile was applied (profile takes precedence)
+        $profileName = !empty($this->resultProfiles) ? ($this->resultProfiles['ui_profiles'][$ui] ?? null) : null;
+        $hasProfile = $profileName && isset($this->resultProfiles['profiles'][$profileName]);
+        
+        if (!$hasProfile) {
+            // No result profile, fall back to capability allowlist
+            $filtered = $this->applyAllowlist($filtered, $capability);
+        }
         
         // Phase 6: Block dangerous content (HTML/JS)
         $filtered = $this->sanitizeDangerousContent($filtered);
@@ -231,5 +276,130 @@ class ResultGate {
         }
         
         return $data;
+    }
+    
+    /**
+     * Phase 6.3: Apply result profile filtering based on UI
+     * Different UIs see different fields based on their profile
+     */
+    private function applyResultProfile(array $data, string $ui): array {
+        if (empty($this->resultProfiles)) {
+            return $data;
+        }
+        
+        // Get profile for UI
+        $profileName = $this->resultProfiles['ui_profiles'][$ui] ?? null;
+        if (!$profileName) {
+            // No profile defined, return as is
+            return $data;
+        }
+        
+        $profile = $this->resultProfiles['profiles'][$profileName] ?? null;
+        if (!$profile) {
+            return $data;
+        }
+        
+        // Apply profile-specific limits
+        if (isset($profile['max_response_size'])) {
+            $this->maxResponseSize = $profile['max_response_size'];
+        }
+        
+        if (isset($profile['max_array_size'])) {
+            $this->maxArraySize = $profile['max_array_size'];
+        }
+        
+        // Apply field filtering based on data type
+        // The profile defines fields per entity type (listing, user, import, etc.)
+        $filtered = $this->filterByProfile($data, $profile['fields'] ?? []);
+        
+        return $filtered;
+    }
+    
+    /**
+     * Phase 6.3: Filter data by profile field definitions
+     */
+    private function filterByProfile(array $data, array $profileFields): array {
+        if (empty($profileFields)) {
+            return $data;
+        }
+        
+        // Detect entity type from data structure
+        $entityType = $this->detectEntityType($data, $profileFields);
+        
+        if ($entityType && isset($profileFields[$entityType])) {
+            // This is a recognized entity type, apply profile filtering
+            $allowedFields = $profileFields[$entityType];
+            return $this->filterEntityFields($data, $allowedFields);
+        }
+        
+        // Not a recognized entity or no profile for this type
+        // Process recursively for nested structures
+        $filtered = [];
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                // Try to filter nested arrays
+                $filtered[$key] = $this->filterByProfile($value, $profileFields);
+            } else {
+                // Keep scalar values
+                $filtered[$key] = $value;
+            }
+        }
+        
+        return $filtered;
+    }
+    
+    /**
+     * Phase 6.3: Detect entity type from data
+     */
+    private function detectEntityType(array $data, array $profileFields): ?string {
+        foreach ($profileFields as $entityType => $fields) {
+            $matchCount = 0;
+            foreach ($fields as $field) {
+                if (isset($data[$field])) {
+                    $matchCount++;
+                }
+            }
+            
+            // If at least 3 fields match, assume this entity type
+            if ($matchCount >= 3) {
+                return $entityType;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Phase 6.3: Filter entity fields based on allowed list
+     */
+    private function filterEntityFields(array $data, array $allowedFields): array {
+        $filtered = [];
+        
+        // Handle array of entities
+        if (isset($data[0]) && is_array($data[0])) {
+            foreach ($data as $item) {
+                $filtered[] = $this->filterSingleEntityFields($item, $allowedFields);
+            }
+        } else {
+            // Single entity
+            $filtered = $this->filterSingleEntityFields($data, $allowedFields);
+        }
+        
+        return $filtered;
+    }
+    
+    /**
+     * Phase 6.3: Filter single entity fields
+     */
+    private function filterSingleEntityFields(array $entity, array $allowedFields): array {
+        $filtered = [];
+        
+        foreach ($allowedFields as $field) {
+            if (array_key_exists($field, $entity)) {
+                $filtered[$field] = $entity[$field];
+            }
+        }
+        
+        return $filtered;
     }
 }

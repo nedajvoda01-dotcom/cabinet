@@ -92,6 +92,207 @@ if ($path === '/invoke' && $method === 'POST') {
             case 'car.list':
                 $result = array_values($data);
                 break;
+            
+            // Phase 6.4: Import capabilities
+            case 'import.run':
+                // Simulated CSV import with hash-based idempotency
+                $filename = $payload['filename'] ?? 'unknown.csv';
+                $csvData = $payload['csv_data'] ?? '';
+                
+                // Calculate content hash
+                $contentHash = hash('sha256', $csvData);
+                
+                // Register import (check for duplicates)
+                // In real implementation, this would call storage adapter
+                // For simulation, we'll use a simple file-based tracking
+                $importTrackingFile = '/tmp/imports-tracking.json';
+                $importTracking = file_exists($importTrackingFile) 
+                    ? json_decode(file_get_contents($importTrackingFile), true) 
+                    : [];
+                
+                if (isset($importTracking[$contentHash])) {
+                    // Already imported
+                    $result = [
+                        'import_id' => $importTracking[$contentHash]['import_id'],
+                        'status' => 'duplicate',
+                        'message' => 'File already imported',
+                        'filename' => $filename,
+                        'records_created' => 0,
+                        'records_updated' => 0,
+                        'records_failed' => 0
+                    ];
+                    break;
+                }
+                
+                // Parse CSV and import
+                $importId = uniqid('import_');
+                $lines = array_filter(explode("\n", trim($csvData)));
+                $headers = str_getcsv(array_shift($lines));
+                
+                $created = 0;
+                $updated = 0;
+                $failed = 0;
+                
+                foreach ($lines as $line) {
+                    try {
+                        $row = str_getcsv($line);
+                        $listing = array_combine($headers, $row);
+                        
+                        // Upsert logic (simplified)
+                        $externalId = $listing['external_id'] ?? uniqid('ext_');
+                        $listingId = 'listing_' . md5($externalId);
+                        
+                        if (isset($data[$listingId])) {
+                            $updated++;
+                            $data[$listingId] = array_merge($data[$listingId], $listing);
+                            $data[$listingId]['updated_at'] = time();
+                            $data[$listingId]['updated_by'] = $actor['user_id'];
+                        } else {
+                            $created++;
+                            $listing['id'] = $listingId;
+                            $listing['external_id'] = $externalId;
+                            $listing['created_at'] = time();
+                            $listing['created_by'] = $actor['user_id'];
+                            $data[$listingId] = $listing;
+                        }
+                    } catch (Exception $e) {
+                        $failed++;
+                    }
+                }
+                
+                saveData($data);
+                
+                // Mark import as done
+                $importTracking[$contentHash] = [
+                    'import_id' => $importId,
+                    'filename' => $filename,
+                    'content_hash' => $contentHash,
+                    'status' => 'done',
+                    'created' => $created,
+                    'updated' => $updated,
+                    'failed' => $failed,
+                    'imported_at' => time()
+                ];
+                file_put_contents($importTrackingFile, json_encode($importTracking, JSON_PRETTY_PRINT));
+                
+                $result = [
+                    'import_id' => $importId,
+                    'status' => 'completed',
+                    'filename' => $filename,
+                    'records_created' => $created,
+                    'records_updated' => $updated,
+                    'records_failed' => $failed,
+                    'message' => "Import completed: $created created, $updated updated, $failed failed"
+                ];
+                break;
+            
+            case 'storage.imports.register':
+                // Internal capability for import registration
+                $contentHash = $payload['content_hash'] ?? '';
+                $filename = $payload['filename'] ?? '';
+                
+                $importTrackingFile = '/tmp/imports-tracking.json';
+                $importTracking = file_exists($importTrackingFile) 
+                    ? json_decode(file_get_contents($importTrackingFile), true) 
+                    : [];
+                
+                if (isset($importTracking[$contentHash])) {
+                    $result = [
+                        'status' => 'duplicate',
+                        'import_id' => $importTracking[$contentHash]['import_id'],
+                        'message' => 'Import already exists'
+                    ];
+                } else {
+                    $importId = uniqid('import_');
+                    $importTracking[$contentHash] = [
+                        'import_id' => $importId,
+                        'filename' => $filename,
+                        'content_hash' => $contentHash,
+                        'status' => 'pending',
+                        'started_at' => time()
+                    ];
+                    file_put_contents($importTrackingFile, json_encode($importTracking, JSON_PRETTY_PRINT));
+                    
+                    $result = [
+                        'status' => 'new',
+                        'import_id' => $importId
+                    ];
+                }
+                break;
+            
+            case 'storage.imports.mark_done':
+                // Internal capability to mark import as done
+                $contentHash = $payload['content_hash'] ?? '';
+                $stats = $payload['stats'] ?? [];
+                
+                $importTrackingFile = '/tmp/imports-tracking.json';
+                $importTracking = file_exists($importTrackingFile) 
+                    ? json_decode(file_get_contents($importTrackingFile), true) 
+                    : [];
+                
+                if (isset($importTracking[$contentHash])) {
+                    $importTracking[$contentHash]['status'] = 'done';
+                    $importTracking[$contentHash]['finished_at'] = time();
+                    $importTracking[$contentHash]['stats'] = $stats;
+                    file_put_contents($importTrackingFile, json_encode($importTracking, JSON_PRETTY_PRINT));
+                    
+                    $result = [
+                        'import_id' => $importTracking[$contentHash]['import_id'],
+                        'status' => 'done'
+                    ];
+                } else {
+                    throw new Exception('Import not found');
+                }
+                break;
+            
+            case 'storage.listings.upsert_batch':
+                // Internal capability for batch upsert
+                $listings = $payload['listings'] ?? [];
+                
+                $created = 0;
+                $updated = 0;
+                $failed = 0;
+                $errors = [];
+                
+                foreach ($listings as $listing) {
+                    try {
+                        $externalId = $listing['external_id'] ?? null;
+                        if (!$externalId) {
+                            throw new Exception('external_id required');
+                        }
+                        
+                        $listingId = 'listing_' . md5($externalId);
+                        
+                        if (isset($data[$listingId])) {
+                            $updated++;
+                            $data[$listingId] = array_merge($data[$listingId], $listing);
+                            $data[$listingId]['updated_at'] = time();
+                            $data[$listingId]['updated_by'] = $actor['user_id'];
+                        } else {
+                            $created++;
+                            $listing['id'] = $listingId;
+                            $listing['created_at'] = time();
+                            $listing['created_by'] = $actor['user_id'];
+                            $data[$listingId] = $listing;
+                        }
+                    } catch (Exception $e) {
+                        $failed++;
+                        $errors[] = [
+                            'listing' => $listing,
+                            'error' => $e->getMessage()
+                        ];
+                    }
+                }
+                
+                saveData($data);
+                
+                $result = [
+                    'created' => $created,
+                    'updated' => $updated,
+                    'failed' => $failed,
+                    'errors' => $errors
+                ];
+                break;
                 
             default:
                 throw new Exception("Unknown capability: $capability");
