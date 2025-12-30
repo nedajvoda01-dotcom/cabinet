@@ -1,0 +1,53 @@
+{
+  "ui": {
+    "cabinet": {
+      "name": "Cabinet UI",
+      "description": "Unified interface that adapts based on user capabilities",
+      "result_profile": "public_ui",
+      "profiles": {
+        "public": {
+          "name": "Public Profile",
+          "description": "Public interface with read-only catalog access",
+          "result_profile": "public_ui",
+          "allowed_capabilities": [
+            "catalog.filters.get",
+            "catalog.listings.search",
+            "catalog.listing.get",
+            "catalog.photos.list"
+          ],
+          "ui_profile": "public"
+        },
+        "admin": {
+          "name": "Admin Profile",
+          "description": "Administrative interface with full access",
+          "result_profile": "internal_ui",
+          "allowed_capabilities": [
+            "catalog.filters.get",
+            "catalog.listings.search",
+            "catalog.listing.get",
+            "catalog.photos.list",
+            "catalog.listing.use",
+            "car.create",
+            "car.read",
+            "car.update",
+            "car.delete",
+            "car.list",
+            "price.calculate",
+            "price.rule.create",
+            "price.rule.list",
+            "workflow.execute",
+            "workflow.status",
+            "workflow.list",
+            "import.run"
+          ],
+          "ui_profile": "admin"
+        }
+      },
+      "scopes": [
+        "read",
+        "write",
+        "admin"
+      ]
+    }
+  }
+}
