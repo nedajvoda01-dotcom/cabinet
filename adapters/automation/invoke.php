@@ -61,11 +61,13 @@ if ($path === '/invoke' && $method === 'POST') {
     $input = file_get_contents('php://input');
     $request = json_decode($input, true);
     
+    // Phase 4: Standardized adapter protocol
     $capability = $request['capability'] ?? '';
     $payload = $request['payload'] ?? [];
+    $traceId = $request['trace_id'] ?? uniqid('trace_');
+    $actor = $request['actor'] ?? ['user_id' => 'unknown', 'role' => 'guest', 'ui' => 'unknown'];
     
     $workflows = loadWorkflows();
-    $response = [];
     
     try {
         switch ($capability) {
@@ -81,13 +83,15 @@ if ($path === '/invoke' && $method === 'POST') {
                     'workflow_id' => $workflowId,
                     'status' => 'running',
                     'started_at' => time(),
+                    'started_by' => $actor['user_id'],
                     'steps_completed' => 0,
-                    'total_steps' => count($workflows[$workflowId]['steps'])
+                    'total_steps' => count($workflows[$workflowId]['steps']),
+                    'trace_id' => $traceId
                 ];
                 
                 saveExecution($executionId, $execution);
                 
-                $response = [
+                $result = [
                     'execution_id' => $executionId,
                     'workflow_id' => $workflowId,
                     'status' => 'running'
@@ -118,23 +122,36 @@ if ($path === '/invoke' && $method === 'POST') {
                     saveExecution($executionId, $execution);
                 }
                 
-                $response = $execution;
+                $result = $execution;
                 break;
                 
             case 'workflow.list':
-                $response = $workflows;
+                $result = $workflows;
                 break;
                 
             default:
                 throw new Exception("Unknown capability: $capability");
         }
         
+        // Phase 4: Standardized success response
         http_response_code(200);
-        echo json_encode($response);
+        echo json_encode([
+            'ok' => true,
+            'data' => $result,
+            'trace_id' => $traceId
+        ]);
         
     } catch (Exception $e) {
+        // Phase 4: Standardized error response
         http_response_code(400);
-        echo json_encode(['error' => $e->getMessage()]);
+        echo json_encode([
+            'ok' => false,
+            'error' => [
+                'code' => 'ADAPTER_ERROR',
+                'message' => $e->getMessage()
+            ],
+            'trace_id' => $traceId
+        ]);
     }
     exit;
 }

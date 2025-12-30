@@ -48,11 +48,13 @@ if ($path === '/invoke' && $method === 'POST') {
     $input = file_get_contents('php://input');
     $request = json_decode($input, true);
     
+    // Phase 4: Standardized adapter protocol
     $capability = $request['capability'] ?? '';
     $payload = $request['payload'] ?? [];
+    $traceId = $request['trace_id'] ?? uniqid('trace_');
+    $actor = $request['actor'] ?? ['user_id' => 'unknown', 'role' => 'guest', 'ui' => 'unknown'];
     
     $rules = loadRules();
-    $response = [];
     
     try {
         switch ($capability) {
@@ -73,12 +75,13 @@ if ($path === '/invoke' && $method === 'POST') {
                 // Calculate final price
                 $finalPrice = $basePrice * $depreciation * $brandMultiplier;
                 
-                $response = [
+                $result = [
                     'base_price' => $basePrice,
                     'depreciation' => $depreciation,
                     'brand_multiplier' => $brandMultiplier,
                     'final_price' => round($finalPrice, 2),
-                    'age_years' => $age
+                    'age_years' => $age,
+                    'calculated_by' => $actor['user_id']
                 ];
                 break;
                 
@@ -90,23 +93,40 @@ if ($path === '/invoke' && $method === 'POST') {
                 }
                 $rules[$ruleKey] = $ruleValue;
                 saveRules($rules);
-                $response = ['key' => $ruleKey, 'value' => $ruleValue];
+                $result = [
+                    'key' => $ruleKey,
+                    'value' => $ruleValue,
+                    'created_by' => $actor['user_id']
+                ];
                 break;
                 
             case 'price.rule.list':
-                $response = $rules;
+                $result = $rules;
                 break;
                 
             default:
                 throw new Exception("Unknown capability: $capability");
         }
         
+        // Phase 4: Standardized success response
         http_response_code(200);
-        echo json_encode($response);
+        echo json_encode([
+            'ok' => true,
+            'data' => $result,
+            'trace_id' => $traceId
+        ]);
         
     } catch (Exception $e) {
+        // Phase 4: Standardized error response
         http_response_code(400);
-        echo json_encode(['error' => $e->getMessage()]);
+        echo json_encode([
+            'ok' => false,
+            'error' => [
+                'code' => 'ADAPTER_ERROR',
+                'message' => $e->getMessage()
+            ],
+            'trace_id' => $traceId
+        ]);
     }
     exit;
 }

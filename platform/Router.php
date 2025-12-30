@@ -64,9 +64,19 @@ class Router {
     public function invoke(array $adapter, string $capability, array $payload, int $timeout = 30): array {
         $url = $adapter['url'] . '/invoke';
         
+        // Phase 4: Use standardized adapter protocol
+        $traceId = uniqid('trace_', true);
+        $actor = [
+            'user_id' => $GLOBALS['current_user_id'] ?? 'anonymous',
+            'role' => $GLOBALS['current_role'] ?? 'guest',
+            'ui' => $GLOBALS['current_ui'] ?? 'unknown'
+        ];
+        
         $requestData = [
             'capability' => $capability,
             'payload' => $payload,
+            'trace_id' => $traceId,
+            'actor' => $actor,
             'timestamp' => time()
         ];
         
@@ -76,7 +86,8 @@ class Router {
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($requestData));
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'X-Capability: ' . $capability
+            'X-Capability: ' . $capability,
+            'X-Trace-Id: ' . $traceId
         ]);
         curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
         
@@ -98,6 +109,17 @@ class Router {
             throw new Exception("Invalid JSON response from adapter");
         }
         
+        // Phase 4: Handle standardized response format
+        if (isset($result['ok'])) {
+            if (!$result['ok']) {
+                $errorMsg = $result['error']['message'] ?? 'Unknown adapter error';
+                throw new Exception($errorMsg);
+            }
+            // Return the data part
+            return $result['data'] ?? [];
+        }
+        
+        // Legacy response format (for backward compatibility)
         return $result;
     }
     

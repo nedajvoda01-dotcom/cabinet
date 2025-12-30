@@ -38,11 +38,13 @@ if ($path === '/invoke' && $method === 'POST') {
     $input = file_get_contents('php://input');
     $request = json_decode($input, true);
     
+    // Phase 4: Standardized adapter protocol
     $capability = $request['capability'] ?? '';
     $payload = $request['payload'] ?? [];
+    $traceId = $request['trace_id'] ?? uniqid('trace_');
+    $actor = $request['actor'] ?? ['user_id' => 'unknown', 'role' => 'guest', 'ui' => 'unknown'];
     
     $data = loadData();
-    $response = [];
     
     try {
         switch ($capability) {
@@ -51,9 +53,10 @@ if ($path === '/invoke' && $method === 'POST') {
                 $car = $payload;
                 $car['id'] = $carId;
                 $car['created_at'] = time();
+                $car['created_by'] = $actor['user_id'];
                 $data[$carId] = $car;
                 saveData($data);
-                $response = ['id' => $carId, 'car' => $car];
+                $result = ['id' => $carId, 'car' => $car];
                 break;
                 
             case 'car.read':
@@ -61,7 +64,7 @@ if ($path === '/invoke' && $method === 'POST') {
                 if (!isset($data[$carId])) {
                     throw new Exception('Car not found');
                 }
-                $response = $data[$carId];
+                $result = $data[$carId];
                 break;
                 
             case 'car.update':
@@ -71,8 +74,9 @@ if ($path === '/invoke' && $method === 'POST') {
                 }
                 $data[$carId] = array_merge($data[$carId], $payload);
                 $data[$carId]['updated_at'] = time();
+                $data[$carId]['updated_by'] = $actor['user_id'];
                 saveData($data);
-                $response = $data[$carId];
+                $result = $data[$carId];
                 break;
                 
             case 'car.delete':
@@ -82,23 +86,36 @@ if ($path === '/invoke' && $method === 'POST') {
                 }
                 unset($data[$carId]);
                 saveData($data);
-                $response = ['deleted' => true, 'id' => $carId];
+                $result = ['deleted' => true, 'id' => $carId];
                 break;
                 
             case 'car.list':
-                $response = array_values($data);
+                $result = array_values($data);
                 break;
                 
             default:
                 throw new Exception("Unknown capability: $capability");
         }
         
+        // Phase 4: Standardized success response
         http_response_code(200);
-        echo json_encode($response);
+        echo json_encode([
+            'ok' => true,
+            'data' => $result,
+            'trace_id' => $traceId
+        ]);
         
     } catch (Exception $e) {
+        // Phase 4: Standardized error response
         http_response_code(400);
-        echo json_encode(['error' => $e->getMessage()]);
+        echo json_encode([
+            'ok' => false,
+            'error' => [
+                'code' => 'ADAPTER_ERROR',
+                'message' => $e->getMessage()
+            ],
+            'trace_id' => $traceId
+        ]);
     }
     exit;
 }
