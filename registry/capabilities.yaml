@@ -167,3 +167,68 @@ capabilities:
       - updated
       - failed
       - errors
+  
+  # Step 8: Catalog capabilities for search functionality
+  catalog.filters.get:
+    adapter: car-storage
+    description: "Get available filters for catalog search"
+    allowed_fields:
+      - brands
+      - models
+      - years
+      - price_ranges
+      - statuses
+  
+  catalog.listings.search:
+    adapter: car-storage
+    description: "Search catalog listings with filters"
+    allowed_fields:
+      - listings
+      - total_count
+      - page
+      - per_page
+      - filters_applied
+  
+  catalog.listing.get:
+    adapter: car-storage
+    description: "Get detailed information about a specific listing"
+    allowed_fields:
+      - id
+      - external_id
+      - brand
+      - model
+      - year
+      - price
+      - status
+      - description
+      - vin
+      - created_at
+      - updated_at
+  
+  catalog.photos.list:
+    adapter: car-storage
+    description: "List photos for a specific listing"
+    allowed_fields:
+      - listing_id
+      - photos
+      - total_count
+  
+  catalog.listing.use:
+    adapter: car-storage
+    description: "Mark a listing as used/reserved"
+    allowed_fields:
+      - id
+      - status
+      - used_at
+      - used_by
+      - message
+  
+  # Step 7: Parser capabilities (internal-only)
+  parser.parse_csv:
+    adapter: car-storage
+    description: "Parse CSV data and normalize listings (internal only)"
+    allowed_fields:
+      - listings
+      - photos
+      - report
+      - errors

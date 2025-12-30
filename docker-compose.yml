@@ -37,6 +37,9 @@ services:
       - ADAPTER_CAR_STORAGE_URL=http://adapter-car-storage
       - ADAPTER_PRICING_URL=http://adapter-pricing
       - ADAPTER_AUTOMATION_URL=http://adapter-automation
+      - ENABLE_AUTH=${ENABLE_AUTH:-true}
+      - API_KEY_ADMIN=${API_KEY_ADMIN:-admin_secret_key_12345|admin|admin|admin_user}
+      - API_KEY_PUBLIC=${API_KEY_PUBLIC:-public_secret_key_67890|public|guest|public_user}
     command: >
       bash -c "
         a2enmod rewrite &&

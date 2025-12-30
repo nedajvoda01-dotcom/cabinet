@@ -2,47 +2,246 @@
   "capabilities": {
     "car.create": {
       "adapter": "car-storage",
-      "description": "Create a new car record"
+      "description": "Create a new car record",
+      "allowed_fields": [
+        "id",
+        "brand",
+        "model",
+        "year",
+        "price",
+        "status",
+        "created_at",
+        "created_by"
+      ]
     },
     "car.read": {
       "adapter": "car-storage",
-      "description": "Read car information"
+      "description": "Read car information",
+      "allowed_fields": [
+        "id",
+        "brand",
+        "model",
+        "year",
+        "price",
+        "status",
+        "vin",
+        "created_at",
+        "updated_at"
+      ]
     },
     "car.update": {
       "adapter": "car-storage",
-      "description": "Update car information"
+      "description": "Update car information",
+      "allowed_fields": [
+        "id",
+        "brand",
+        "model",
+        "year",
+        "price",
+        "status",
+        "updated_at",
+        "updated_by"
+      ]
     },
     "car.delete": {
       "adapter": "car-storage",
-      "description": "Delete a car record"
+      "description": "Delete a car record",
+      "allowed_fields": [
+        "id",
+        "status",
+        "deleted_at",
+        "deleted_by"
+      ]
     },
     "car.list": {
       "adapter": "car-storage",
-      "description": "List all cars"
+      "description": "List all cars",
+      "allowed_fields": [
+        "id",
+        "brand",
+        "model",
+        "year",
+        "price",
+        "status"
+      ]
     },
     "price.calculate": {
       "adapter": "pricing",
-      "description": "Calculate price for a service"
+      "description": "Calculate price for a service",
+      "allowed_fields": [
+        "original_price",
+        "discount",
+        "final_price",
+        "currency",
+        "calculation_date",
+        "calculated_by"
+      ]
     },
     "price.rule.create": {
       "adapter": "pricing",
-      "description": "Create a pricing rule"
+      "description": "Create a pricing rule",
+      "allowed_fields": [
+        "id",
+        "rule_name",
+        "discount_percent",
+        "conditions",
+        "status",
+        "created_at",
+        "created_by"
+      ]
     },
     "price.rule.list": {
       "adapter": "pricing",
-      "description": "List pricing rules"
+      "description": "List pricing rules",
+      "allowed_fields": [
+        "id",
+        "rule_name",
+        "discount_percent",
+        "status",
+        "created_at"
+      ]
     },
     "workflow.execute": {
       "adapter": "automation",
-      "description": "Execute an automated workflow"
+      "description": "Execute an automated workflow",
+      "allowed_fields": [
+        "workflow_id",
+        "execution_id",
+        "status",
+        "started_at",
+        "started_by"
+      ]
     },
     "workflow.status": {
       "adapter": "automation",
-      "description": "Check workflow execution status"
+      "description": "Check workflow execution status",
+      "allowed_fields": [
+        "workflow_id",
+        "execution_id",
+        "status",
+        "progress",
+        "started_at",
+        "completed_at"
+      ]
     },
     "workflow.list": {
       "adapter": "automation",
-      "description": "List available workflows"
+      "description": "List available workflows",
+      "allowed_fields": [
+        "workflow_id",
+        "name",
+        "description",
+        "status"
+      ]
+    },
+    "import.run": {
+      "adapter": "car-storage",
+      "description": "Run CSV import with idempotency",
+      "allowed_fields": [
+        "import_id",
+        "status",
+        "filename",
+        "records_created",
+        "records_updated",
+        "records_failed",
+        "message"
+      ]
+    },
+    "storage.imports.register": {
+      "adapter": "car-storage",
+      "description": "Register import attempt (internal only)",
+      "allowed_fields": [
+        "import_id",
+        "status",
+        "message"
+      ]
+    },
+    "storage.imports.mark_done": {
+      "adapter": "car-storage",
+      "description": "Mark import as completed (internal only)",
+      "allowed_fields": [
+        "import_id",
+        "status"
+      ]
+    },
+    "storage.listings.upsert_batch": {
+      "adapter": "car-storage",
+      "description": "Batch upsert listings (internal only)",
+      "allowed_fields": [
+        "created",
+        "updated",
+        "failed",
+        "errors"
+      ]
+    },
+    "catalog.filters.get": {
+      "adapter": "car-storage",
+      "description": "Get available filters for catalog search",
+      "allowed_fields": [
+        "brands",
+        "models",
+        "years",
+        "price_ranges",
+        "statuses"
+      ]
+    },
+    "catalog.listings.search": {
+      "adapter": "car-storage",
+      "description": "Search catalog listings with filters",
+      "allowed_fields": [
+        "listings",
+        "total_count",
+        "page",
+        "per_page",
+        "filters_applied"
+      ]
+    },
+    "catalog.listing.get": {
+      "adapter": "car-storage",
+      "description": "Get detailed information about a specific listing",
+      "allowed_fields": [
+        "id",
+        "external_id",
+        "brand",
+        "model",
+        "year",
+        "price",
+        "status",
+        "description",
+        "vin",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "catalog.photos.list": {
+      "adapter": "car-storage",
+      "description": "List photos for a specific listing",
+      "allowed_fields": [
+        "listing_id",
+        "photos",
+        "total_count"
+      ]
+    },
+    "catalog.listing.use": {
+      "adapter": "car-storage",
+      "description": "Mark a listing as used/reserved",
+      "allowed_fields": [
+        "id",
+        "status",
+        "used_at",
+        "used_by",
+        "message"
+      ]
+    },
+    "parser.parse_csv": {
+      "adapter": "car-storage",
+      "description": "Parse CSV data and normalize listings (internal only)",
+      "allowed_fields": [
+        "listings",
+        "photos",
+        "report",
+        "errors"
+      ]
     }
   }
 }
