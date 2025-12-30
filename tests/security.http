@@ -332,11 +332,6 @@ POST {{apiUrl}}
 Content-Type: application/json
 X-API-Key: {{adminKey}}
 
-{
-  "capability": "car.list",
-  "payload": {
-    malformed json here
-  }
-}
+{"capability":"car.list","payload":{"malformed":
 
 ###

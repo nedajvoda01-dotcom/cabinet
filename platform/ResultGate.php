@@ -188,12 +188,17 @@ class ResultGate {
      * Check if string contains dangerous content
      */
     private function containsDangerousContent(string $value): bool {
-        // Patterns for dangerous content
+        // Comprehensive patterns for dangerous content
+        // This is a defense-in-depth approach - blocks common XSS vectors
         $dangerousPatterns = [
-            '/<script[\s\S]*?>/i',           // Script tags
-            '/<iframe[\s\S]*?>/i',           // Iframes
-            '/javascript:/i',                // JavaScript protocol
-            '/on\w+\s*=\s*["\']?[^"\']*["\']?/i', // Event handlers (onclick, etc)
+            '/<script[\s\S]*?>/i',                    // Script tags (any variant)
+            '/<iframe[\s\S]*?>/i',                    // Iframes
+            '/javascript:/i',                          // JavaScript protocol
+            '/on\w+\s*=\s*["\']?[^"\']*["\']?/i',    // Event handlers (onclick, onload, onerror, etc)
+            '/<object[\s\S]*?>/i',                    // Object tags
+            '/<embed[\s\S]*?>/i',                     // Embed tags
+            '/vbscript:/i',                            // VBScript protocol
+            '/data:text\/html/i',                      // Data URI with HTML
         ];
         
         foreach ($dangerousPatterns as $pattern) {
@@ -211,11 +216,13 @@ class ResultGate {
     private function limitArraySizes(array $data): array {
         foreach ($data as $key => $value) {
             if (is_array($value)) {
+                $arrayCount = count($value);
+                
                 // If array is too large, truncate it
-                if (count($value) > $this->maxArraySize) {
+                if ($arrayCount > $this->maxArraySize) {
                     $data[$key] = array_slice($value, 0, $this->maxArraySize);
                     $data[$key . '_truncated'] = true;
-                    $data[$key . '_total_count'] = count($value);
+                    $data[$key . '_total_count'] = $arrayCount;
                 } else {
                     // Recursively limit nested arrays
                     $data[$key] = $this->limitArraySizes($value);

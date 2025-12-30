@@ -35,7 +35,6 @@ class InvokeController {
      */
     public function handle(array $requestData, string $input): array {
         // Phase 5.1: Authenticate request (fail-closed by default)
-        $authenticatedActor = null;
         try {
             $authenticatedActor = $this->authentication->authenticate();
         } catch (\Exception $e) {

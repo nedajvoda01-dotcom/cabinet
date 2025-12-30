@@ -56,8 +56,9 @@ class Authentication {
     private function getApiKeyFromHeaders(): ?string {
         // Check X-API-Key header (case insensitive)
         
-        // In CLI/test mode, check $_SERVER directly
-        if (php_sapi_name() === 'cli' || !function_exists('getallheaders')) {
+        // In CLI mode, getallheaders() is not available
+        if (php_sapi_name() === 'cli') {
+            // Check $_SERVER for HTTP_X_API_KEY in CLI/test context
             foreach ($_SERVER as $name => $value) {
                 if (strtolower($name) === 'http_x_api_key') {
                     return $value;
@@ -66,7 +67,18 @@ class Authentication {
             return null;
         }
         
-        // In web context, use getallheaders
+        // Check if getallheaders function exists (some PHP setups may not have it)
+        if (!function_exists('getallheaders')) {
+            // Fallback: manually parse headers from $_SERVER
+            foreach ($_SERVER as $name => $value) {
+                if (strtolower($name) === 'http_x_api_key') {
+                    return $value;
+                }
+            }
+            return null;
+        }
+        
+        // In web context with getallheaders available, use it
         $headers = getallheaders();
         if (!$headers) {
             return null;
@@ -115,10 +127,13 @@ class Authentication {
     private function loadApiKeys(): array {
         $keys = [];
         
-        // Load from environment variables
-        // API_KEY_ADMIN format: ui|role|user_id
+        // Check both $_ENV and getenv() for maximum compatibility
+        // $_ENV is populated from environment in some setups
+        // getenv() is more reliable in Docker/containerized environments
+        
         $envPrefix = 'API_KEY_';
         
+        // Try $_ENV first
         foreach ($_ENV as $key => $value) {
             if (strpos($key, $envPrefix) === 0) {
                 $keyName = substr($key, strlen($envPrefix));
@@ -135,31 +150,28 @@ class Authentication {
             }
         }
         
-        // Also check getenv for Docker compatibility
-        if (empty($keys)) {
-            // Default admin key for MVP
-            $adminKey = getenv('API_KEY_ADMIN');
-            if ($adminKey) {
-                $parts = explode('|', $adminKey);
-                $apiKey = $parts[0];
-                $keys[$apiKey] = [
-                    'ui' => $parts[1] ?? 'admin',
-                    'role' => $parts[2] ?? 'admin',
-                    'user_id' => $parts[3] ?? 'admin_user'
-                ];
-            }
-            
-            // Default public key for MVP
-            $publicKey = getenv('API_KEY_PUBLIC');
-            if ($publicKey) {
-                $parts = explode('|', $publicKey);
-                $apiKey = $parts[0];
-                $keys[$apiKey] = [
-                    'ui' => $parts[1] ?? 'public',
-                    'role' => $parts[2] ?? 'guest',
-                    'user_id' => $parts[3] ?? 'public_user'
-                ];
-            }
+        // Also try getenv for Docker/container environments
+        // This ensures we get values even if $_ENV is not populated
+        $adminKey = getenv('API_KEY_ADMIN');
+        if ($adminKey && !isset($keys[explode('|', $adminKey)[0]])) {
+            $parts = explode('|', $adminKey);
+            $apiKey = $parts[0];
+            $keys[$apiKey] = [
+                'ui' => $parts[1] ?? 'admin',
+                'role' => $parts[2] ?? 'admin',
+                'user_id' => $parts[3] ?? 'admin_user'
+            ];
+        }
+        
+        $publicKey = getenv('API_KEY_PUBLIC');
+        if ($publicKey && !isset($keys[explode('|', $publicKey)[0]])) {
+            $parts = explode('|', $publicKey);
+            $apiKey = $parts[0];
+            $keys[$apiKey] = [
+                'ui' => $parts[1] ?? 'public',
+                'role' => $parts[2] ?? 'guest',
+                'user_id' => $parts[3] ?? 'public_user'
+            ];
         }
         
         return $keys;
