@@ -38,6 +38,8 @@ use Platform\Registry\RegistryLoader;
 use Platform\Registry\CapabilityRouter;
 use Platform\Registry\UiProfileResolver;
 use Platform\Adapter\AdapterClient;
+use Platform\Adapter\RouterAdapter;
+use Platform\Core\CapabilityExecutor;
 
 // Load environment variables from .env if exists
 if (file_exists(__DIR__ . '/../../.env')) {
@@ -89,6 +91,20 @@ $resultGate = new ResultGate($policy, $capabilitiesConfig, $resultGateConfig);
 // Initialize Phase 4 component - Adapter Client
 $adapterClient = new AdapterClient();
 
+// MVP Step 2: Create RouterAdapter to bridge old Router interface with new components
+$routerAdapter = new RouterAdapter($capabilityRouter, $adapterClient);
+
+// MVP Step 2: Initialize CapabilityExecutor (unified pipeline)
+$capabilityExecutor = new CapabilityExecutor(
+    $routerAdapter,
+    $policy,
+    $limits,
+    $resultGate,
+    $storage,
+    $uiConfig,
+    $capabilitiesConfig
+);
+
 // Initialize Phase 2 component - Route Requirements Map
 $routeMap = new RouteRequirementsMap();
 
@@ -130,23 +146,9 @@ try {
     }
     
     if ($method === 'POST' && $path === '/api/invoke') {
-        // Phase 2: Invoke endpoint (refactored)
-        // For now, use the existing Router class for backward compatibility
-        // Phase 3/4 integration can be done more cleanly later
-        require_once __DIR__ . '/../Router.php';
-        $legacyRouter = new Router(
-            $registryPath . '/adapters.yaml',
-            $registryPath . '/capabilities.yaml'
-        );
-        
-        $controller = new InvokeController(
-            $legacyRouter,
-            $policy,
-            $limits,
-            $resultGate,
-            $storage,
-            $uiConfig
-        );
+        // MVP Step 2: Use CapabilityExecutor directly (no legacy Router)
+        // Single code path: InvokeController → CapabilityExecutor
+        $controller = new InvokeController($capabilityExecutor);
         
         $response = $controller->handle($requestData, $input);
         http_response_code(200);

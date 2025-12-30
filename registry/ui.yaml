@@ -6,6 +6,7 @@ ui:
   admin:
     name: "Admin UI"
     description: "Administrative interface with full access"
+    result_profile: internal_ui
     allowed_capabilities:
       - car.create
       - car.read
@@ -32,6 +33,7 @@ ui:
   public:
     name: "Public UI"
     description: "Public interface with limited access"
+    result_profile: public_ui
     allowed_capabilities:
       - car.list
       - car.read

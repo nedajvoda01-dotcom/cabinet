@@ -39,26 +39,30 @@ class RegistryLoader {
     
     /**
      * Load config from YAML or JSON
+     * MVP Step 3: Prefer YAML as source of truth (JSON only as fallback)
      */
     private function loadConfig(string $path): array {
-        // Support both YAML and JSON
-        $jsonPath = str_replace('.yaml', '.json', $path);
+        // MVP Step 3: Try YAML first (source of truth)
+        if (file_exists($path)) {
+            if (function_exists('yaml_parse_file')) {
+                $data = yaml_parse_file($path);
+                if (is_array($data)) {
+                    return $data;
+                }
+            }
+        }
         
+        // Fallback to JSON only if YAML doesn't exist or can't be parsed
+        $jsonPath = str_replace('.yaml', '.json', $path);
         if (file_exists($jsonPath)) {
             $content = file_get_contents($jsonPath);
-            return json_decode($content, true) ?? [];
+            $data = json_decode($content, true);
+            if (is_array($data)) {
+                return $data;
+            }
         }
         
-        if (!file_exists($path)) {
-            throw new \Exception("Registry file not found: $path or $jsonPath");
-        }
-        
-        // Try YAML if available
-        if (function_exists('yaml_parse_file')) {
-            return yaml_parse_file($path) ?? [];
-        }
-        
-        throw new \Exception("YAML extension not available and JSON config not found");
+        throw new \Exception("Registry file not found or invalid: $path");
     }
     
     /**

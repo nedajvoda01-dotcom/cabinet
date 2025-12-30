@@ -18,14 +18,16 @@ class CapabilityExecutor {
     private $storage;
     private $uiConfig;
     private $authentication;
+    private $capabilitiesConfig;
     
-    public function __construct($router, $policy, $limits, $resultGate, $storage, $uiConfig) {
+    public function __construct($router, $policy, $limits, $resultGate, $storage, $uiConfig, $capabilitiesConfig = []) {
         $this->router = $router;
         $this->policy = $policy;
         $this->limits = $limits;
         $this->resultGate = $resultGate;
         $this->storage = $storage;
         $this->uiConfig = $uiConfig;
+        $this->capabilitiesConfig = $capabilitiesConfig;
         // Lazy load authentication when needed
         $this->authentication = null;
     }
@@ -198,40 +200,32 @@ class CapabilityExecutor {
     }
     
     /**
-     * Phase 6.2: Check if capability is internal-only
+     * Phase 6.2 / MVP Step 4: Check if capability is internal-only
+     * Now reads from registry instead of hardcoded array
      */
     private function isInternalOnlyCapability(string $capability): bool {
-        // Internal capabilities that should not be called directly from UI
-        $internalCapabilities = [
-            'storage.listings.upsert_batch',
-            'storage.imports.register',
-            'storage.imports.mark_done',
-            'parser.calculate_hash',
-            'parser.parse_csv',
-        ];
-        
-        return in_array($capability, $internalCapabilities);
-    }
-    
-    /**
-     * Phase 6.2: Check if capability chain is allowed
-     */
-    private function isAllowedChain(string $parentCapability, string $childCapability): bool {
-        // Define allowed capability chains
-        $allowedChains = [
-            'import.run' => [
-                'parser.calculate_hash',
-                'parser.parse_csv',
-                'storage.imports.register',
-                'storage.listings.upsert_batch',
-                'storage.imports.mark_done',
-            ],
-        ];
-        
-        if (!isset($allowedChains[$parentCapability])) {
+        // Read from registry/capabilities.yaml
+        if (!isset($this->capabilitiesConfig['capabilities'][$capability])) {
             return false;
         }
         
-        return in_array($childCapability, $allowedChains[$parentCapability]);
+        $config = $this->capabilitiesConfig['capabilities'][$capability];
+        return $config['internal_only'] ?? false;
+    }
+    
+    /**
+     * Phase 6.2 / MVP Step 4: Check if capability chain is allowed
+     * Now reads from registry instead of hardcoded array
+     */
+    private function isAllowedChain(string $parentCapability, string $childCapability): bool {
+        // Read from registry/capabilities.yaml
+        if (!isset($this->capabilitiesConfig['capabilities'][$childCapability])) {
+            return false;
+        }
+        
+        $childConfig = $this->capabilitiesConfig['capabilities'][$childCapability];
+        $allowedParents = $childConfig['allowed_parents'] ?? [];
+        
+        return in_array($parentCapability, $allowedParents);
     }
 }
