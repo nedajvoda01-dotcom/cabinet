@@ -25,16 +25,16 @@ test_request() {
     body=$(echo "$response" | head -n-1)
     
     if [ "$should_succeed" = "true" ]; then
-        if [ "$http_code" = "200" ]; then
+        if [ "$http_code" = "200" ] && echo "$body" | grep -q '"success":true'; then
             echo "✓ PASSED"
             PASSED=$((PASSED + 1))
         else
-            echo "✗ FAILED (Expected 200, got $http_code)"
+            echo "✗ FAILED (Expected success, got $http_code)"
             echo "Response: $body"
             FAILED=$((FAILED + 1))
         fi
     else
-        if [ "$http_code" != "200" ]; then
+        if echo "$body" | grep -q '"error":true'; then
             echo "✓ PASSED (correctly rejected)"
             PASSED=$((PASSED + 1))
         else

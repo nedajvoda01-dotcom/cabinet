@@ -1,0 +1,39 @@
+{
+  "ui": {
+    "admin": {
+      "name": "Admin UI",
+      "description": "Administrative interface with full access",
+      "allowed_capabilities": [
+        "car.create",
+        "car.read",
+        "car.update",
+        "car.delete",
+        "car.list",
+        "price.calculate",
+        "price.rule.create",
+        "price.rule.list",
+        "workflow.execute",
+        "workflow.status",
+        "workflow.list"
+      ],
+      "scopes": [
+        "admin",
+        "read",
+        "write"
+      ]
+    },
+    "public": {
+      "name": "Public UI",
+      "description": "Public interface with limited access",
+      "allowed_capabilities": [
+        "car.list",
+        "car.read",
+        "price.calculate",
+        "workflow.status"
+      ],
+      "scopes": [
+        "read"
+      ]
+    }
+  }
+}

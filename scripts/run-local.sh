@@ -24,7 +24,7 @@ mkdir -p storage
 
 # Start services
 echo "Starting services with Docker Compose..."
-docker-compose up -d
+docker compose up -d
 
 echo ""
 echo "Waiting for services to be ready..."
@@ -60,6 +60,6 @@ echo "  Platform API:  http://localhost:8080/api/invoke"
 echo "  Admin UI:      http://localhost:3000"
 echo "  Public UI:     http://localhost:3001"
 echo ""
-echo "To stop: docker-compose down"
-echo "To view logs: docker-compose logs -f"
+echo "To stop: docker compose down"
+echo "To view logs: docker compose logs -f"
 echo ""

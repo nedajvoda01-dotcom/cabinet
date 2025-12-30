@@ -14,11 +14,24 @@ class Router {
     }
     
     private function loadConfig(string $path): array {
-        if (!file_exists($path)) {
-            throw new Exception("Config not found: $path");
+        // Support both YAML and JSON
+        $jsonPath = str_replace('.yaml', '.json', $path);
+        
+        if (file_exists($jsonPath)) {
+            $content = file_get_contents($jsonPath);
+            return json_decode($content, true);
         }
         
-        return yaml_parse_file($path);
+        if (!file_exists($path)) {
+            throw new Exception("Config not found: $path or $jsonPath");
+        }
+        
+        // Try YAML if available
+        if (function_exists('yaml_parse_file')) {
+            return yaml_parse_file($path);
+        }
+        
+        throw new Exception("YAML extension not available and JSON config not found");
     }
     
     /**

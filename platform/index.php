@@ -25,10 +25,26 @@ if (file_exists(__DIR__ . '/../.env')) {
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 
+// Helper function to load config (YAML or JSON)
+function loadConfig($path) {
+    $jsonPath = str_replace('.yaml', '.json', $path);
+    
+    if (file_exists($jsonPath)) {
+        $content = file_get_contents($jsonPath);
+        return json_decode($content, true);
+    }
+    
+    if (file_exists($path) && function_exists('yaml_parse_file')) {
+        return yaml_parse_file($path);
+    }
+    
+    throw new Exception("Config not found or YAML extension not available: $path");
+}
+
 // Initialize components
 $storage = new Storage(getenv('STORAGE_PATH') ?: '/var/lib/cabinet/storage');
 $policy = new Policy(__DIR__ . '/../registry/policy.yaml');
-$uiConfig = yaml_parse_file(__DIR__ . '/../registry/ui.yaml');
+$uiConfig = loadConfig(__DIR__ . '/../registry/ui.yaml');
 $router = new Router(
     __DIR__ . '/../registry/adapters.yaml',
     __DIR__ . '/../registry/capabilities.yaml'

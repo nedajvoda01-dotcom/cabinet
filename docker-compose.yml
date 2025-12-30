@@ -21,10 +21,6 @@ services:
       - ADAPTER_AUTOMATION_URL=http://adapter-automation
     command: >
       bash -c "
-        apt-get update && 
-        apt-get install -y libyaml-dev && 
-        pecl install yaml && 
-        docker-php-ext-enable yaml && 
         a2enmod rewrite &&
         apache2-foreground
       "
@@ -41,7 +37,11 @@ services:
       - "8081:80"
     volumes:
       - ./adapters/car-storage:/var/www/html
-    command: apache2-foreground
+    command: >
+      bash -c "
+        a2enmod rewrite &&
+        apache2-foreground
+      "
 
   adapter-pricing:
     image: php:8.2-apache
@@ -50,7 +50,11 @@ services:
       - "8082:80"
     volumes:
       - ./adapters/pricing:/var/www/html
-    command: apache2-foreground
+    command: >
+      bash -c "
+        a2enmod rewrite &&
+        apache2-foreground
+      "
 
   adapter-automation:
     image: php:8.2-apache
@@ -59,7 +63,11 @@ services:
       - "8083:80"
     volumes:
       - ./adapters/automation:/var/www/html
-    command: apache2-foreground
+    command: >
+      bash -c "
+        a2enmod rewrite &&
+        apache2-foreground
+      "
 
   # UI - Admin
   ui-admin:
