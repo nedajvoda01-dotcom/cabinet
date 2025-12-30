@@ -26,7 +26,7 @@ ADAPTER_URL_PATTERN='http://.*adapter-'
 UI_FILES=$(find ui -type f \( -name "*.js" -o -name "*.html" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \) 2>/dev/null || true)
 
 if [ -n "$UI_FILES" ]; then
-    VIOLATIONS=$(echo "$UI_FILES" | xargs grep -n "$ADAPTER_URL_PATTERN" 2>/dev/null || true)
+    VIOLATIONS=$(find ui -type f \( -name "*.js" -o -name "*.html" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \) -exec grep -Hn "$ADAPTER_URL_PATTERN" {} \; 2>/dev/null || true)
     
     if [ -n "$VIOLATIONS" ]; then
         echo -e "   ${RED}✗ FAIL: Found direct adapter URLs in UI code:${NC}"

@@ -43,13 +43,14 @@ echo ""
 echo -e "${BLUE}Running smoke tests...${NC}"
 echo ""
 
-# Run smoke tests
-cd tests
-
+# Run smoke tests (stay in current directory, use subshell)
+(
+cd tests && \
 PLATFORM_URL="$PLATFORM_URL/api/invoke" \
 API_KEY_ADMIN="$ADMIN_API_KEY" \
 API_KEY_PUBLIC="$PUBLIC_API_KEY" \
 ./run-smoke-tests.sh
+)
 
 RESULT=$?
 

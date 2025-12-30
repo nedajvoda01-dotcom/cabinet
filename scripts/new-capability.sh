@@ -111,11 +111,12 @@ if [[ $IS_INTERNAL =~ ^[Yy]$ ]]; then
 fi
 
 # Add capability to registry file
-# Insert before the last line (assumes file ends cleanly)
+# Append to end of file (assumes YAML structure is maintained)
 echo "$CAPABILITY_ENTRY" >> "$REGISTRY_FILE"
 
 echo ""
 echo "✓ Added capability to $REGISTRY_FILE"
+echo "  (Appended to end of file)"
 echo ""
 echo "Next steps:"
 echo "==========="
@@ -125,8 +126,10 @@ echo "   - Add any additional configuration"
 echo ""
 echo "2. Implement the capability handler in adapters/$ADAPTER_ID/invoke.php:"
 echo ""
+# Convert capability name to camelCase function name
+FUNC_NAME=$(echo "$CAPABILITY_NAME" | sed 's/\./ /g' | awk '{for(i=1;i<=NF;i++){$i=toupper(substr($i,1,1)) substr($i,2)}}1' | sed 's/ //g')
 echo "   case '$CAPABILITY_NAME':"
-echo "       \$result = handle${CAPABILITY_NAME//./_}(\$payload);"
+echo "       \$result = handle$FUNC_NAME(\$payload);"
 echo "       break;"
 echo ""
 echo "3. Add capability to UI in registry/ui.yaml if needed:"

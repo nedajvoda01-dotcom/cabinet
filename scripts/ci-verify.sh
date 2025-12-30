@@ -71,8 +71,16 @@ run_check "Import Idempotency Tests" \
 
 # 8. Network Isolation Tests (requires Docker)
 if command -v docker >/dev/null 2>&1; then
-    # Check if docker-compose is available
-    if command -v docker-compose >/dev/null 2>&1 || docker compose version >/dev/null 2>&1; then
+    # Check if docker-compose or docker compose is available
+    if command -v docker-compose >/dev/null 2>&1; then
+        COMPOSE_CMD="docker-compose"
+    elif docker compose version >/dev/null 2>&1; then
+        COMPOSE_CMD="docker compose"
+    else
+        COMPOSE_CMD=""
+    fi
+    
+    if [ -n "$COMPOSE_CMD" ]; then
         run_check "Network Isolation Tests" \
             "./tests/test-network-isolation.sh"
     else

@@ -149,7 +149,7 @@ check "Network isolation test exists" \
     "test -x tests/test-network-isolation.sh"
 
 # Note: Network isolation test requires Docker, so we only check if containers are running
-if command -v docker >/dev/null 2>&1 && docker ps | grep -q cabinet-platform 2>/dev/null; then
+if command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep -q '^cabinet-platform$' 2>/dev/null; then
     echo -e "${YELLOW}Note: Docker containers detected. Network isolation test should be run in CI.${NC}"
     echo -e "${YELLOW}      To run manually: ./tests/test-network-isolation.sh${NC}"
 else

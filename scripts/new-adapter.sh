@@ -119,8 +119,9 @@ function handleExample(array $payload): array {
 }
 EOF
 
-# Replace ADAPTER_NAME placeholder
-sed -i "s/ADAPTER_NAME/$ADAPTER_NAME/g" "$ADAPTER_DIR/invoke.php"
+# Replace ADAPTER_NAME placeholder safely (escape for sed)
+ESCAPED_NAME=$(echo "$ADAPTER_NAME" | sed 's/[\/&]/\\&/g')
+sed -i "s/ADAPTER_NAME/$ESCAPED_NAME/g" "$ADAPTER_DIR/invoke.php"
 
 # Create README.md
 cat > "$ADAPTER_DIR/README.md" << EOF
