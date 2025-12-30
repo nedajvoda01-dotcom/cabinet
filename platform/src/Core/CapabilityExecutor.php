@@ -26,7 +26,8 @@ class CapabilityExecutor {
         $this->resultGate = $resultGate;
         $this->storage = $storage;
         $this->uiConfig = $uiConfig;
-        $this->authentication = new Authentication();
+        // Lazy load authentication when needed
+        $this->authentication = null;
     }
     
     /**

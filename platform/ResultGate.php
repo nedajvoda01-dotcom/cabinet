@@ -68,7 +68,14 @@ class ResultGate {
         $filtered = $this->applyResultProfile($filtered, $ui);
         
         // Phase 6: Apply allowlist fields if configured
-        $filtered = $this->applyAllowlist($filtered, $capability);
+        // Skip capability allowlist if result profile was applied (profile takes precedence)
+        $profileName = !empty($this->resultProfiles) ? ($this->resultProfiles['ui_profiles'][$ui] ?? null) : null;
+        $hasProfile = $profileName && isset($this->resultProfiles['profiles'][$profileName]);
+        
+        if (!$hasProfile) {
+            // No result profile, fall back to capability allowlist
+            $filtered = $this->applyAllowlist($filtered, $capability);
+        }
         
         // Phase 6: Block dangerous content (HTML/JS)
         $filtered = $this->sanitizeDangerousContent($filtered);
@@ -317,24 +324,25 @@ class ResultGate {
         }
         
         // Detect entity type from data structure
-        // If data has known entity fields, apply profile filtering
-        $filtered = [];
+        $entityType = $this->detectEntityType($data, $profileFields);
         
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                // Recursively filter nested arrays
-                $filtered[$key] = $this->filterByProfile($value, $profileFields);
-            } else {
-                // Keep scalar values as is (profile filtering is applied at entity level)
-                $filtered[$key] = $value;
-            }
+        if ($entityType && isset($profileFields[$entityType])) {
+            // This is a recognized entity type, apply profile filtering
+            $allowedFields = $profileFields[$entityType];
+            return $this->filterEntityFields($data, $allowedFields);
         }
         
-        // If this looks like an entity (has multiple fields from a known type)
-        $entityType = $this->detectEntityType($data, $profileFields);
-        if ($entityType && isset($profileFields[$entityType])) {
-            $allowedFields = $profileFields[$entityType];
-            $filtered = $this->filterEntityFields($data, $allowedFields);
+        // Not a recognized entity or no profile for this type
+        // Process recursively for nested structures
+        $filtered = [];
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                // Try to filter nested arrays
+                $filtered[$key] = $this->filterByProfile($value, $profileFields);
+            } else {
+                // Keep scalar values
+                $filtered[$key] = $value;
+            }
         }
         
         return $filtered;
