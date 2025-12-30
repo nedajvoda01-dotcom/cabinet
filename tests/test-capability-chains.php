@@ -45,7 +45,7 @@ $router = new Router(
     $registryPath . '/capabilities.yaml'
 );
 
-$executor = new CapabilityExecutor($router, $policy, $limits, $resultGate, $storage, $uiConfig);
+$executor = new CapabilityExecutor($router, $policy, $limits, $resultGate, $storage, $uiConfig, $capabilitiesConfig);
 
 $testsPassed = 0;
 $testsFailed = 0;

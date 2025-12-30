@@ -134,6 +134,7 @@ capabilities:
   import.run:
     adapter: car-storage
     description: "Run CSV import with idempotency"
+    internal_only: false
     allowed_fields:
       - import_id
       - status
@@ -147,6 +148,9 @@ capabilities:
   storage.imports.register:
     adapter: car-storage
     description: "Register import attempt (internal only)"
+    internal_only: true
+    allowed_parents:
+      - import.run
     allowed_fields:
       - import_id
       - status
@@ -155,6 +159,9 @@ capabilities:
   storage.imports.mark_done:
     adapter: car-storage
     description: "Mark import as completed (internal only)"
+    internal_only: true
+    allowed_parents:
+      - import.run
     allowed_fields:
       - import_id
       - status
@@ -162,6 +169,9 @@ capabilities:
   storage.listings.upsert_batch:
     adapter: car-storage
     description: "Batch upsert listings (internal only)"
+    internal_only: true
+    allowed_parents:
+      - import.run
     allowed_fields:
       - created
       - updated
@@ -227,8 +237,21 @@ capabilities:
   parser.parse_csv:
     adapter: car-storage
     description: "Parse CSV data and normalize listings (internal only)"
+    internal_only: true
+    allowed_parents:
+      - import.run
     allowed_fields:
       - listings
       - photos
       - report
       - errors
+  
+  parser.calculate_hash:
+    adapter: car-storage
+    description: "Calculate content hash for idempotency (internal only)"
+    internal_only: true
+    allowed_parents:
+      - import.run
+    allowed_fields:
+      - hash
+      - algorithm

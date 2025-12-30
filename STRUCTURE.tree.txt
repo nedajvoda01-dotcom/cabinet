@@ -1,0 +1,86 @@
+.
+├── EXTENDING.md
+├── IMPLEMENTATION_SUMMARY.md
+├── PHASE2-4.md
+├── PHASE6.md
+├── PHASE6_DIAGRAMS.md
+├── PHASE6_SUMMARY.md
+├── README.md
+├── STEPS_7-9_IMPLEMENTATION.md
+├── STRUCTURE.files.txt
+├── STRUCTURE.tree.txt
+├── STRUCTURE.txt
+├── VERIFICATION.md
+├── adapters
+│   ├── automation
+│   │   ├── README.md
+│   │   ├── capabilities.yaml
+│   │   └── invoke.php
+│   ├── car-storage
+│   │   ├── README.md
+│   │   ├── capabilities.yaml
+│   │   └── invoke.php
+│   └── pricing
+│       ├── README.md
+│       ├── capabilities.yaml
+│       └── invoke.php
+├── docker-compose.yml
+├── platform
+│   ├── Limits.php
+│   ├── Policy.php
+│   ├── README.md
+│   ├── ResultGate.php
+│   ├── Router.php
+│   ├── Storage.php
+│   ├── apache-config.conf
+│   ├── index.php
+│   ├── public
+│   │   └── index.php
+│   └── src
+│       ├── Adapter
+│       │   └── AdapterClient.php
+│       ├── Core
+│       │   └── CapabilityExecutor.php
+│       ├── Http
+│       │   ├── Controllers
+│       │   └── Security
+│       └── Registry
+│           ├── CapabilityRouter.php
+│           ├── RegistryLoader.php
+│           └── UiProfileResolver.php
+├── registry
+│   ├── adapters.json
+│   ├── adapters.yaml
+│   ├── capabilities.json
+│   ├── capabilities.yaml
+│   ├── policy.json
+│   ├── policy.yaml
+│   ├── result_profiles.yaml
+│   ├── ui.json
+│   └── ui.yaml
+├── scripts
+│   └── run-local.sh
+├── tests
+│   ├── integration-test.php
+│   ├── run-smoke-tests.sh
+│   ├── security.http
+│   ├── smoke.http
+│   ├── test-capability-chains.php
+│   ├── test-import-idempotency.php
+│   ├── test-network-isolation.sh
+│   ├── test-result-profiles.php
+│   ├── test-security.php
+│   ├── test-steps-7-9.php
+│   ├── verify-implementation.sh
+│   └── verify-phase6.sh
+└── ui
+    ├── admin
+    │   ├── index.html
+    │   └── src
+    │       └── app.js
+    └── public
+        ├── index.html
+        └── src
+            └── app.js
+
+22 directories, 62 files
