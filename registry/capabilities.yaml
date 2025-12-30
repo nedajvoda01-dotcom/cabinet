@@ -1,51 +1,131 @@
 # Capability to Adapter Mapping
 # Defines which adapter handles each capability
 # Format: capability → adapter_id
+# Phase 6: Added allowed_fields for ResultGate filtering
 
 capabilities:
   # Car Storage capabilities
   car.create:
     adapter: car-storage
     description: "Create a new car record"
+    allowed_fields:
+      - id
+      - brand
+      - model
+      - year
+      - price
+      - status
+      - created_at
+      - created_by
     
   car.read:
     adapter: car-storage
     description: "Read car information"
+    allowed_fields:
+      - id
+      - brand
+      - model
+      - year
+      - price
+      - status
+      - vin
+      - created_at
+      - updated_at
     
   car.update:
     adapter: car-storage
     description: "Update car information"
+    allowed_fields:
+      - id
+      - brand
+      - model
+      - year
+      - price
+      - status
+      - updated_at
+      - updated_by
     
   car.delete:
     adapter: car-storage
     description: "Delete a car record"
+    allowed_fields:
+      - id
+      - status
+      - deleted_at
+      - deleted_by
     
   car.list:
     adapter: car-storage
     description: "List all cars"
+    allowed_fields:
+      - id
+      - brand
+      - model
+      - year
+      - price
+      - status
     
   # Pricing capabilities
   price.calculate:
     adapter: pricing
     description: "Calculate price for a service"
+    allowed_fields:
+      - original_price
+      - discount
+      - final_price
+      - currency
+      - calculation_date
+      - calculated_by
     
   price.rule.create:
     adapter: pricing
     description: "Create a pricing rule"
+    allowed_fields:
+      - id
+      - rule_name
+      - discount_percent
+      - conditions
+      - status
+      - created_at
+      - created_by
     
   price.rule.list:
     adapter: pricing
     description: "List pricing rules"
+    allowed_fields:
+      - id
+      - rule_name
+      - discount_percent
+      - status
+      - created_at
     
   # Automation capabilities
   workflow.execute:
     adapter: automation
     description: "Execute an automated workflow"
+    allowed_fields:
+      - workflow_id
+      - execution_id
+      - status
+      - started_at
+      - started_by
     
   workflow.status:
     adapter: automation
     description: "Check workflow execution status"
+    allowed_fields:
+      - workflow_id
+      - execution_id
+      - status
+      - progress
+      - started_at
+      - completed_at
     
   workflow.list:
     adapter: automation
     description: "List available workflows"
+    allowed_fields:
+      - workflow_id
+      - name
+      - description
+      - status
