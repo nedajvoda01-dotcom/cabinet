@@ -1,9 +1,0 @@
-{
-  "trace": "X-Cabinet-Trace-Id",
-  "nonce": "X-Cabinet-Nonce",
-  "idempotency": "X-Cabinet-Idempotency-Key",
-  "kid": "X-Cabinet-Key-Id",
-  "signature": "X-Cabinet-Signature",
-  "encryption": "X-Cabinet-Encryption",
-  "key_exchange": "X-Cabinet-Key-Exchange"
-}
