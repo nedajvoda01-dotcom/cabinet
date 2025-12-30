@@ -41,8 +41,9 @@ export async function fetchCapabilities() {
         const data = await response.json();
         
         // Update session with server-determined role (if different from what we thought)
-        if (data.role && data.role !== session.role) {
-            session.role = data.role;
+        // The server's role is the source of truth
+        if (data.role && data.role !== session.displayRole) {
+            session.displayRole = data.role;
             session.save();
         }
         

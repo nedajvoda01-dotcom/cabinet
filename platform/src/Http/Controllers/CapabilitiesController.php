@@ -31,13 +31,20 @@ class CapabilitiesController {
         try {
             $authenticatedActor = $this->authentication->authenticate();
         } catch (\Exception $e) {
-            // If auth fails, default to guest/public (unauthenticated)
-            $authenticatedActor = [
-                'authenticated' => false,
-                'user_id' => 'anonymous',
-                'role' => 'guest',
-                'ui' => 'cabinet'
-            ];
+            // If auth is disabled or no API key provided, use guest/public (unauthenticated)
+            // Only authentication errors should fall through here
+            // Other errors should be thrown
+            if (strpos($e->getMessage(), 'Authentication') === 0 || strpos($e->getMessage(), 'API key') !== false) {
+                $authenticatedActor = [
+                    'authenticated' => false,
+                    'user_id' => 'anonymous',
+                    'role' => 'guest',
+                    'ui' => 'cabinet'
+                ];
+            } else {
+                // Re-throw non-authentication errors
+                throw $e;
+            }
         }
         
         // UI comes from query param (or authenticated context)

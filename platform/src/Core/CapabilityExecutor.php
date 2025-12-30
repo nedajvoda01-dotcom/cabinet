@@ -213,6 +213,7 @@ class CapabilityExecutor {
         // Check if UI has profile-based structure (new unified UI)
         if (isset($uiEntry['profiles'])) {
             // Determine profile based on role
+            // TODO: Make this mapping configurable in registry for extensibility
             $profile = $role === 'admin' ? 'admin' : 'public';
             $profileConfig = $uiEntry['profiles'][$profile] ?? $uiEntry['profiles']['public'];
             

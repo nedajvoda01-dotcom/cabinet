@@ -59,11 +59,12 @@ function attachEvents() {
             const userId = userAccount === 'admin' ? 'admin_user' : 'public_user';
             
             // Store API key as token (this simulates session management)
-            // NOTE: We do NOT store the role - the server determines it from the API key
+            // NOTE: displayRole is only for UI display purposes
+            // The actual role is determined server-side from the API key
             session.set({
                 token: apiKey,
                 userId: userId,
-                role: userAccount, // Only for UI display, server ignores this
+                displayRole: userAccount, // Only for UI display, server ignores this
                 uiProfile: userAccount === 'admin' ? 'admin' : 'public'
             });
             
