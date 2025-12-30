@@ -6,24 +6,52 @@
 
 namespace Platform\Http\Controllers;
 
+use Platform\Http\Security\Authentication;
+
 class CapabilitiesController {
     private $policy;
     private $uiConfig;
     private $capabilitiesConfig;
+    private $authentication;
     
     public function __construct($policy, $uiConfig, $capabilitiesConfig) {
         $this->policy = $policy;
         $this->uiConfig = $uiConfig;
         $this->capabilitiesConfig = $capabilitiesConfig;
+        $this->authentication = new Authentication();
     }
     
     /**
      * Get capabilities filtered by UI and policy
-     * GET /api/capabilities?ui=cabinet&role=admin
+     * GET /api/capabilities?ui=cabinet
+     * Role is determined from authentication context, NOT from query params
      */
     public function handle(array $params): array {
-        $ui = $params['ui'] ?? 'cabinet';
-        $role = $params['role'] ?? 'guest';
+        // Authenticate request to get role from server context
+        try {
+            $authenticatedActor = $this->authentication->authenticate();
+        } catch (\Exception $e) {
+            // If auth is disabled or no API key provided, use guest/public (unauthenticated)
+            // Only authentication errors should fall through here
+            // Other errors should be thrown
+            if (strpos($e->getMessage(), 'Authentication') === 0 || strpos($e->getMessage(), 'API key') !== false) {
+                $authenticatedActor = [
+                    'authenticated' => false,
+                    'user_id' => 'anonymous',
+                    'role' => 'guest',
+                    'ui' => 'cabinet'
+                ];
+            } else {
+                // Re-throw non-authentication errors
+                throw $e;
+            }
+        }
+        
+        // UI comes from query param (or authenticated context)
+        $ui = $params['ui'] ?? $authenticatedActor['ui'] ?? 'cabinet';
+        
+        // Role is ALWAYS determined server-side from authentication, NEVER from client
+        $role = $authenticatedActor['role'];
         
         // Get UI configuration
         $uiEntry = $this->uiConfig['ui'][$ui] ?? null;

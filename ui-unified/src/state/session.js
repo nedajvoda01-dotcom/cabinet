@@ -5,7 +5,7 @@ class SessionState {
     constructor() {
         this.token = null;
         this.userId = null;
-        this.role = 'guest';  // default to guest
+        this.displayRole = 'guest';  // Only for UI display, server determines actual role
         this.uiProfile = 'public';  // default to public
         this.isAuthenticated = false;
         
@@ -23,7 +23,7 @@ class SessionState {
                 const session = JSON.parse(stored);
                 this.token = session.token;
                 this.userId = session.userId;
-                this.role = session.role || 'guest';
+                this.displayRole = session.displayRole || session.role || 'guest';
                 this.uiProfile = session.uiProfile || 'public';
                 this.isAuthenticated = !!this.token;
             }
@@ -41,7 +41,7 @@ class SessionState {
             const session = {
                 token: this.token,
                 userId: this.userId,
-                role: this.role,
+                displayRole: this.displayRole,
                 uiProfile: this.uiProfile
             };
             localStorage.setItem('cabinet_session', JSON.stringify(session));
@@ -56,7 +56,7 @@ class SessionState {
     set(data) {
         this.token = data.token;
         this.userId = data.userId;
-        this.role = data.role || 'guest';
+        this.displayRole = data.displayRole || data.role || 'guest';
         this.uiProfile = data.uiProfile || 'public';
         this.isAuthenticated = true;
         this.save();
@@ -68,7 +68,7 @@ class SessionState {
     clear() {
         this.token = null;
         this.userId = null;
-        this.role = 'guest';
+        this.displayRole = 'guest';
         this.uiProfile = 'public';
         this.isAuthenticated = false;
         localStorage.removeItem('cabinet_session');
@@ -81,7 +81,8 @@ class SessionState {
         return {
             token: this.token,
             userId: this.userId,
-            role: this.role,
+            role: this.displayRole, // For backward compatibility in UI display
+            displayRole: this.displayRole,
             uiProfile: this.uiProfile,
             isAuthenticated: this.isAuthenticated
         };
@@ -91,7 +92,7 @@ class SessionState {
      * Check if user is admin
      */
     isAdmin() {
-        return this.role === 'admin';
+        return this.displayRole === 'admin';
     }
 }
 
