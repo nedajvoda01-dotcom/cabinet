@@ -142,6 +142,22 @@ check "Import idempotency tests pass" \
     "php tests/test-import-idempotency.php >/dev/null 2>&1"
 
 echo ""
+echo "=== Network Isolation (Merge Blocker) ==="
+echo ""
+
+check "Network isolation test exists" \
+    "test -x tests/test-network-isolation.sh"
+
+# Note: Network isolation test requires Docker, so we only check if containers are running
+if command -v docker >/dev/null 2>&1 && docker ps | grep -q cabinet-platform 2>/dev/null; then
+    echo -e "${YELLOW}Note: Docker containers detected. Network isolation test should be run in CI.${NC}"
+    echo -e "${YELLOW}      To run manually: ./tests/test-network-isolation.sh${NC}"
+else
+    echo -e "${YELLOW}Note: Docker containers not running. Skipping network isolation test.${NC}"
+    echo -e "${YELLOW}      This test is a merge-blocker and must pass in CI.${NC}"
+fi
+
+echo ""
 echo "=== Registry Validation ==="
 echo ""
 
@@ -171,6 +187,11 @@ if [ $CHECKS_FAILED -eq 0 ]; then
     echo "  ✓ Chain rules in registry (internal_only + allowed_parents)"
     echo "  ✓ Result profiles applied by ui.yaml"
     echo "  ✓ All tests passing (smoke + security + chains + profiles + idempotency)"
+    echo "  ✓ Network isolation test exists (merge-blocker in CI)"
+    echo ""
+    echo "Additional tooling:"
+    echo "  ✓ Developer scripts: new-adapter.sh, new-capability.sh, run-smoke.sh"
+    echo "  ✓ Architecture checks: check-architecture.sh"
     echo ""
     exit 0
 else
