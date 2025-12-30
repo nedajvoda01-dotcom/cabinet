@@ -78,9 +78,11 @@ $limits = new Limits($policy, $storage, [
 ]);
 
 // Phase 6: Pass capabilities config and limits to ResultGate
+// Phase 6.3: Add registry path for result profiles
 $resultGateConfig = [
     'max_response_size' => (int)(getenv('MAX_RESPONSE_SIZE') ?: 10485760), // 10MB
-    'max_array_size' => (int)(getenv('MAX_ARRAY_SIZE') ?: 1000)
+    'max_array_size' => (int)(getenv('MAX_ARRAY_SIZE') ?: 1000),
+    'registry_path' => $registryPath
 ];
 $resultGate = new ResultGate($policy, $capabilitiesConfig, $resultGateConfig);
 

@@ -18,6 +18,7 @@ ui:
       - workflow.execute
       - workflow.status
       - workflow.list
+      - import.run
     scopes:
       - admin
       - read
