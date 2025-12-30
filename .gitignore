@@ -26,6 +26,9 @@ Thumbs.db
 dist/
 build/
 
+# Generated files
+registry/*.json
+
 # Temporary files
 tmp/
 temp/
