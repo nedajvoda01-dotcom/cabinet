@@ -1,0 +1,51 @@
+# Capability to Adapter Mapping
+# Defines which adapter handles each capability
+# Format: capability → adapter_id
+
+capabilities:
+  # Car Storage capabilities
+  car.create:
+    adapter: car-storage
+    description: "Create a new car record"
+    
+  car.read:
+    adapter: car-storage
+    description: "Read car information"
+    
+  car.update:
+    adapter: car-storage
+    description: "Update car information"
+    
+  car.delete:
+    adapter: car-storage
+    description: "Delete a car record"
+    
+  car.list:
+    adapter: car-storage
+    description: "List all cars"
+    
+  # Pricing capabilities
+  price.calculate:
+    adapter: pricing
+    description: "Calculate price for a service"
+    
+  price.rule.create:
+    adapter: pricing
+    description: "Create a pricing rule"
+    
+  price.rule.list:
+    adapter: pricing
+    description: "List pricing rules"
+    
+  # Automation capabilities
+  workflow.execute:
+    adapter: automation
+    description: "Execute an automated workflow"
+    
+  workflow.status:
+    adapter: automation
+    description: "Check workflow execution status"
+    
+  workflow.list:
+    adapter: automation
+    description: "List available workflows"

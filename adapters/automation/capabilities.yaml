@@ -1,0 +1,25 @@
+capabilities:
+  - name: workflow.execute
+    description: Execute a workflow
+    input_schema:
+      type: object
+      properties:
+        workflow_id:
+          type: string
+          required: true
+        parameters:
+          type: object
+    
+  - name: workflow.status
+    description: Check workflow execution status
+    input_schema:
+      type: object
+      properties:
+        execution_id:
+          type: string
+          required: true
+    
+  - name: workflow.list
+    description: List available workflows
+    input_schema:
+      type: object

@@ -1,0 +1,153 @@
+### Cabinet Platform Smoke Tests
+### Use with HTTP client like REST Client (VS Code) or curl
+
+### Variables
+@baseUrl = http://localhost:8080
+@apiUrl = {{baseUrl}}/api/invoke
+
+### Health Check - Platform
+GET {{baseUrl}}/health
+Content-Type: application/json
+
+###
+
+### Test 1: List Cars (Public UI - should work)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "capability": "car.list",
+  "payload": {},
+  "ui": "public",
+  "role": "guest",
+  "user_id": "guest_user"
+}
+
+###
+
+### Test 2: Create Car (Admin UI - should work)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "capability": "car.create",
+  "payload": {
+    "brand": "Toyota",
+    "model": "Camry",
+    "year": 2024,
+    "price": 35000
+  },
+  "ui": "admin",
+  "role": "admin",
+  "user_id": "admin_user"
+}
+
+###
+
+### Test 3: Create Car (Public UI - should fail - not allowed)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "capability": "car.create",
+  "payload": {
+    "brand": "Honda",
+    "model": "Accord",
+    "year": 2024,
+    "price": 32000
+  },
+  "ui": "public",
+  "role": "guest",
+  "user_id": "guest_user"
+}
+
+###
+
+### Test 4: Calculate Price (Public UI - should work)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "capability": "price.calculate",
+  "payload": {
+    "brand": "Toyota",
+    "year": 2020,
+    "base_price": 35000
+  },
+  "ui": "public",
+  "role": "guest",
+  "user_id": "guest_user"
+}
+
+###
+
+### Test 5: List Pricing Rules (Admin UI - should work)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "capability": "price.rule.list",
+  "payload": {},
+  "ui": "admin",
+  "role": "admin",
+  "user_id": "admin_user"
+}
+
+###
+
+### Test 6: Execute Workflow (Admin UI - should work)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "capability": "workflow.execute",
+  "payload": {
+    "workflow_id": "car_onboarding"
+  },
+  "ui": "admin",
+  "role": "admin",
+  "user_id": "admin_user"
+}
+
+###
+
+### Test 7: List Workflows (Admin UI - should work)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "capability": "workflow.list",
+  "payload": {},
+  "ui": "admin",
+  "role": "admin",
+  "user_id": "admin_user"
+}
+
+###
+
+### Test 8: Invalid Capability (should fail)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "capability": "invalid.capability",
+  "payload": {},
+  "ui": "admin",
+  "role": "admin",
+  "user_id": "admin_user"
+}
+
+###
+
+### Test 9: Missing Capability (should fail)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "payload": {},
+  "ui": "admin",
+  "role": "admin",
+  "user_id": "admin_user"
+}
+
+###
