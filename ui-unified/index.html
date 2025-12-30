@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cabinet - Unified Car Catalog Platform</title>
+    <link rel="stylesheet" href="/ui/src/design/styles.css">
+    <style>
+        /* Layout styles */
+        .layout {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: var(--color-primary);
+            color: white;
+            padding: var(--spacing-lg);
+            margin-bottom: 0;
+            border-radius: 0;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: var(--font-size-xl);
+        }
+        
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .profile-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+            font-size: var(--font-size-sm);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        
+        .user-info {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .layout-body {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: var(--spacing-lg);
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: var(--spacing-lg);
+        }
+        
+        .sidebar {
+            height: fit-content;
+            position: sticky;
+            top: var(--spacing-lg);
+        }
+        
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .nav-link {
+            padding: var(--spacing-md);
+            color: var(--color-text);
+            text-decoration: none;
+            border-radius: var(--border-radius-sm);
+            transition: background var(--transition-fast);
+            display: block;
+        }
+        
+        .nav-link:hover {
+            background: var(--color-bg);
+        }
+        
+        .nav-link.active {
+            background: var(--color-primary);
+            color: white;
+        }
+        
+        .nav-section-title {
+            padding: var(--spacing-sm) var(--spacing-md);
+            font-size: var(--font-size-sm);
+            font-weight: bold;
+            color: var(--color-text-light);
+            text-transform: uppercase;
+            margin-top: var(--spacing-md);
+        }
+        
+        .layout-main {
+            min-width: 0; /* Allows content to shrink */
+        }
+        
+        hr {
+            border: none;
+            border-top: 1px solid var(--color-border);
+            margin: var(--spacing-md) 0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .layout-body {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: static;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: var(--spacing-md);
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="section text-center">
+                <h2>Loading...</h2>
+                <div class="loading"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="/ui/src/app.js"></script>
+</body>
+</html>
