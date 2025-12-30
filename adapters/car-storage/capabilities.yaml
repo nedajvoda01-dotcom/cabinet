@@ -1,0 +1,46 @@
+capabilities:
+  - name: car.create
+    description: Create a new car record
+    input_schema:
+      type: object
+      properties:
+        brand:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        price:
+          type: number
+    
+  - name: car.read
+    description: Read car information
+    input_schema:
+      type: object
+      properties:
+        id:
+          type: string
+          required: true
+    
+  - name: car.update
+    description: Update car information
+    input_schema:
+      type: object
+      properties:
+        id:
+          type: string
+          required: true
+    
+  - name: car.delete
+    description: Delete a car record
+    input_schema:
+      type: object
+      properties:
+        id:
+          type: string
+          required: true
+    
+  - name: car.list
+    description: List all cars
+    input_schema:
+      type: object

@@ -1,0 +1,28 @@
+capabilities:
+  - name: price.calculate
+    description: Calculate price based on rules
+    input_schema:
+      type: object
+      properties:
+        brand:
+          type: string
+        year:
+          type: integer
+        base_price:
+          type: number
+    
+  - name: price.rule.create
+    description: Create or update a pricing rule
+    input_schema:
+      type: object
+      properties:
+        key:
+          type: string
+          required: true
+        value:
+          required: true
+    
+  - name: price.rule.list
+    description: List all pricing rules
+    input_schema:
+      type: object

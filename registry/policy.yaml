@@ -1,0 +1,77 @@
+# Policy Configuration
+# Defines roles, access rules, and limits
+
+roles:
+  admin:
+    description: "Administrator with full access"
+    scopes:
+      - admin
+      - read
+      - write
+      - delete
+    rate_limit: 1000
+    max_request_size: 10485760  # 10MB
+    
+  user:
+    description: "Regular user with limited access"
+    scopes:
+      - read
+      - write
+    rate_limit: 100
+    max_request_size: 1048576  # 1MB
+    
+  guest:
+    description: "Guest with read-only access"
+    scopes:
+      - read
+    rate_limit: 50
+    max_request_size: 524288  # 512KB
+
+# Capability-specific policies
+capability_policies:
+  car.create:
+    required_scopes:
+      - write
+    rate_limit: 10
+    
+  car.update:
+    required_scopes:
+      - write
+    rate_limit: 20
+    
+  car.delete:
+    required_scopes:
+      - delete
+    rate_limit: 5
+    
+  car.read:
+    required_scopes:
+      - read
+    rate_limit: 100
+    
+  car.list:
+    required_scopes:
+      - read
+    rate_limit: 50
+    
+  price.calculate:
+    required_scopes:
+      - read
+    rate_limit: 100
+    
+  price.rule.create:
+    required_scopes:
+      - admin
+    rate_limit: 5
+    
+  workflow.execute:
+    required_scopes:
+      - write
+    rate_limit: 10
+
+# Global limits
+global:
+  default_timeout: 30
+  max_timeout: 120
+  default_rate_limit: 100
+  max_request_size: 10485760
