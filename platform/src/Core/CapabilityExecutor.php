@@ -20,7 +20,7 @@ class CapabilityExecutor {
     private $authentication;
     private $capabilitiesConfig;
     
-    public function __construct($router, $policy, $limits, $resultGate, $storage, $uiConfig, $capabilitiesConfig = []) {
+    public function __construct($router, $policy, $limits, $resultGate, $storage, $uiConfig, array $capabilitiesConfig) {
         $this->router = $router;
         $this->policy = $policy;
         $this->limits = $limits;

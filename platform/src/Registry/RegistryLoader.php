@@ -39,7 +39,7 @@ class RegistryLoader {
     
     /**
      * Load config from YAML or JSON
-     * MVP Step 3: Prefer YAML as source of truth (JSON only as fallback)
+     * MVP Step 3: Try YAML first (source of truth), then JSON as fallback for compatibility
      */
     private function loadConfig(string $path): array {
         // MVP Step 3: Try YAML first (source of truth)
@@ -52,7 +52,7 @@ class RegistryLoader {
             }
         }
         
-        // Fallback to JSON only if YAML doesn't exist or can't be parsed
+        // Fallback to JSON for backward compatibility (but JSON should not be used in MVP)
         $jsonPath = str_replace('.yaml', '.json', $path);
         if (file_exists($jsonPath)) {
             $content = file_get_contents($jsonPath);

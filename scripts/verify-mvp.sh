@@ -82,7 +82,7 @@ check "result_profiles.yaml exists" \
     "test -f registry/result_profiles.yaml"
 
 check "No JSON files in registry" \
-    "test \$(ls registry/*.json 2>/dev/null | wc -l) -eq 0"
+    "! ls registry/*.json >/dev/null 2>&1"
 
 check "RegistryLoader prefers YAML" \
     "grep -q 'Try YAML first' platform/src/Registry/RegistryLoader.php"
