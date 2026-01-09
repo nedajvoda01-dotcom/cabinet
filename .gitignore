@@ -25,6 +25,8 @@ Thumbs.db
 # Build artifacts
 dist/
 build/
+target/
+Cargo.lock
 
 # Generated files
 registry/*.json
