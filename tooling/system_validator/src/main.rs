@@ -264,22 +264,19 @@ fn check_prohibited_inputs() -> Vec<String> {
 }
 
 fn generate_report(errors: &[String], warnings: &[String]) -> Value {
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
+    // NOTE: No timestamp in report body to ensure determinism
+    // Per shared/canonicalization requirements: reports must be bit-for-bit reproducible
     
     json!({
         "version": "1.0.0",
-        "timestamp": format!("{}", now),
         "validator": "system_validator",
         "status": if errors.is_empty() { "PASS" } else { "FAIL" },
         "deterministic": true,
         "inputs": {
+            "schemas": "shared/schemas/**",
             "system_intent": "system/intent/**",
-            "system_policy": "system/policy/**",
             "system_invariants": "system/invariants/**",
-            "schemas": "shared/schemas/**"
+            "system_policy": "system/policy/**"
         },
         "outputs": {
             "report": "dist/reports/system_validation_report.json"
@@ -288,9 +285,9 @@ fn generate_report(errors: &[String], warnings: &[String]) -> Value {
             "extensions": "MUST NOT be read by this tool"
         },
         "summary": {
+            "required_intent_files": 7,
             "total_errors": errors.len(),
             "total_warnings": warnings.len(),
-            "required_intent_files": 7,
             "validation_passed": errors.is_empty()
         },
         "errors": errors,

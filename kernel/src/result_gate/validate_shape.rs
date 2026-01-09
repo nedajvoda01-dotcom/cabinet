@@ -20,9 +20,9 @@ pub fn validate_result_shape(result: &Value) -> Result<(), Box<dyn Error>> {
         .ok_or("status must be a string")?;
     
     match status {
-        "success" | "partial_success" => Ok(()),
-        _ => Err(format!("Invalid status: '{}' (must be 'success' or 'partial_success')", status).into()),
-    }?;
+        "success" | "partial_success" => {},
+        _ => return Err(format!("Invalid status: '{}' (must be 'success' or 'partial_success')", status).into()),
+    }
     
     // Validate metadata if present
     if let Some(metadata) = result.get("metadata") {

@@ -40,7 +40,7 @@ pub fn load_roles() -> Result<HashMap<String, Role>, Box<dyn Error>> {
 }
 
 /// Validates that a role exists and returns it
-pub fn get_role(role_name: &str, roles: &HashMap<String, Role>) -> Result<&Role, Box<dyn Error>> {
+pub fn get_role<'a>(role_name: &str, roles: &'a HashMap<String, Role>) -> Result<&'a Role, Box<dyn Error>> {
     roles.get(role_name)
         .ok_or_else(|| format!("Unknown role: {}", role_name).into())
 }

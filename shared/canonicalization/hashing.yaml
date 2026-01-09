@@ -1,0 +1,167 @@
+# Hashing Rules
+# Single source of truth for content hashing across platform
+
+version: v1.0.0
+
+description: |
+  Rules for deterministic content hashing.
+  All implementations MUST follow these rules to ensure hash reproducibility.
+
+# Allowed Algorithms (allowlist)
+allowed_algorithms:
+  primary: SHA-256
+  alternatives: []  # No alternatives allowed - SHA-256 only
+  
+  rationale: |
+    SHA-256 provides:
+    - Strong cryptographic properties
+    - Wide support across platforms
+    - Deterministic output
+    - 256-bit collision resistance
+
+# Hashing Rules
+rules:
+  # Input Encoding
+  input_encoding:
+    text: UTF-8
+    binary: as-is
+    description: "Text MUST be UTF-8 encoded before hashing"
+  
+  # Canonicalization
+  canonicalization:
+    json_required: true
+    yaml_required: true
+    csv_required: false
+    binary_required: false
+    description: "JSON/YAML MUST be canonicalized before hashing"
+    process:
+      - "For JSON: canonicalize per canonical_json.yaml"
+      - "For YAML: canonicalize per canonical_yaml.yaml"
+      - "For CSV/binary: hash as-is (preserve exact content)"
+  
+  # Output Format
+  output_format:
+    encoding: hexadecimal
+    case: lowercase
+    prefix: none
+    length: 64  # 256 bits = 64 hex characters
+    description: "Output as lowercase hexadecimal string"
+    example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  
+  # Salt/Pepper
+  salt:
+    allowed: false
+    rationale: "Hashing for content identity, not cryptographic security"
+  
+  pepper:
+    allowed: false
+    rationale: "Must be reproducible across systems"
+
+# Use Cases
+use_cases:
+  import_deduplication:
+    description: "Detect duplicate CSV imports"
+    algorithm: SHA-256
+    canonicalization: false  # Hash exact CSV content
+    process:
+      - "Read CSV file bytes"
+      - "SHA-256 hash"
+      - "Store with import record"
+      - "Check before importing"
+  
+  message_integrity:
+    description: "Verify IPC message integrity"
+    algorithm: SHA-256
+    canonicalization: true  # Must canonicalize JSON
+    process:
+      - "Canonicalize payload per canonical_json.yaml"
+      - "SHA-256 hash"
+      - "Include in envelope.security.checksum"
+      - "Receiver recalculates and compares"
+  
+  schema_versioning:
+    description: "Detect schema changes"
+    algorithm: SHA-256
+    canonicalization: true  # Must canonicalize YAML
+    process:
+      - "Canonicalize schema per canonical_yaml.yaml"
+      - "SHA-256 hash"
+      - "Compare with known hash"
+      - "Different = schema changed"
+  
+  file_integrity:
+    description: "Verify file hasn't changed"
+    algorithm: SHA-256
+    canonicalization: depends_on_type
+    process:
+      - "For JSON/YAML: canonicalize first"
+      - "For other files: hash as-is"
+      - "Store hash in manifest"
+      - "Verify on load"
+
+# Implementation Requirements
+implementations:
+  kernel_primitives:
+    path: kernel/src/primitives/hash.rs
+    must_do:
+      - "Implement SHA-256 only"
+      - "Accept bytes or string input"
+      - "Return lowercase hex string"
+      - "Be deterministic (same input = same output)"
+    must_not_do:
+      - "Use other hash algorithms"
+      - "Add salt or pepper"
+      - "Depend on system state"
+  
+  tooling:
+    paths:
+      - tooling/canonicalizer/src/main.rs
+      - tooling/diff_builder/src/main.rs
+      - tooling/system_validator/src/main.rs
+    must_do:
+      - "Canonicalize JSON/YAML before hashing"
+      - "Use SHA-256 via kernel primitives or standard lib"
+      - "Output lowercase hex"
+    must_not_do:
+      - "Hash non-canonical JSON/YAML"
+      - "Use custom hash functions"
+
+# Validation
+validation:
+  method: "Compare against test vectors"
+  test_vectors: shared/test_vectors/hashing/vectors.yaml
+  requirement: "Implementation MUST produce exactly matching hashes for all test vectors"
+
+# Prohibited
+prohibited:
+  - description: "Using algorithms not in allowlist"
+    examples: ["MD5", "SHA-1", "custom hash"]
+  - description: "Non-deterministic hashing"
+    examples: ["Including timestamp", "Including random salt"]
+  - description: "Platform-specific behavior"
+    examples: ["Different endianness", "Locale-dependent"]
+  - description: "Hashing non-canonical JSON/YAML"
+    examples: ["Hashing with different key order", "Hashing pretty-printed JSON"]
+
+# Security Notes
+security:
+  collision_resistance: |
+    SHA-256 provides strong collision resistance (2^128 operations).
+    Suitable for content addressing and integrity verification.
+  
+  cryptographic_signing: |
+    For signatures, hash the canonical form first, then sign the hash.
+    This ensures signature verification works across implementations.
+  
+  not_for_passwords: |
+    SHA-256 is NOT suitable for password hashing.
+    Use dedicated password hashing (bcrypt, argon2) elsewhere.
+
+# Migration
+migration:
+  from_other_algorithms:
+    process:
+      - "Re-hash all content using SHA-256"
+      - "Update stored hashes"
+      - "Verify new hashes match expectations"
+    validation: "Test against known SHA-256 test vectors"

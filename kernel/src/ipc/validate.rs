@@ -47,9 +47,9 @@ pub fn validate_command(command: &Value) -> Result<(), Box<dyn Error>> {
         .ok_or("command_type must be a string")?;
     
     match command_type {
-        "invoke" | "query" | "subscribe" | "unsubscribe" => Ok(()),
-        _ => Err(format!("Invalid command_type: {}", command_type).into()),
-    }?;
+        "invoke" | "query" | "subscribe" | "unsubscribe" => {},
+        _ => return Err(format!("Invalid command_type: {}", command_type).into()),
+    }
     
     // Validate target
     let target = &command["target"];

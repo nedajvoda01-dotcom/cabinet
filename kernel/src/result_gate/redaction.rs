@@ -47,7 +47,7 @@ pub fn load_result_profiles() -> Result<ResultProfilesPolicy, Box<dyn Error>> {
 }
 
 /// Gets profile for a UI
-pub fn get_profile_for_ui(ui_id: &str, policy: &ResultProfilesPolicy) -> Result<&ResultProfile, Box<dyn Error>> {
+pub fn get_profile_for_ui<'a>(ui_id: &str, policy: &'a ResultProfilesPolicy) -> Result<&'a ResultProfile, Box<dyn Error>> {
     let profile_id = policy.ui_profiles.get(ui_id)
         .ok_or_else(|| format!("No profile mapping for UI: {}", ui_id))?;
     

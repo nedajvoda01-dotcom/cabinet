@@ -7,6 +7,8 @@ pub mod routing;
 pub mod sandbox;
 pub mod result_gate;
 pub mod observed;
+pub mod primitives;
+pub mod config;
 
 #[cfg(test)]
 mod tests;
@@ -273,9 +275,8 @@ impl Kernel {
 }
 
 #[cfg(test)]
-mod tests {
+mod lib_tests {
     use super::*;
-    use serde_json::json;
     
     #[test]
     fn test_kernel_initialization() {
