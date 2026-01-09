@@ -1,0 +1,33 @@
+# Backend UI Role Configuration
+# Defines roles and their permissions (stub)
+
+roles:
+  admin:
+    name: "Administrator"
+    description: "Full system access"
+    capabilities:
+      - "*"
+    scopes:
+      - "*"
+  
+  editor:
+    name: "Editor"
+    description: "Can create and edit content"
+    capabilities:
+      - "storage.listings.create"
+      - "storage.listings.update"
+      - "storage.listings.list"
+      - "storage.listings.get"
+      - "ads.parse.listings"
+    scopes:
+      - "storage:write"
+      - "storage:read"
+  
+  viewer:
+    name: "Viewer"
+    description: "Read-only access"
+    capabilities:
+      - "storage.listings.list"
+      - "storage.listings.get"
+    scopes:
+      - "storage:read"

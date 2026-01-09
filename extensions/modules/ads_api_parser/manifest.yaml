@@ -1,0 +1,53 @@
+manifest_version: v1.0.0
+
+module:
+  id: ads-api-parser
+  name: "Ads API Parser Module"
+  description: "Parses advertising API data (stub - no external API calls)"
+  version: v1.0.0
+  type: adapter
+  author:
+    name: "Cabinet Team"
+    email: "team@cabinet.example"
+  license: MIT
+
+capabilities:
+  - id: ads.parse.listings
+    name: "Parse Listings"
+    description: "Parse listings from ads API format (stub only)"
+    handler: "ipc.php::handleParseListings"
+    visibility: public
+    category: parsing
+  
+  - id: ads.health
+    name: "Health Check"
+    description: "Ads parser health check"
+    handler: "ipc.php::handleHealth"
+    visibility: public
+    category: system
+
+runtime:
+  language: php
+  language_version: "8.1"
+  dependencies:
+    - name: "psr/log"
+      version: "^3.0"
+
+endpoints:
+  invoke: "http://ads-api-parser/ipc.php"
+  health: "http://ads-api-parser/ipc.php?cmd=health"
+
+configuration:
+  temp_path:
+    type: string
+    required: true
+    default: "temp/work/"
+    description: "Temporary working directory for processing"
+
+security:
+  trusted: false
+  network_access: none
+  file_system_access: true
+
+lifecycle:
+  health_check_interval_seconds: 60
