@@ -1,0 +1,145 @@
+version: v1.0.0
+policy: deny_by_default
+
+routes:
+  # Admin UI to Storage Module
+  - id: admin-ui-to-storage
+    from:
+      type: ui
+      id: admin-ui
+      capability: storage.*
+    to:
+      type: module
+      id: car-storage
+    conditions:
+      scopes:
+        - storage:read
+        - storage:write
+      roles:
+        - admin
+        - editor
+    metadata:
+      description: "Allow admin UI to access storage capabilities"
+      enabled: true
+      priority: 50
+  
+  # Admin UI to Pricing Module
+  - id: admin-ui-to-pricing
+    from:
+      type: ui
+      id: admin-ui
+    to:
+      type: module
+      id: pricing
+      capability: pricing.calculate
+    conditions:
+      scopes:
+        - pricing:read
+      roles:
+        - admin
+    metadata:
+      description: "Allow admin UI to calculate pricing"
+      enabled: true
+  
+  # Public UI to Storage Module (read-only)
+  - id: public-ui-to-storage
+    from:
+      type: ui
+      id: public-ui
+    to:
+      type: module
+      id: car-storage
+      capability: storage.listings.list
+    conditions:
+      scopes:
+        - storage:read
+    metadata:
+      description: "Allow public UI to list listings"
+      enabled: true
+  
+  - id: public-ui-to-storage-get
+    from:
+      type: ui
+      id: public-ui
+    to:
+      type: module
+      id: car-storage
+      capability: storage.listings.get
+    conditions:
+      scopes:
+        - storage:read
+    metadata:
+      description: "Allow public UI to view individual listings"
+      enabled: true
+  
+  # Internal capability chains for import
+  - id: import-to-parser
+    from:
+      type: module
+      id: car-storage
+      capability: import.run
+    to:
+      type: module
+      id: car-storage
+      capability: parser.calculate_hash
+    metadata:
+      description: "Allow import to calculate content hash"
+      enabled: true
+  
+  - id: import-to-register
+    from:
+      type: module
+      id: car-storage
+      capability: import.run
+    to:
+      type: module
+      id: car-storage
+      capability: storage.imports.register
+    metadata:
+      description: "Allow import to register operation"
+      enabled: true
+  
+  - id: import-to-upsert
+    from:
+      type: module
+      id: car-storage
+      capability: import.run
+    to:
+      type: module
+      id: car-storage
+      capability: storage.listings.upsert_batch
+    metadata:
+      description: "Allow import to batch upsert listings"
+      enabled: true
+  
+  - id: import-to-mark-done
+    from:
+      type: module
+      id: car-storage
+      capability: import.run
+    to:
+      type: module
+      id: car-storage
+      capability: storage.imports.mark_done
+    metadata:
+      description: "Allow import to mark completion"
+      enabled: true
+
+# Allowed capability chains
+capability_chains:
+  import.run:
+    - parser.calculate_hash
+    - storage.imports.register
+    - storage.listings.upsert_batch
+    - storage.imports.mark_done
+
+# Global restrictions
+restrictions:
+  max_chain_depth: 10
+  blocked_capabilities:
+    - system.shutdown
+    - kernel.debug
+    - kernel.config.modify
+  allowed_networks:
+    - mesh
+    - edge

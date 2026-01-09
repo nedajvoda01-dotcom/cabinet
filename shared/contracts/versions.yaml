@@ -1,0 +1,104 @@
+# ABI Versions Configuration
+# Tracks active, deprecated, and removed ABI versions
+# Changes to this file MUST follow governance approval process
+
+version: v1.0.0
+
+# Active versions that are currently supported
+active:
+  - version: v1.0.0
+    released: "2026-01-09"
+    status: stable
+    description: "Initial stable release of axIOm_mini ABI"
+    contracts:
+      - envelope.schema.yaml
+      - command.schema.yaml
+      - result.schema.yaml
+      - error.schema.yaml
+      - capability.schema.yaml
+    manifests:
+      - module.manifest.schema.yaml
+      - ui.manifest.schema.yaml
+      - routing.schema.yaml
+    compatibility:
+      kernel_versions:
+        - ">=v1.0.0"
+      extension_api: v1.0.0
+
+# Deprecated versions (still supported but not recommended)
+deprecated: []
+  # Example when v1.0.0 is deprecated:
+  # - version: v1.0.0
+  #   deprecated_since: "2027-01-01"
+  #   removal_date: "2028-01-01"
+  #   replacement: v2.0.0
+  #   reason: "Breaking changes in error handling"
+
+# Removed versions (no longer supported)
+removed: []
+  # Example when v0.x is removed:
+  # - version: v0.9.0
+  #   removed_on: "2026-01-01"
+  #   replacement: v1.0.0
+  #   reason: "Pre-release version removed after stable release"
+
+# Support policy
+support_policy:
+  # N = current version, support N and N-1
+  concurrent_versions: 2
+  
+  # Minimum support duration after deprecation
+  deprecation_period_months: 12
+  
+  # Security fixes
+  security_fixes:
+    active_versions: true
+    deprecated_versions: true
+    removed_versions: false
+  
+  # Bug fixes
+  bug_fixes:
+    active_versions: true
+    deprecated_versions: false
+    removed_versions: false
+
+# Breaking change classification
+breaking_changes:
+  # These changes REQUIRE a new major version
+  major:
+    - "Removing required fields from schemas"
+    - "Changing field types in incompatible ways"
+    - "Removing enum values"
+    - "Changing error codes"
+    - "Modifying message structure"
+  
+  # These changes ALLOW a new minor version
+  minor:
+    - "Adding optional fields"
+    - "Adding new enum values"
+    - "Adding new capabilities"
+    - "Deprecating fields (with support period)"
+  
+  # These changes ALLOW a patch version
+  patch:
+    - "Fixing typos in descriptions"
+    - "Clarifying documentation"
+    - "Adding examples"
+    - "Fixing bugs without changing API"
+
+# Version upgrade paths
+upgrade_paths:
+  - from: v1.0.0
+    to: v1.x.x
+    compatibility: backward_compatible
+    migration_required: false
+  
+  # Example for future v2:
+  # - from: v1.x.x
+  #   to: v2.0.0
+  #   compatibility: breaking
+  #   migration_required: true
+  #   migration_guide: shared/docs/migration_v1_to_v2.md
+
+# Compatibility matrix reference
+# See shared/compatibility/matrix.yaml for detailed compatibility rules

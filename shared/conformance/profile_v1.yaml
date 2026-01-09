@@ -1,0 +1,113 @@
+# Conformance Profile v1
+# Defines conformance requirements for v1.0.0 ABI
+
+version: v1.0.0
+
+# Conformance levels
+levels:
+  minimal:
+    description: "Minimum requirements for v1 compatibility"
+    required:
+      - "Parse and validate envelope schema"
+      - "Handle command.invoke messages"
+      - "Return result or error responses"
+      - "Validate against schemas"
+  
+  standard:
+    description: "Standard conformance (recommended)"
+    required:
+      - "All minimal requirements"
+      - "Support all message types (invoke, query)"
+      - "Implement canonical encoding"
+      - "Handle unknown fields gracefully"
+      - "Version negotiation"
+  
+  full:
+    description: "Full conformance with all features"
+    required:
+      - "All standard requirements"
+      - "Support all optional features"
+      - "Message signing (optional)"
+      - "Compression support (optional)"
+      - "Caching support"
+
+# Required test suites
+test_suites:
+  - name: "IPC Envelope"
+    suite: shared/conformance/suites/ipc_envelope.yaml
+    level: minimal
+    description: "Validate envelope structure and fields"
+  
+  - name: "Invoke Roundtrip"
+    suite: shared/conformance/suites/invoke_roundtrip.yaml
+    level: minimal
+    description: "End-to-end invoke capability test"
+  
+  - name: "Canonicalization"
+    suite: shared/conformance/suites/canonicalization.yaml
+    level: standard
+    description: "JSON/YAML canonicalization tests"
+  
+  - name: "Routing Authorization"
+    suite: shared/conformance/suites/routing_authz.yaml
+    level: standard
+    description: "Routing and authorization tests"
+
+# Conformance criteria
+criteria:
+  schemas:
+    - "MUST validate all messages against schemas"
+    - "MUST reject invalid messages"
+    - "MUST handle schema validation errors gracefully"
+  
+  encoding:
+    - "MUST produce valid JSON for all messages"
+    - "SHOULD use canonical encoding for determinism"
+    - "MUST support UTF-8 encoding"
+  
+  errors:
+    - "MUST return structured errors on failure"
+    - "MUST include error_code in all errors"
+    - "SHOULD include helpful error messages"
+  
+  compatibility:
+    - "MUST support v1.0.0 contracts"
+    - "MUST handle unknown fields (forward compatibility)"
+    - "MUST check version in envelope"
+    - "SHOULD support N-1 version"
+
+# Certification process
+certification:
+  steps:
+    - "Run all test suites for your conformance level"
+    - "Generate conformance report"
+    - "Submit report for review"
+    - "Fix any failures"
+    - "Receive certification"
+  
+  validity:
+    - "Certification valid for ABI version"
+    - "Re-certify on major version change"
+    - "Periodic re-certification recommended"
+
+# Tools
+tools:
+  validator:
+    name: "ABI Conformance Validator"
+    location: "tooling/conformance_validator"
+    usage: "conformance_validator --profile v1 --suite all"
+  
+  report:
+    name: "Conformance Report Generator"
+    location: "tooling/conformance_report"
+    output: "dist/reports/conformance_report.json"
+
+# Exemptions
+exemptions:
+  - feature: "Message signing"
+    reason: "Optional in v1.0.0"
+    requirement: "SHOULD implement, not MUST"
+  
+  - feature: "Compression"
+    reason: "Optional optimization"
+    requirement: "MAY implement"

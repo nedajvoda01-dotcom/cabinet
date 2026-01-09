@@ -1,0 +1,197 @@
+# System Schemas ↔ Kernel/Contracts Compatibility Matrix (Mini)
+# Defines compatibility between system intent/policy schemas and kernel/contracts
+
+version: v1.0.0
+last_updated: "2026-01-09"
+
+# System schema versions
+system_schemas:
+  intent:
+    current_version: v1.0.0
+    schemas:
+      - company.intent.schema.yaml
+      - ui.intent.schema.yaml
+      - modules.intent.schema.yaml
+      - routing.intent.schema.yaml
+      - access.intent.schema.yaml
+      - limits.intent.schema.yaml
+      - result_profiles.intent.schema.yaml
+  
+  policy:
+    current_version: v1.0.0
+    schemas:
+      - access.schema.yaml
+      - routing.schema.yaml
+      - limits.schema.yaml
+      - result_profile.schema.yaml
+  
+  invariants:
+    current_version: v1.0.0
+    schema: invariants.schema.yaml
+
+# Compatibility with kernel versions
+system_to_kernel:
+  - system_schemas_version: v1.0.0
+    compatible_kernel_versions:
+      min: v1.0.0
+      max: v1.x.x
+    notes: "Initial system schemas compatible with all v1 kernels"
+
+# Compatibility with contract versions
+system_to_contracts:
+  - system_schemas_version: v1.0.0
+    compatible_contract_versions:
+      min: v1.0.0
+      max: v1.x.x
+    dependencies:
+      - schema: routing.intent.schema.yaml
+        depends_on: contracts/v1/routing.schema.yaml
+        reason: "Routing intent generates routing policy"
+      
+      - schema: access.intent.schema.yaml
+        depends_on: contracts/v1/capability.schema.yaml
+        reason: "Access intent references capabilities"
+      
+      - schema: result_profiles.intent.schema.yaml
+        depends_on: contracts/v1/result.schema.yaml
+        reason: "Result profiles filter result schema"
+    notes: "System schemas build on top of contract schemas"
+
+# Validation requirements
+validation:
+  # Who validates what
+  tooling_validation:
+    tool: tooling/system_validator
+    validates:
+      - system/intent/** against shared/schemas/intent/**
+      - system/policy/** against shared/schemas/policy/**
+    output: dist/reports/system_validation_report.json
+    on_failure: FAIL
+  
+  governance_validation:
+    tool: governance/guards/abi_guard
+    validates:
+      - Schema changes don't break compatibility
+      - Matrix is updated when schemas change
+    on_failure: DENY
+
+# Breaking change rules for system schemas
+breaking_changes:
+  # Changes that require updating this matrix
+  requires_matrix_update:
+    - "Adding required field to intent schema"
+    - "Removing field from intent schema"
+    - "Changing field type in incompatible way"
+    - "Modifying validation rules"
+    - "Changes that affect kernel behavior"
+  
+  # Changes that DON'T require matrix update
+  no_matrix_update_needed:
+    - "Adding optional field to intent schema"
+    - "Adding new intent schema"
+    - "Clarifying documentation"
+    - "Adding examples"
+
+# Intent to policy transformation
+intent_to_policy:
+  # How intent schemas map to policy schemas
+  mappings:
+    - intent: access.intent.schema.yaml
+      policy: access.schema.yaml
+      transformer: tooling/intent_compiler/access.rs
+      validates: "Roles and scopes are properly defined"
+    
+    - intent: routing.intent.schema.yaml
+      policy: routing.schema.yaml
+      transformer: tooling/intent_compiler/routing.rs
+      validates: "All routes are valid and authorized"
+    
+    - intent: limits.intent.schema.yaml
+      policy: limits.schema.yaml
+      transformer: tooling/intent_compiler/limits.rs
+      validates: "Limits are within acceptable ranges"
+    
+    - intent: result_profiles.intent.schema.yaml
+      policy: result_profile.schema.yaml
+      transformer: tooling/intent_compiler/result_profiles.rs
+      validates: "Field references are valid"
+
+# Policy to kernel runtime
+policy_to_kernel:
+  # How policies are consumed by kernel
+  consumption:
+    - policy: access.schema.yaml
+      kernel_component: kernel/src/policy/access.rs
+      runtime_behavior: "Enforces access control"
+    
+    - policy: routing.schema.yaml
+      kernel_component: kernel/src/routing/authorize_route.rs
+      runtime_behavior: "Validates routing decisions"
+    
+    - policy: limits.schema.yaml
+      kernel_component: kernel/src/limits/enforce.rs
+      runtime_behavior: "Enforces rate limits and constraints"
+    
+    - policy: result_profile.schema.yaml
+      kernel_component: kernel/src/result_gate/filter.rs
+      runtime_behavior: "Filters result fields"
+
+# Upgrade paths
+upgrade_paths:
+  # When upgrading system schemas
+  - from_system: v1.0.0
+    to_system: v1.x.x
+    kernel_compatibility: maintained
+    requires_kernel_upgrade: no
+    notes: "Backwards compatible changes in system schemas"
+  
+  # Future v2 example
+  # - from_system: v1.x.x
+  #   to_system: v2.0.0
+  #   kernel_compatibility: breaking
+  #   requires_kernel_upgrade: yes
+  #   requires_contract_upgrade: yes
+  #   transition_period: 12_months
+
+# Testing matrix
+testing:
+  # Required test combinations
+  required_tests:
+    - system_schemas: v1.0.0
+      kernel: v1.0.0
+      contracts: v1.0.0
+      test_type: integration
+      status: required
+  
+  test_coverage:
+    - "Intent validation against schemas"
+    - "Policy generation from intent"
+    - "Kernel policy consumption"
+    - "Cross-schema references"
+    - "Invariant validation"
+
+# Invariant enforcement
+invariants:
+  # Invariants that relate to compatibility
+  - id: SCHEMA_CONSISTENCY
+    description: "System schemas must be consistent with contracts"
+    validation: tooling/system_validator
+    enforcement: continuous
+  
+  - id: NO_ORPHAN_REFERENCES
+    description: "No references to non-existent capabilities or modules"
+    validation: tooling/system_validator
+    enforcement: on_change
+  
+  - id: POLICY_FROM_INTENT
+    description: "All policies must be derivable from intent"
+    validation: tooling/intent_compiler
+    enforcement: on_build
+
+# Future extensions
+future_considerations:
+  - "Support for multi-version system schemas"
+  - "Schema evolution with backwards compatibility"
+  - "Automated intent-to-policy compilation"
+  - "Schema drift detection"
+  - "Cross-version testing automation"

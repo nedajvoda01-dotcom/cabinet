@@ -1,0 +1,57 @@
+# Routing Intent Schema
+# Defines structure for routing intent declarations
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/intent/routing.intent.schema.json"
+
+title: "Routing Intent"
+description: "Intent declarations for routing and communication patterns"
+
+type: object
+required:
+  - policy
+  - allowed_paths
+
+properties:
+  policy:
+    type: string
+    enum: ["deny_by_default", "allow_by_default"]
+    default: "deny_by_default"
+  
+  allowed_paths:
+    type: array
+    description: "Communication paths that should be allowed"
+    items:
+      type: object
+      required:
+        - from
+        - to
+        - reason
+      properties:
+        from:
+          type: string
+          description: "Source (UI ID or module ID)"
+        
+        to:
+          type: string
+          description: "Destination (module ID)"
+        
+        capabilities:
+          type: array
+          description: "Specific capabilities in this path"
+          items:
+            type: string
+        
+        reason:
+          type: string
+          description: "Why this path is needed"
+  
+  capability_chains:
+    type: object
+    description: "Allowed capability chaining patterns"
+    additionalProperties:
+      type: array
+      items:
+        type: string
+
+additionalProperties: false

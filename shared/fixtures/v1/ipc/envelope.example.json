@@ -1,0 +1,43 @@
+{
+  "version": "v1.0.0",
+  "message_id": "550e8400-e29b-41d4-a716-446655440000",
+  "timestamp": "2026-01-09T15:00:00Z",
+  "message_type": "command",
+  "sender": {
+    "id": "kernel-main",
+    "type": "kernel"
+  },
+  "receiver": {
+    "id": "module-storage",
+    "type": "module"
+  },
+  "payload": {
+    "command_type": "invoke",
+    "target": {
+      "capability": "storage.listings.create",
+      "version": "v1.0.0"
+    },
+    "args": {
+      "data": {
+        "external_id": "CAR-2026-001",
+        "brand": "Toyota",
+        "model": "Camry",
+        "year": 2026,
+        "price": 28500
+      }
+    },
+    "options": {
+      "timeout_ms": 5000,
+      "priority": "normal"
+    },
+    "context": {
+      "actor": {
+        "id": "user-123",
+        "type": "user",
+        "roles": ["admin"],
+        "scopes": ["storage:write"]
+      },
+      "chain_depth": 0
+    }
+  }
+}

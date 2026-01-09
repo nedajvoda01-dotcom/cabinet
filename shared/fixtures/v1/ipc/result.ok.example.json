@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "data": {
+    "id": "listing-550e8400-e29b-41d4-a716-446655440000",
+    "external_id": "CAR-2026-001",
+    "brand": "Toyota",
+    "model": "Camry",
+    "year": 2026,
+    "price": 28500,
+    "mileage": 0,
+    "condition": "new",
+    "created_at": "2026-01-09T15:00:00Z",
+    "updated_at": "2026-01-09T15:00:00Z"
+  },
+  "metadata": {
+    "execution_time_ms": 45,
+    "cached": false
+  },
+  "links": {
+    "self": {
+      "href": "/api/listings/listing-550e8400-e29b-41d4-a716-446655440000",
+      "method": "GET"
+    },
+    "update": {
+      "href": "/api/listings/listing-550e8400-e29b-41d4-a716-446655440000",
+      "method": "PUT"
+    },
+    "delete": {
+      "href": "/api/listings/listing-550e8400-e29b-41d4-a716-446655440000",
+      "method": "DELETE"
+    }
+  }
+}

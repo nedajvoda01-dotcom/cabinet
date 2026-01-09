@@ -1,0 +1,243 @@
+# IPC Capability Schema v1
+# Defines structure for capability definitions and queries
+# Changes MUST follow lifecycle.yaml rules
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/v1/capability.schema.json"
+
+title: "Capability Definition"
+description: "Describes a capability provided by a module"
+
+type: object
+required:
+  - id
+  - name
+  - version
+  - provider
+
+properties:
+  id:
+    type: string
+    description: "Unique capability identifier (dot-notation)"
+    pattern: "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+    examples: ["storage.create", "auth.verify", "routing.resolve"]
+  
+  name:
+    type: string
+    description: "Human-readable capability name"
+    minLength: 1
+    maxLength: 100
+  
+  description:
+    type: string
+    description: "Detailed description of what the capability does"
+    maxLength: 1000
+  
+  version:
+    type: string
+    description: "Capability version (semantic versioning)"
+    pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+  
+  provider:
+    type: object
+    description: "Information about the capability provider"
+    required:
+      - module_id
+      - module_type
+    properties:
+      module_id:
+        type: string
+        description: "ID of the module providing this capability"
+      
+      module_type:
+        type: string
+        enum: ["adapter", "extension", "plugin"]
+      
+      endpoint:
+        type: string
+        description: "Endpoint URL for invoking the capability"
+        format: uri
+  
+  category:
+    type: string
+    description: "Capability category"
+    enum:
+      - "storage"
+      - "computation"
+      - "communication"
+      - "authentication"
+      - "authorization"
+      - "routing"
+      - "transformation"
+      - "validation"
+      - "monitoring"
+      - "other"
+  
+  visibility:
+    type: string
+    description: "Visibility level of the capability"
+    enum:
+      - "public"     # Can be called from UI
+      - "internal"   # Only callable by other capabilities
+      - "system"     # Only callable by kernel
+    default: "public"
+  
+  input_schema:
+    type: object
+    description: "JSON Schema for capability input validation"
+    additionalProperties: true
+  
+  output_schema:
+    type: object
+    description: "JSON Schema for capability output validation"
+    additionalProperties: true
+  
+  permissions:
+    type: object
+    description: "Required permissions to invoke this capability"
+    properties:
+      required_scopes:
+        type: array
+        description: "OAuth-style scopes required"
+        items:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
+          examples: ["storage:read", "admin:write"]
+      
+      required_roles:
+        type: array
+        description: "Roles required to invoke"
+        items:
+          type: string
+      
+      allowed_chains:
+        type: array
+        description: "Capabilities that can chain into this one"
+        items:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+  
+  limits:
+    type: object
+    description: "Rate limits and constraints"
+    properties:
+      max_requests_per_minute:
+        type: integer
+        minimum: 1
+        maximum: 10000
+      
+      max_requests_per_hour:
+        type: integer
+        minimum: 1
+        maximum: 100000
+      
+      max_input_size_bytes:
+        type: integer
+        minimum: 1
+        maximum: 104857600
+      
+      max_output_size_bytes:
+        type: integer
+        minimum: 1
+        maximum: 104857600
+      
+      timeout_ms:
+        type: integer
+        minimum: 100
+        maximum: 300000
+        default: 30000
+  
+  dependencies:
+    type: array
+    description: "Other capabilities this one depends on"
+    items:
+      type: object
+      required:
+        - capability_id
+      properties:
+        capability_id:
+          type: string
+        version_constraint:
+          type: string
+          description: "Semantic version constraint"
+        optional:
+          type: boolean
+          default: false
+  
+  tags:
+    type: array
+    description: "Tags for categorization and discovery"
+    items:
+      type: string
+  
+  status:
+    type: string
+    description: "Capability lifecycle status"
+    enum:
+      - "stable"
+      - "beta"
+      - "alpha"
+      - "deprecated"
+      - "retired"
+    default: "stable"
+  
+  deprecated:
+    type: object
+    description: "Deprecation information"
+    properties:
+      since_version:
+        type: string
+        pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+      
+      removal_version:
+        type: string
+        pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+      
+      replacement:
+        type: string
+        description: "ID of replacement capability"
+      
+      reason:
+        type: string
+        description: "Reason for deprecation"
+
+additionalProperties: false
+
+examples:
+  - id: "storage.listings.create"
+    name: "Create Listing"
+    description: "Create a new listing in the storage system"
+    version: "v1.0.0"
+    provider:
+      module_id: "car-storage"
+      module_type: "adapter"
+      endpoint: "http://adapter-car-storage/invoke"
+    category: "storage"
+    visibility: "public"
+    permissions:
+      required_scopes: ["storage:write"]
+      required_roles: ["admin", "editor"]
+    limits:
+      max_requests_per_minute: 100
+      max_input_size_bytes: 1048576
+      timeout_ms: 5000
+    tags: ["storage", "listings", "write"]
+    status: "stable"
+  
+  - id: "storage.imports.register"
+    name: "Register Import"
+    description: "Register a new import operation (internal only)"
+    version: "v1.0.0"
+    provider:
+      module_id: "car-storage"
+      module_type: "adapter"
+      endpoint: "http://adapter-car-storage/invoke"
+    category: "storage"
+    visibility: "internal"
+    permissions:
+      required_scopes: ["admin"]
+      allowed_chains: ["import.run"]
+    limits:
+      max_requests_per_minute: 10
+      timeout_ms: 2000
+    status: "stable"

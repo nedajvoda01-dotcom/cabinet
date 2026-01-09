@@ -1,0 +1,50 @@
+# Modules Intent Schema
+# Defines structure for modules intent declarations
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/intent/modules.intent.schema.json"
+
+title: "Modules Intent"
+description: "Intent declarations for system modules and their capabilities"
+
+type: object
+required:
+  - modules
+
+properties:
+  modules:
+    type: array
+    description: "List of modules that should exist"
+    items:
+      type: object
+      required:
+        - id
+        - purpose
+        - provides
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z][a-z0-9-]*$"
+        
+        purpose:
+          type: string
+          description: "Why this module exists"
+        
+        provides:
+          type: array
+          description: "Capabilities this module should provide"
+          items:
+            type: string
+        
+        dependencies:
+          type: array
+          description: "Other modules this depends on"
+          items:
+            type: string
+        
+        trust_level:
+          type: string
+          enum: ["trusted", "untrusted"]
+          default: "untrusted"
+
+additionalProperties: false

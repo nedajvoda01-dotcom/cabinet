@@ -1,0 +1,275 @@
+# Routing Authorization Conformance Suite
+# Tests for routing rules and authorization enforcement
+
+version: v1.0.0
+suite: routing_authz
+
+description: "Validates routing decisions and authorization enforcement"
+
+tests:
+  # Allowed routes
+  - id: "route-allow-001"
+    name: "Explicit allow rule"
+    route_config:
+      policy: deny_by_default
+      routes:
+        - id: "test-route"
+          from:
+            type: ui
+            id: admin-ui
+          to:
+            type: module
+            id: car-storage
+            capability: storage.listings.list
+          action: allow
+    request:
+      from:
+        type: ui
+        id: admin-ui
+      to:
+        capability: storage.listings.list
+      actor:
+        roles: ["admin"]
+        scopes: ["storage:read"]
+    expected: ALLOW
+    note: "Explicit allow rule permits access"
+  
+  - id: "route-allow-002"
+    name: "Allow with scope condition"
+    route_config:
+      policy: deny_by_default
+      routes:
+        - id: "test-route"
+          from:
+            type: ui
+            id: admin-ui
+          to:
+            type: module
+            id: car-storage
+          conditions:
+            scopes: ["storage:write"]
+          action: allow
+    request:
+      from:
+        type: ui
+        id: admin-ui
+      to:
+        capability: storage.listings.create
+      actor:
+        roles: ["admin"]
+        scopes: ["storage:write", "storage:read"]
+    expected: ALLOW
+    note: "Actor has required scope"
+  
+  # Denied routes
+  - id: "route-deny-001"
+    name: "Deny by default (no matching route)"
+    route_config:
+      policy: deny_by_default
+      routes: []
+    request:
+      from:
+        type: ui
+        id: admin-ui
+      to:
+        capability: storage.listings.list
+      actor:
+        roles: ["admin"]
+        scopes: ["storage:read"]
+    expected: DENY
+    error_code: "ROUTE_NOT_ALLOWED"
+    note: "No matching route, deny by default"
+  
+  - id: "route-deny-002"
+    name: "Missing required scope"
+    route_config:
+      policy: deny_by_default
+      routes:
+        - id: "test-route"
+          from:
+            type: ui
+            id: admin-ui
+          to:
+            type: module
+            id: car-storage
+          conditions:
+            scopes: ["storage:write"]
+          action: allow
+    request:
+      from:
+        type: ui
+        id: admin-ui
+      to:
+        capability: storage.listings.create
+      actor:
+        roles: ["admin"]
+        scopes: ["storage:read"]  # Missing storage:write
+    expected: DENY
+    error_code: "PERMISSION_DENIED"
+    note: "Actor missing required scope"
+  
+  - id: "route-deny-003"
+    name: "Missing required role"
+    route_config:
+      policy: deny_by_default
+      routes:
+        - id: "test-route"
+          from:
+            type: ui
+            id: admin-ui
+          to:
+            type: module
+            id: car-storage
+          conditions:
+            roles: ["admin"]
+          action: allow
+    request:
+      from:
+        type: ui
+        id: admin-ui
+      to:
+        capability: storage.listings.delete
+      actor:
+        roles: ["viewer"]
+        scopes: ["storage:write"]
+    expected: DENY
+    error_code: "PERMISSION_DENIED"
+    note: "Actor missing required role"
+  
+  # Internal capability protection
+  - id: "route-internal-001"
+    name: "Block direct call to internal capability"
+    capability_config:
+      storage.listings.upsert_batch:
+        visibility: internal
+        allowed_chains:
+          - import.run
+    request:
+      from:
+        type: ui
+        id: admin-ui
+      to:
+        capability: storage.listings.upsert_batch
+      actor:
+        roles: ["admin"]
+        scopes: ["admin"]  # Even with admin scope
+    expected: DENY
+    error_code: "CAPABILITY_NOT_ACCESSIBLE"
+    note: "Internal capabilities cannot be called directly from UI"
+  
+  - id: "route-internal-002"
+    name: "Allow internal capability in chain"
+    capability_config:
+      storage.listings.upsert_batch:
+        visibility: internal
+        allowed_chains:
+          - import.run
+    request:
+      from:
+        type: module
+        id: car-storage
+        current_capability: import.run
+      to:
+        capability: storage.listings.upsert_batch
+      actor:
+        roles: ["admin"]
+        scopes: ["admin"]
+      chain_context:
+        parent_capability: import.run
+        chain_depth: 1
+    expected: ALLOW
+    note: "Internal capability allowed when chained from approved parent"
+  
+  # Capability chains
+  - id: "route-chain-001"
+    name: "Valid capability chain"
+    chain_config:
+      import.run:
+        - parser.calculate_hash
+        - storage.imports.register
+        - storage.listings.upsert_batch
+    request:
+      from:
+        type: module
+        id: car-storage
+        current_capability: import.run
+      to:
+        capability: storage.imports.register
+      chain_context:
+        parent_capability: import.run
+        chain_depth: 1
+    expected: ALLOW
+    note: "Chain explicitly allowed"
+  
+  - id: "route-chain-002"
+    name: "Invalid capability chain"
+    chain_config:
+      import.run:
+        - parser.calculate_hash
+        - storage.imports.register
+    request:
+      from:
+        type: module
+        id: car-storage
+        current_capability: import.run
+      to:
+        capability: storage.listings.delete  # Not in allowed chain
+      chain_context:
+        parent_capability: import.run
+        chain_depth: 1
+    expected: DENY
+    error_code: "CHAIN_NOT_ALLOWED"
+    note: "Chain not explicitly allowed"
+  
+  - id: "route-chain-003"
+    name: "Chain depth exceeded"
+    restrictions:
+      max_chain_depth: 10
+    request:
+      from:
+        type: module
+        id: car-storage
+      to:
+        capability: some.capability
+      chain_context:
+        chain_depth: 11  # Exceeds max
+    expected: DENY
+    error_code: "CHAIN_DEPTH_EXCEEDED"
+    note: "Chain depth limit enforced"
+
+# Requirements
+requirements:
+  - "MUST implement deny-by-default routing"
+  - "MUST validate all routes against routing.yaml"
+  - "MUST check actor permissions (roles and scopes)"
+  - "MUST enforce capability visibility (public/internal/system)"
+  - "MUST validate capability chains"
+  - "MUST enforce chain depth limits"
+  - "MUST return clear error codes for denials"
+  - "SHOULD log all authorization decisions"
+
+# Security invariants
+invariants:
+  - "NO route is allowed unless explicitly listed"
+  - "INTERNAL capabilities CANNOT be called directly from UI"
+  - "ALL capability invocations MUST pass authorization"
+  - "Capability chains MUST be explicitly allowed"
+  - "Chain depth MUST be limited"
+
+# Metrics
+metrics:
+  - metric: "authorization_time_ms"
+    description: "Time to make authorization decision"
+    target: "<5ms"
+  
+  - metric: "false_positives"
+    description: "Valid requests denied"
+    target: "0%"
+  
+  - metric: "false_negatives"
+    description: "Invalid requests allowed"
+    target: "0%"
+  
+  - metric: "audit_coverage"
+    description: "Percentage of decisions logged"
+    target: "100%"

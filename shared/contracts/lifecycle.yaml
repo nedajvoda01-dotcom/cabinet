@@ -1,0 +1,252 @@
+# ABI Lifecycle Rules
+# Defines the lifecycle process for ABI changes
+# These rules are ENFORCED by governance/guards/abi_guard
+
+version: v1.0.0
+
+# Lifecycle stages
+stages:
+  alpha:
+    description: "Experimental, may change without notice"
+    stability: low
+    support: none
+    breaking_changes_allowed: yes
+    deprecation_required: no
+  
+  beta:
+    description: "Feature complete, API may still change"
+    stability: medium
+    support: best_effort
+    breaking_changes_allowed: yes_with_notice
+    deprecation_required: yes
+    notice_period_days: 30
+  
+  stable:
+    description: "Production ready, backwards compatible"
+    stability: high
+    support: full
+    breaking_changes_allowed: no
+    deprecation_required: yes
+    deprecation_period_months: 12
+  
+  deprecated:
+    description: "Marked for removal, use replacement"
+    stability: medium
+    support: security_only
+    breaking_changes_allowed: no
+    removal_scheduled: yes
+  
+  retired:
+    description: "No longer supported"
+    stability: none
+    support: none
+    breaking_changes_allowed: n/a
+
+# Change approval process
+approval_process:
+  # Breaking changes (major version bump)
+  breaking:
+    required_approvals:
+      - architecture_review
+      - security_review
+      - compatibility_analysis
+    
+    must_update:
+      - shared/contracts/versions.yaml
+      - shared/compatibility/matrix.yaml
+      - shared/fixtures/v*/  # Update example fixtures
+      - shared/conformance/  # Update conformance tests
+    
+    must_run:
+      - tooling/system_validator
+      - shared/conformance/suites/*
+      - governance/guards/abi_guard
+    
+    notification_required:
+      - all_module_maintainers
+      - all_ui_developers
+      - operations_team
+    
+    migration_guide_required: yes
+  
+  # Non-breaking changes (minor version bump)
+  non_breaking:
+    required_approvals:
+      - architecture_review
+    
+    must_update:
+      - shared/contracts/versions.yaml  # Update patch/minor version
+      - shared/fixtures/v*/  # Update if adding new fields
+    
+    must_run:
+      - shared/conformance/suites/*
+    
+    notification_required:
+      - module_maintainers  # Only if affects them
+  
+  # Bug fixes (patch version bump)
+  patch:
+    required_approvals:
+      - code_review
+    
+    must_update:
+      - shared/contracts/versions.yaml  # Update patch version
+    
+    must_run:
+      - relevant_conformance_tests
+
+# Deprecation process
+deprecation:
+  # Steps to deprecate an API element
+  steps:
+    1_announce:
+      description: "Add deprecation notice to schema"
+      required_fields:
+        - deprecated_since_version
+        - removal_version
+        - replacement
+        - reason
+    
+    2_update_docs:
+      description: "Update documentation with migration path"
+      artifacts:
+        - API documentation
+        - Migration guide
+        - Release notes
+    
+    3_add_warnings:
+      description: "Add runtime warnings when deprecated feature is used"
+      implementation: kernel/src/deprecation_warnings.rs
+    
+    4_notify:
+      description: "Notify all affected parties"
+      channels:
+        - Email to maintainers
+        - Announcement in docs
+        - Console warnings
+    
+    5_wait:
+      description: "Wait for deprecation period"
+      minimum_period: 12 months
+    
+    6_remove:
+      description: "Remove in next major version"
+      required_approvals:
+        - architecture_review
+        - confirmation_of_zero_usage
+
+# Field modification rules
+field_changes:
+  adding_required_field:
+    classification: breaking
+    version_bump: major
+    reason: "Existing clients will fail validation"
+    alternative: "Add as optional, then promote in next major"
+  
+  adding_optional_field:
+    classification: non_breaking
+    version_bump: minor
+    reason: "Clients can ignore unknown fields"
+  
+  removing_field:
+    classification: breaking
+    version_bump: major
+    reason: "Clients may depend on this field"
+    process: "Deprecate first, then remove"
+  
+  renaming_field:
+    classification: breaking
+    version_bump: major
+    reason: "Clients using old name will break"
+    alternative: "Add new field, deprecate old, remove in next major"
+  
+  changing_field_type:
+    classification: breaking
+    version_bump: major
+    reason: "May cause parsing errors"
+    exception: "Widening type (e.g., int32 to int64) may be minor"
+  
+  adding_enum_value:
+    classification: non_breaking
+    version_bump: minor
+    reason: "Clients should handle unknown enum values gracefully"
+    requirement: "Clients MUST handle unknown enum values"
+  
+  removing_enum_value:
+    classification: breaking
+    version_bump: major
+    reason: "Existing usage will fail"
+    process: "Deprecate first, ensure zero usage, then remove"
+
+# Schema modification rules
+schema_changes:
+  adding_new_schema:
+    classification: non_breaking
+    version_bump: minor
+    artifacts:
+      - New schema file in shared/contracts/vX/
+      - Example fixture in shared/fixtures/vX/
+      - Conformance test in shared/conformance/
+  
+  modifying_existing_schema:
+    classification: depends_on_change
+    evaluation: "Apply field_changes rules above"
+  
+  removing_schema:
+    classification: breaking
+    version_bump: major
+    process: "Deprecate, confirm zero usage, remove"
+
+# Enforcement
+enforcement:
+  # Automated checks (MUST pass before merge)
+  automated:
+    - name: "Schema validation"
+      tool: "governance/guards/abi_guard"
+      runs_on: "every_commit"
+      blocks_merge: yes
+    
+    - name: "Conformance tests"
+      tool: "shared/conformance/runner"
+      runs_on: "every_commit"
+      blocks_merge: yes
+    
+    - name: "Fixture validation"
+      tool: "tooling/fixture_validator"
+      runs_on: "every_commit"
+      blocks_merge: yes
+    
+    - name: "Compatibility check"
+      tool: "tooling/compatibility_checker"
+      runs_on: "every_commit"
+      blocks_merge: yes
+  
+  # Manual checks (MUST complete before release)
+  manual:
+    - name: "Architecture review"
+      required_for: ["breaking", "non_breaking"]
+    
+    - name: "Security review"
+      required_for: ["breaking"]
+    
+    - name: "Migration guide review"
+      required_for: ["breaking"]
+
+# Test vector requirements
+test_vectors:
+  required_for_version:
+    - canonical_json: "Ensure JSON canonicalization is deterministic"
+    - canonical_yaml: "Ensure YAML canonicalization is deterministic"
+    - hashing: "Ensure content hashing is consistent"
+    - id_generation: "Ensure ID generation is deterministic"
+  
+  must_include:
+    - positive_cases: "Valid examples that MUST pass"
+    - negative_cases: "Invalid examples that MUST fail"
+    - edge_cases: "Boundary conditions"
+    - regression_cases: "Previously found bugs"
+  
+  versioning:
+    - "Test vectors MUST be versioned with ABI version"
+    - "Each version has its own test vector directory"
+    - "Cross-version compatibility tests required"

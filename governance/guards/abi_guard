@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# ABI Guard - Governance enforcement for ABI changes
+# Prevents breaking changes without proper versioning
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+echo "🛡️  ABI Guard - Checking for ABI breaking changes..."
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Track if we found any violations
+VIOLATIONS=0
+
+# Check if contracts schemas have changed
+echo "Checking shared/contracts/v1/ for changes..."
+if git diff --name-only HEAD~1 HEAD | grep -q "shared/contracts/v1/"; then
+    echo "${YELLOW}⚠️  Changes detected in shared/contracts/v1/${NC}"
+    
+    # Check if versions.yaml was updated
+    if ! git diff --name-only HEAD~1 HEAD | grep -q "shared/contracts/versions.yaml"; then
+        echo "${RED}❌ DENY: Contract schemas changed but versions.yaml not updated${NC}"
+        echo "   Required: Update shared/contracts/versions.yaml when changing contracts"
+        VIOLATIONS=$((VIOLATIONS + 1))
+    else
+        echo "${GREEN}✓ versions.yaml was updated${NC}"
+    fi
+    
+    # Check if compatibility matrix was updated
+    if ! git diff --name-only HEAD~1 HEAD | grep -q "shared/compatibility/matrix.yaml"; then
+        echo "${YELLOW}⚠️  WARNING: Consider updating shared/compatibility/matrix.yaml${NC}"
+    fi
+    
+    # Check if fixtures were updated
+    if ! git diff --name-only HEAD~1 HEAD | grep -q "shared/fixtures/v1/"; then
+        echo "${YELLOW}⚠️  WARNING: Consider updating shared/fixtures/v1/ examples${NC}"
+    fi
+fi
+
+# Check if intent/policy schemas have changed
+echo "Checking shared/schemas/ for changes..."
+if git diff --name-only HEAD~1 HEAD | grep -q "shared/schemas/"; then
+    echo "${YELLOW}⚠️  Changes detected in shared/schemas/${NC}"
+    
+    # Check if system_matrix was updated
+    if ! git diff --name-only HEAD~1 HEAD | grep -q "shared/compatibility/system_matrix.yaml"; then
+        echo "${YELLOW}⚠️  WARNING: Consider updating shared/compatibility/system_matrix.yaml${NC}"
+    fi
+fi
+
+# Check for breaking changes in schemas (heuristic)
+echo "Analyzing schema changes for breaking patterns..."
+
+# Look for removed required fields (breaking)
+if git diff HEAD~1 HEAD shared/contracts/v1/ | grep -E "^-\s+required:" -A 5 | grep -q "^-\s+-"; then
+    echo "${YELLOW}⚠️  Potential breaking change: Required field may have been removed${NC}"
+    echo "   Review: Ensure this is intentional and version is bumped"
+fi
+
+# Look for changed enum values (potential breaking)
+if git diff HEAD~1 HEAD shared/contracts/v1/ | grep -E "^-\s+enum:" -A 5; then
+    echo "${YELLOW}⚠️  Potential breaking change: Enum value may have been removed${NC}"
+    echo "   Review: Ensure enum changes are backwards compatible"
+fi
+
+# Summary
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if [ $VIOLATIONS -eq 0 ]; then
+    echo "${GREEN}✅ ABI Guard: PASS${NC}"
+    echo "No critical violations found"
+    exit 0
+else
+    echo "${RED}❌ ABI Guard: DENY${NC}"
+    echo "Found $VIOLATIONS critical violation(s)"
+    echo ""
+    echo "To fix:"
+    echo "  1. Update shared/contracts/versions.yaml with new version"
+    echo "  2. Update shared/compatibility/matrix.yaml if needed"
+    echo "  3. Follow shared/contracts/lifecycle.yaml process"
+    echo "  4. Update shared/fixtures/v1/ examples"
+    exit 1
+fi

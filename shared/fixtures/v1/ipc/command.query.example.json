@@ -1,0 +1,33 @@
+{
+  "command_type": "query",
+  "target": {
+    "capability": "storage.listings.list"
+  },
+  "args": {
+    "filter": {
+      "brand": "Toyota",
+      "year_min": 2020
+    },
+    "pagination": {
+      "page": 1,
+      "per_page": 20
+    },
+    "sort": {
+      "field": "price",
+      "direction": "asc"
+    }
+  },
+  "options": {
+    "timeout_ms": 3000,
+    "priority": "normal"
+  },
+  "context": {
+    "actor": {
+      "id": "user-public-001",
+      "type": "user",
+      "roles": ["public"],
+      "scopes": ["storage:read"]
+    },
+    "chain_depth": 0
+  }
+}

@@ -1,0 +1,77 @@
+# Result Profiles Intent
+# Declares intended result filtering profiles for different UIs
+
+profiles:
+  - id: "internal_ui"
+    name: "Internal UI Profile"
+    purpose: "For admin and internal users - shows all fields including sensitive data"
+    max_response_size: 10485760  # 10MB
+    max_array_size: 5000
+    field_policies:
+      listing:
+        allowed_fields:
+          - "id"
+          - "external_id"
+          - "brand"
+          - "model"
+          - "year"
+          - "mileage"
+          - "condition"
+          - "price"
+          - "cost_price"  # Admin only
+          - "profit_margin"  # Admin only
+          - "internal_notes"  # Admin only
+          - "supplier"  # Admin only
+          - "created_at"
+          - "updated_at"
+          - "created_by"
+          - "updated_by"
+  
+  - id: "public_ui"
+    name: "Public UI Profile"
+    purpose: "For public/guest users - shows only public-safe fields"
+    max_response_size: 1048576  # 1MB
+    max_array_size: 100
+    field_policies:
+      listing:
+        allowed_fields:
+          - "id"
+          - "brand"
+          - "model"
+          - "year"
+          - "mileage"
+          - "condition"
+          - "price"
+          - "created_at"
+        denied_fields:
+          - "cost_price"
+          - "profit_margin"
+          - "internal_notes"
+          - "supplier"
+          - "created_by"
+          - "updated_by"
+          - "updated_at"
+  
+  - id: "ops_ui"
+    name: "Operations UI Profile"
+    purpose: "For operations team - operational fields but not financial"
+    max_response_size: 5242880  # 5MB
+    max_array_size: 1000
+    field_policies:
+      listing:
+        allowed_fields:
+          - "id"
+          - "external_id"
+          - "brand"
+          - "model"
+          - "year"
+          - "mileage"
+          - "condition"
+          - "price"
+          - "supplier"
+          - "created_at"
+          - "updated_at"
+        denied_fields:
+          - "cost_price"
+          - "profit_margin"
+          - "internal_notes"

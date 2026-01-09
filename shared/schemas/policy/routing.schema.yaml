@@ -1,0 +1,89 @@
+# Routing Policy Schema
+# Defines structure for routing policies
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/policy/routing.schema.json"
+
+title: "Routing Policy"
+description: "Concrete routing policies derived from intent"
+
+type: object
+required:
+  - version
+  - default_policy
+  - routes
+
+properties:
+  version:
+    type: string
+    pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+  
+  default_policy:
+    type: string
+    enum: ["deny", "allow"]
+    default: "deny"
+  
+  routes:
+    type: array
+    items:
+      type: object
+      required:
+        - id
+        - from
+        - to
+        - action
+      properties:
+        id:
+          type: string
+        
+        from:
+          type: object
+          required:
+            - type
+            - id
+          properties:
+            type:
+              type: string
+              enum: ["ui", "module", "kernel"]
+            id:
+              type: string
+        
+        to:
+          type: object
+          required:
+            - type
+            - id
+          properties:
+            type:
+              type: string
+              enum: ["module", "kernel"]
+            id:
+              type: string
+            capability:
+              type: string
+        
+        action:
+          type: string
+          enum: ["allow", "deny"]
+        
+        conditions:
+          type: object
+          properties:
+            scopes:
+              type: array
+              items:
+                type: string
+            roles:
+              type: array
+              items:
+                type: string
+  
+  capability_chains:
+    type: object
+    description: "Allowed capability chains"
+    additionalProperties:
+      type: array
+      items:
+        type: string
+
+additionalProperties: false

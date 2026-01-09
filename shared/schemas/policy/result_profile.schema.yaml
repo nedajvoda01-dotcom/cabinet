@@ -1,0 +1,61 @@
+# Result Profile Policy Schema
+# Defines structure for result profile policies
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/policy/result_profile.schema.json"
+
+title: "Result Profile Policy"
+description: "Concrete result filtering profiles derived from intent"
+
+type: object
+required:
+  - version
+  - profiles
+
+properties:
+  version:
+    type: string
+    pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+  
+  profiles:
+    type: object
+    description: "Profile definitions"
+    additionalProperties:
+      type: object
+      required:
+        - name
+        - max_response_size
+      properties:
+        name:
+          type: string
+        
+        description:
+          type: string
+        
+        max_response_size:
+          type: integer
+          description: "Maximum response size in bytes"
+          minimum: 1
+        
+        max_array_size:
+          type: integer
+          description: "Maximum array size"
+          minimum: 1
+        
+        fields:
+          type: object
+          description: "Field filtering rules by entity type"
+          additionalProperties:
+            type: array
+            description: "Allowed fields for this entity type"
+            items:
+              type: string
+  
+  ui_mappings:
+    type: object
+    description: "Map UI IDs to profiles"
+    additionalProperties:
+      type: string
+      description: "Profile ID"
+
+additionalProperties: false

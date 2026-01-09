@@ -1,0 +1,230 @@
+# UI Manifest Schema v1
+# Defines structure for UI application manifests
+# Changes MUST follow lifecycle.yaml rules
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/v1/ui.manifest.schema.json"
+
+title: "UI Manifest"
+description: "Manifest file that describes a UI application"
+
+type: object
+required:
+  - manifest_version
+  - ui
+  - permissions
+
+properties:
+  manifest_version:
+    type: string
+    description: "Manifest schema version"
+    pattern: "^v1\\.[0-9]+\\.[0-9]+$"
+    const: "v1.0.0"
+  
+  ui:
+    type: object
+    description: "UI application metadata"
+    required:
+      - id
+      - name
+      - version
+    properties:
+      id:
+        type: string
+        description: "Unique UI identifier"
+        pattern: "^[a-z][a-z0-9-]*$"
+        examples: ["admin-ui", "public-ui", "internal-dashboard"]
+      
+      name:
+        type: string
+        description: "Human-readable UI name"
+        minLength: 1
+        maxLength: 100
+      
+      description:
+        type: string
+        description: "UI description"
+        maxLength: 500
+      
+      version:
+        type: string
+        description: "UI version (semantic versioning)"
+        pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+      
+      type:
+        type: string
+        description: "UI type"
+        enum: ["web", "mobile", "desktop", "cli"]
+        default: "web"
+      
+      entry_point:
+        type: string
+        description: "Entry point URL or file"
+      
+      icon:
+        type: string
+        description: "Icon URL or path"
+      
+      theme:
+        type: object
+        description: "Theme configuration"
+        properties:
+          primary_color:
+            type: string
+            pattern: "^#[0-9A-Fa-f]{6}$"
+          logo_url:
+            type: string
+            format: uri
+  
+  permissions:
+    type: object
+    description: "Permissions required by this UI"
+    required:
+      - allowed_capabilities
+    properties:
+      allowed_capabilities:
+        type: array
+        description: "List of capabilities this UI can invoke"
+        minItems: 1
+        items:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+      
+      required_scopes:
+        type: array
+        description: "OAuth-style scopes required"
+        items:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
+      
+      result_profile:
+        type: string
+        description: "Result profile to apply for this UI"
+        examples: ["public_ui", "internal_ui", "admin_ui"]
+  
+  profiles:
+    type: array
+    description: "User profiles supported by this UI"
+    items:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*$"
+        
+        name:
+          type: string
+          minLength: 1
+        
+        description:
+          type: string
+        
+        default:
+          type: boolean
+          description: "Whether this is the default profile"
+          default: false
+        
+        capabilities:
+          type: array
+          description: "Capabilities available in this profile"
+          items:
+            type: string
+        
+        routes:
+          type: array
+          description: "Routes available in this profile"
+          items:
+            type: string
+  
+  routes:
+    type: array
+    description: "UI routes/pages"
+    items:
+      type: object
+      required:
+        - path
+        - component
+      properties:
+        path:
+          type: string
+          description: "Route path pattern"
+          pattern: "^/.*$"
+        
+        component:
+          type: string
+          description: "Component file or identifier"
+        
+        name:
+          type: string
+          description: "Route name"
+        
+        required_capabilities:
+          type: array
+          description: "Capabilities required to access this route"
+          items:
+            type: string
+        
+        public:
+          type: boolean
+          description: "Whether this route is publicly accessible"
+          default: false
+  
+  dependencies:
+    type: object
+    description: "Dependencies and requirements"
+    properties:
+      kernel_version:
+        type: string
+        description: "Minimum kernel version required"
+        pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+      
+      modules:
+        type: array
+        description: "Required modules"
+        items:
+          type: object
+          required:
+            - module_id
+          properties:
+            module_id:
+              type: string
+            version_constraint:
+              type: string
+            optional:
+              type: boolean
+              default: false
+  
+  build:
+    type: object
+    description: "Build configuration"
+    properties:
+      framework:
+        type: string
+        description: "Frontend framework"
+        enum: ["react", "vue", "angular", "svelte", "vanilla"]
+      
+      build_command:
+        type: string
+        description: "Command to build the UI"
+      
+      output_directory:
+        type: string
+        description: "Build output directory"
+      
+      assets:
+        type: object
+        description: "Asset paths"
+        properties:
+          scripts:
+            type: array
+            items:
+              type: string
+          styles:
+            type: array
+            items:
+              type: string
+
+additionalProperties: false

@@ -1,0 +1,241 @@
+# Invoke Roundtrip Conformance Suite
+# End-to-end tests for capability invocation
+
+version: v1.0.0
+suite: invoke_roundtrip
+
+description: "Tests complete roundtrip of capability invocation from request to response"
+
+tests:
+  # Successful invocation
+  - id: "invoke-success-001"
+    name: "Simple capability invocation"
+    request:
+      envelope:
+        version: "v1.0.0"
+        message_id: "550e8400-e29b-41d4-a716-446655440000"
+        timestamp: "2026-01-09T15:00:00Z"
+        message_type: "command"
+        payload:
+          command_type: "invoke"
+          target:
+            capability: "storage.listings.create"
+          args:
+            data:
+              external_id: "TEST-001"
+              brand: "TestBrand"
+          context:
+            actor:
+              id: "test-user"
+              type: "user"
+              roles: ["admin"]
+              scopes: ["storage:write"]
+    expected_response:
+      envelope:
+        version: "v1.0.0"
+        message_type: "result"
+        correlation_id: "550e8400-e29b-41d4-a716-446655440000"
+      payload:
+        status: "success"
+        data:
+          id: "<any-uuid>"
+          external_id: "TEST-001"
+          brand: "TestBrand"
+    note: "Successful invoke returns result with data"
+  
+  # Permission denied
+  - id: "invoke-error-001"
+    name: "Invoke without required permissions"
+    request:
+      envelope:
+        version: "v1.0.0"
+        message_id: "550e8400-e29b-41d4-a716-446655440001"
+        timestamp: "2026-01-09T15:00:00Z"
+        message_type: "command"
+        payload:
+          command_type: "invoke"
+          target:
+            capability: "storage.listings.delete"
+          args:
+            id: "listing-123"
+          context:
+            actor:
+              id: "test-user"
+              type: "user"
+              roles: ["viewer"]
+              scopes: ["storage:read"]  # Missing storage:write
+    expected_response:
+      envelope:
+        version: "v1.0.0"
+        message_type: "error"
+        correlation_id: "550e8400-e29b-41d4-a716-446655440001"
+      payload:
+        error_code: "PERMISSION_DENIED"
+        message: "<any-string>"
+        severity: "error"
+    note: "Missing permissions returns error"
+  
+  # Invalid capability
+  - id: "invoke-error-002"
+    name: "Invoke non-existent capability"
+    request:
+      envelope:
+        version: "v1.0.0"
+        message_id: "550e8400-e29b-41d4-a716-446655440002"
+        timestamp: "2026-01-09T15:00:00Z"
+        message_type: "command"
+        payload:
+          command_type: "invoke"
+          target:
+            capability: "nonexistent.capability"
+          args: {}
+          context:
+            actor:
+              id: "test-user"
+              type: "user"
+              roles: ["admin"]
+              scopes: ["*"]
+    expected_response:
+      envelope:
+        version: "v1.0.0"
+        message_type: "error"
+        correlation_id: "550e8400-e29b-41d4-a716-446655440002"
+      payload:
+        error_code: "RESOURCE_NOT_FOUND"
+        message: "<any-string>"
+        severity: "error"
+    note: "Unknown capability returns error"
+  
+  # Validation error
+  - id: "invoke-error-003"
+    name: "Invoke with invalid arguments"
+    request:
+      envelope:
+        version: "v1.0.0"
+        message_id: "550e8400-e29b-41d4-a716-446655440003"
+        timestamp: "2026-01-09T15:00:00Z"
+        message_type: "command"
+        payload:
+          command_type: "invoke"
+          target:
+            capability: "storage.listings.create"
+          args:
+            data:
+              # Missing required external_id
+              brand: "TestBrand"
+          context:
+            actor:
+              id: "test-user"
+              type: "user"
+              roles: ["admin"]
+              scopes: ["storage:write"]
+    expected_response:
+      envelope:
+        version: "v1.0.0"
+        message_type: "error"
+        correlation_id: "550e8400-e29b-41d4-a716-446655440003"
+      payload:
+        error_code: "VALIDATION_ERROR"
+        message: "<any-string>"
+        severity: "error"
+        details:
+          validation_errors:
+            - field: "external_id"
+              message: "<any-string>"
+    note: "Invalid args returns validation error"
+  
+  # Timeout
+  - id: "invoke-error-004"
+    name: "Invoke with timeout"
+    request:
+      envelope:
+        version: "v1.0.0"
+        message_id: "550e8400-e29b-41d4-a716-446655440004"
+        timestamp: "2026-01-09T15:00:00Z"
+        message_type: "command"
+        payload:
+          command_type: "invoke"
+          target:
+            capability: "slow.operation"
+          args: {}
+          options:
+            timeout_ms: 100  # Very short timeout
+          context:
+            actor:
+              id: "test-user"
+              type: "user"
+              roles: ["admin"]
+              scopes: ["*"]
+    expected_response:
+      envelope:
+        version: "v1.0.0"
+        message_type: "error"
+        correlation_id: "550e8400-e29b-41d4-a716-446655440004"
+      payload:
+        error_code: "TIMEOUT"
+        message: "<any-string>"
+        severity: "error"
+        retry:
+          retryable: true
+    note: "Timeout returns error with retry info"
+  
+  # Query capability
+  - id: "query-success-001"
+    name: "Query capability"
+    request:
+      envelope:
+        version: "v1.0.0"
+        message_id: "550e8400-e29b-41d4-a716-446655440005"
+        timestamp: "2026-01-09T15:00:00Z"
+        message_type: "command"
+        payload:
+          command_type: "query"
+          target:
+            capability: "storage.listings.list"
+          args:
+            filter:
+              brand: "Toyota"
+          context:
+            actor:
+              id: "test-user"
+              type: "user"
+              roles: ["viewer"]
+              scopes: ["storage:read"]
+    expected_response:
+      envelope:
+        version: "v1.0.0"
+        message_type: "result"
+        correlation_id: "550e8400-e29b-41d4-a716-446655440005"
+      payload:
+        status: "success"
+        data: "<array>"
+        metadata:
+          pagination:
+            total_items: "<number>"
+    note: "Query returns array of results"
+
+# Requirements
+requirements:
+  - "MUST handle invoke command_type"
+  - "MUST handle query command_type"
+  - "MUST validate capability existence"
+  - "MUST check permissions before invocation"
+  - "MUST validate arguments"
+  - "MUST respect timeout"
+  - "MUST return correlation_id in response"
+  - "MUST return structured errors"
+  - "SHOULD include execution_time_ms in metadata"
+
+# Metrics
+metrics:
+  - metric: "roundtrip_time_ms"
+    description: "Time from request to response"
+    target: "<100ms for simple operations"
+  
+  - metric: "error_rate"
+    description: "Percentage of requests that error"
+    target: "<1% for valid requests"
+  
+  - metric: "timeout_handling"
+    description: "Timeouts are respected"
+    target: "100%"

@@ -1,0 +1,42 @@
+# Modules Intent
+# Declares intended modules and their purposes
+
+modules:
+  - id: "car-storage"
+    purpose: "Manage car listing data storage, retrieval, and import operations"
+    provides:
+      - "storage.listings.create"
+      - "storage.listings.list"
+      - "storage.listings.get"
+      - "storage.listings.update"
+      - "storage.listings.delete"
+      - "storage.listings.upsert_batch"  # Internal
+      - "storage.imports.register"  # Internal
+      - "storage.imports.mark_done"  # Internal
+      - "import.run"
+      - "parser.calculate_hash"  # Internal
+    dependencies: []
+    trust_level: "untrusted"
+  
+  - id: "pricing"
+    purpose: "Calculate prices and apply pricing rules"
+    provides:
+      - "pricing.calculate"
+      - "pricing.rules.list"
+      - "pricing.rules.create"
+      - "pricing.rules.update"
+    dependencies:
+      - "car-storage"  # Needs listing data
+    trust_level: "untrusted"
+  
+  - id: "automation"
+    purpose: "Automate workflows and business processes"
+    provides:
+      - "automation.workflow.create"
+      - "automation.workflow.list"
+      - "automation.workflow.execute"
+      - "automation.workflow.schedule"
+    dependencies:
+      - "car-storage"
+      - "pricing"
+    trust_level: "untrusted"

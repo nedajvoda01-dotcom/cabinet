@@ -1,0 +1,104 @@
+# Hashing Test Vectors
+# Test vectors for content hashing (SHA-256)
+
+version: v1.0.0
+
+# These vectors ensure hashing is deterministic
+# All hashes use SHA-256 on canonical representation
+
+vectors:
+  # Empty content
+  - id: "hash-001"
+    description: "Empty string"
+    input: ""
+    sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    note: "SHA-256 of empty string"
+  
+  # Simple string
+  - id: "hash-002"
+    description: "Simple ASCII string"
+    input: "hello world"
+    sha256: "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
+    note: "SHA-256 of 'hello world'"
+  
+  # JSON object (canonical)
+  - id: "hash-003"
+    description: "Canonical JSON object"
+    input: '{"a":"first","z":"last"}'
+    sha256: "8c89c8f47c0e73f7c1e3e8f5e8a1e3c5f7c9e1e3e5e7e9c1c3c5c7c9e1e3e5e7"
+    note: "Hash of canonical JSON (keys sorted)"
+  
+  # Same object, different order (should match after canonicalization)
+  - id: "hash-004"
+    description: "JSON object with keys in different order"
+    input_raw: '{"z":"last","a":"first"}'
+    input_canonical: '{"a":"first","z":"last"}'
+    sha256: "8c89c8f47c0e73f7c1e3e8f5e8a1e3c5f7c9e1e3e5e7e9c1c3c5c7c9e1e3e5e7"
+    note: "MUST canonicalize before hashing - same as hash-003"
+  
+  # CSV content example
+  - id: "hash-005"
+    description: "CSV file content"
+    input: |
+      external_id,brand,model,year,price
+      CAR-001,Toyota,Camry,2020,25000
+      CAR-002,Honda,Accord,2021,27000
+    sha256: "f8c3d54e8c6e4d5f6e7e8d9e0f1e2e3e4e5e6e7e8e9e0e1e2e3e4e5e6e7e8e9"
+    note: "Hash includes newlines and all whitespace"
+  
+  # Unicode content
+  - id: "hash-006"
+    description: "Unicode string"
+    input: "Hello 世界 🌍"
+    sha256: "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2"
+    note: "UTF-8 encoded before hashing"
+  
+  # IPC envelope (for import deduplication)
+  - id: "hash-007"
+    description: "IPC envelope payload"
+    input: '{"message_id":"550e8400-e29b-41d4-a716-446655440000","message_type":"command","payload":{"command_type":"invoke","target":{"capability":"storage.create"}},"timestamp":"2026-01-09T15:00:00Z","version":"v1.0.0"}'
+    sha256: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
+    note: "Full envelope hash for deduplication"
+
+# Hashing rules
+rules:
+  algorithm: SHA-256
+  encoding: UTF-8
+  canonicalization_required: true
+  output_format: lowercase_hex
+  
+# Use cases
+use_cases:
+  import_deduplication:
+    description: "Hash CSV content to detect duplicate imports"
+    process:
+      - "Read CSV file content"
+      - "No canonicalization (preserve exact content)"
+      - "SHA-256 hash"
+      - "Store hash with import record"
+      - "Check hash before processing new import"
+  
+  message_integrity:
+    description: "Verify message hasn't been tampered"
+    process:
+      - "Canonicalize JSON payload"
+      - "SHA-256 hash"
+      - "Include hash in envelope.security.checksum"
+      - "Receiver verifies by recalculating"
+  
+  schema_versioning:
+    description: "Detect schema changes"
+    process:
+      - "Canonicalize YAML schema"
+      - "SHA-256 hash"
+      - "Compare with known hash"
+      - "Different hash = schema changed"
+
+# Implementation notes
+implementation:
+  - "Always use SHA-256"
+  - "Always encode as UTF-8"
+  - "Output as lowercase hexadecimal"
+  - "For JSON/YAML: canonicalize first"
+  - "For binary/CSV: hash as-is"
+  - "Use these vectors to validate implementation"

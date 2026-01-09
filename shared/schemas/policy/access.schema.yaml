@@ -1,0 +1,70 @@
+# Access Policy Schema
+# Defines structure for access control policies
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/policy/access.schema.json"
+
+title: "Access Policy"
+description: "Concrete access control policies derived from intent"
+
+type: object
+required:
+  - version
+  - roles
+  - capabilities
+
+properties:
+  version:
+    type: string
+    pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+  
+  roles:
+    type: object
+    description: "Role definitions"
+    additionalProperties:
+      type: object
+      required:
+        - scopes
+      properties:
+        scopes:
+          type: array
+          items:
+            type: string
+            pattern: "^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
+        
+        description:
+          type: string
+        
+        inherits:
+          type: array
+          description: "Roles to inherit from"
+          items:
+            type: string
+  
+  capabilities:
+    type: object
+    description: "Capability-level access control"
+    additionalProperties:
+      type: object
+      properties:
+        required_scopes:
+          type: array
+          items:
+            type: string
+        
+        required_roles:
+          type: array
+          items:
+            type: string
+        
+        visibility:
+          type: string
+          enum: ["public", "internal", "system"]
+        
+        allowed_chains:
+          type: array
+          description: "Capabilities that can chain into this one"
+          items:
+            type: string
+
+additionalProperties: false

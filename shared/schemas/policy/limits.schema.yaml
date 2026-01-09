@@ -1,0 +1,89 @@
+# Limits Policy Schema
+# Defines structure for rate limiting and resource constraint policies
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/policy/limits.schema.json"
+
+title: "Limits Policy"
+description: "Concrete rate limits and resource constraints derived from intent"
+
+type: object
+required:
+  - version
+  - global
+
+properties:
+  version:
+    type: string
+    pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+  
+  global:
+    type: object
+    description: "Global system limits"
+    properties:
+      max_requests_per_second:
+        type: integer
+        minimum: 1
+      
+      max_concurrent_requests:
+        type: integer
+        minimum: 1
+      
+      max_chain_depth:
+        type: integer
+        minimum: 1
+        maximum: 20
+      
+      max_request_size_bytes:
+        type: integer
+        minimum: 1
+      
+      max_response_size_bytes:
+        type: integer
+        minimum: 1
+      
+      default_timeout_ms:
+        type: integer
+        minimum: 100
+        maximum: 300000
+  
+  per_capability:
+    type: object
+    description: "Per-capability limits"
+    additionalProperties:
+      type: object
+      properties:
+        requests_per_minute:
+          type: integer
+        
+        requests_per_hour:
+          type: integer
+        
+        timeout_ms:
+          type: integer
+        
+        max_input_size_bytes:
+          type: integer
+        
+        max_output_size_bytes:
+          type: integer
+        
+        max_concurrent:
+          type: integer
+  
+  per_role:
+    type: object
+    description: "Per-role limits"
+    additionalProperties:
+      type: object
+      properties:
+        requests_per_minute:
+          type: integer
+        
+        requests_per_hour:
+          type: integer
+        
+        max_concurrent_requests:
+          type: integer
+
+additionalProperties: false

@@ -1,0 +1,29 @@
+{
+  "error_code": "VALIDATION_ERROR",
+  "message": "Invalid input data: missing required field 'external_id'",
+  "severity": "error",
+  "details": {
+    "validation_errors": [
+      {
+        "field": "external_id",
+        "message": "This field is required",
+        "constraint": "required"
+      },
+      {
+        "field": "year",
+        "message": "Year must be between 1900 and 2100",
+        "constraint": "range",
+        "value": 2200
+      }
+    ],
+    "hint": "Ensure all required fields are provided and values are within valid ranges",
+    "documentation_url": "https://docs.axiom.mini/api/validation"
+  },
+  "retry": {
+    "retryable": false
+  },
+  "trace": {
+    "trace_id": "trace-abc-123",
+    "occurred_at": "2026-01-09T15:00:00Z"
+  }
+}
