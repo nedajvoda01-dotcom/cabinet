@@ -1,0 +1,27 @@
+# Security Invariants
+
+category: "security"
+description: "Security and access control constraints"
+
+invariants:
+  - id: "no_wildcard_access"
+    description: "UI configurations must not grant wildcard (*) access to capabilities"
+    severity: "critical"
+    check_type: "pattern_match"
+    pattern: "\\*"
+    target: "ui.allowed_capabilities"
+    invert: true
+    
+  - id: "internal_capability_protection"
+    description: "Internal-only capabilities must not be directly accessible from UI"
+    severity: "critical"
+    check_type: "intersection_empty"
+    source: "capabilities[internal_only=true]"
+    target: "ui.allowed_capabilities"
+    
+  - id: "result_profile_assigned"
+    description: "All UI configurations must have a result_profile assigned"
+    severity: "high"
+    check_type: "field_required"
+    target: "ui"
+    field: "result_profile"

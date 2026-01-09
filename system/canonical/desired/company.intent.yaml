@@ -1,0 +1,42 @@
+business_goals:
+- description: Maintain a secure, capability-based architecture with clear boundaries
+  id: secure_architecture
+  metrics:
+  - name: Zero unauthorized access
+    target: 100% authorization enforcement
+  - name: Audit coverage
+    target: 100% of capability invocations logged
+  priority: critical
+- description: Enable adding new adapters and UI without platform code changes
+  id: extensibility
+  metrics:
+  - name: New adapter deployment time
+    target: <1 hour
+  - name: Platform modifications for new features
+    target: Zero modifications required
+  priority: high
+- description: Maintain fast response times for user interactions
+  id: performance
+  metrics:
+  - name: API response time p95
+    target: <200ms
+  - name: Throughput
+    target: '>1000 req/sec'
+  priority: high
+company:
+  description: Thin platform for managing automotive listings with capability-based architecture
+  domain: automotive
+  name: Cabinet Platform
+constraints:
+  availability:
+    maintenance_windows:
+    - day: sunday
+      end_time: 04:00
+      start_time: 02:00
+    sla_percentage: 99.9
+  budget:
+    currency: USD
+    monthly_limit: 5000
+  regulatory:
+  - GDPR
+  - PCI-DSS

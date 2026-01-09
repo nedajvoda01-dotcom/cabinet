@@ -1,0 +1,47 @@
+# System Invariants
+# Define global invariants that must be maintained across the system
+
+version: "1.0.0"
+metadata:
+  description: "Global system invariants and constraints"
+  last_updated: "2026-01-09"
+
+# Global invariants
+invariants:
+  - id: "unique_capability_names"
+    category: "naming"
+    description: "All capability names must be unique across the system"
+    severity: "critical"
+    check_type: "uniqueness"
+    target: "capabilities"
+    
+  - id: "valid_adapter_references"
+    category: "references"
+    description: "All capability-to-adapter mappings must reference existing adapters"
+    severity: "critical"
+    check_type: "referential_integrity"
+    source: "capabilities"
+    target: "adapters"
+    
+  - id: "no_circular_dependencies"
+    category: "dependencies"
+    description: "Module dependencies must not form cycles"
+    severity: "critical"
+    check_type: "acyclic_graph"
+    target: "module_dependencies"
+    
+  - id: "valid_schema_references"
+    category: "schemas"
+    description: "All schema references must point to existing schema files"
+    severity: "critical"
+    check_type: "file_exists"
+    target: "schema_refs"
+
+# Category-specific invariants are defined in categories/*.yaml
+categories:
+  - naming
+  - references
+  - dependencies
+  - schemas
+  - security
+  - performance

@@ -1,0 +1,75 @@
+desired:
+  profiles:
+  - field_policies:
+      listing:
+        allowed_fields:
+        - id
+        - external_id
+        - brand
+        - model
+        - year
+        - mileage
+        - condition
+        - price
+        - cost_price
+        - profit_margin
+        - internal_notes
+        - supplier
+        - created_at
+        - updated_at
+        - created_by
+        - updated_by
+    id: internal_ui
+    max_array_size: 5000
+    max_response_size: 10485760
+    name: Internal UI Profile
+    purpose: For admin and internal users - shows all fields including sensitive data
+  - field_policies:
+      listing:
+        allowed_fields:
+        - id
+        - brand
+        - model
+        - year
+        - mileage
+        - condition
+        - price
+        - created_at
+        denied_fields:
+        - cost_price
+        - profit_margin
+        - internal_notes
+        - supplier
+        - created_by
+        - updated_by
+        - updated_at
+    id: public_ui
+    max_array_size: 100
+    max_response_size: 1048576
+    name: Public UI Profile
+    purpose: For public/guest users - shows only public-safe fields
+  - field_policies:
+      listing:
+        allowed_fields:
+        - id
+        - external_id
+        - brand
+        - model
+        - year
+        - mileage
+        - condition
+        - price
+        - supplier
+        - created_at
+        - updated_at
+        denied_fields:
+        - cost_price
+        - profit_margin
+        - internal_notes
+    id: ops_ui
+    max_array_size: 1000
+    max_response_size: 5242880
+    name: Operations UI Profile
+    purpose: For operations team - operational fields but not financial
+filename: result_profiles.intent.yaml
+status: added

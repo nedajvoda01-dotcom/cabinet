@@ -1,0 +1,40 @@
+allowed_paths:
+- capabilities:
+  - storage.listings.*
+  - import.run
+  from: admin-ui
+  reason: Admins need full access to storage operations
+  to: car-storage
+- capabilities:
+  - pricing.*
+  from: admin-ui
+  reason: Admins need to configure pricing
+  to: pricing
+- capabilities:
+  - automation.workflow.*
+  from: admin-ui
+  reason: Admins need to manage workflows
+  to: automation
+- capabilities:
+  - storage.listings.list
+  - storage.listings.get
+  from: public-ui
+  reason: Public users can browse listings
+  to: car-storage
+- capabilities:
+  - storage.listings.*
+  from: automation
+  reason: Workflows need to modify listings
+  to: car-storage
+- capabilities:
+  - pricing.calculate
+  from: automation
+  reason: Workflows may need pricing calculations
+  to: pricing
+capability_chains:
+  import.run:
+  - parser.calculate_hash
+  - storage.imports.register
+  - storage.listings.upsert_batch
+  - storage.imports.mark_done
+policy: deny_by_default

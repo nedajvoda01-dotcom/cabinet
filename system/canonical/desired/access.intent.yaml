@@ -1,0 +1,47 @@
+roles:
+- description: Full system access
+  id: admin
+  name: Administrator
+  scopes:
+  - storage:read
+  - storage:write
+  - storage:delete
+  - pricing:read
+  - pricing:write
+  - automation:read
+  - automation:write
+  - admin
+- description: Can create and edit but not delete
+  id: editor
+  name: Editor
+  scopes:
+  - storage:read
+  - storage:write
+  - pricing:read
+- description: Read-only access
+  id: viewer
+  name: Viewer
+  scopes:
+  - storage:read
+  - pricing:read
+- description: Anonymous/guest access
+  id: public
+  name: Public User
+  scopes:
+  - storage:read
+scope_groups:
+- description: Full storage access
+  id: storage_full
+  scopes:
+  - storage:read
+  - storage:write
+  - storage:delete
+- description: Read-only storage access
+  id: storage_readonly
+  scopes:
+  - storage:read
+- description: Full pricing access
+  id: pricing_full
+  scopes:
+  - pricing:read
+  - pricing:write
