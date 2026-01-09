@@ -1,0 +1,122 @@
+# Canonical JSON Test Vectors
+# These vectors ensure JSON canonicalization is deterministic and consistent
+
+version: v1.0.0
+
+# Test vectors for JSON canonicalization
+# Expected output uses RFC 8785 (JSON Canonicalization Scheme)
+
+vectors:
+  # Basic object with unordered keys
+  - id: "canonical-001"
+    description: "Simple object with keys in non-alphabetical order"
+    input:
+      z_field: "last"
+      a_field: "first"
+      m_field: "middle"
+    canonical: '{"a_field":"first","m_field":"middle","z_field":"last"}'
+    note: "Keys MUST be sorted alphabetically"
+  
+  # Nested objects
+  - id: "canonical-002"
+    description: "Nested objects with multiple levels"
+    input:
+      outer:
+        z: 3
+        a: 1
+        m: 2
+      other: "value"
+    canonical: '{"other":"value","outer":{"a":1,"m":2,"z":3}}'
+    note: "All levels MUST be sorted"
+  
+  # Numbers (no exponent notation)
+  - id: "canonical-003"
+    description: "Number formatting"
+    input:
+      integer: 42
+      float: 3.14159
+      negative: -100
+      zero: 0
+    canonical: '{"float":3.14159,"integer":42,"negative":-100,"zero":0}'
+    note: "Numbers MUST NOT use exponent notation unless necessary"
+  
+  # Arrays (order preserved)
+  - id: "canonical-004"
+    description: "Arrays preserve order"
+    input:
+      items:
+        - 3
+        - 1
+        - 2
+    canonical: '{"items":[3,1,2]}'
+    note: "Array order MUST be preserved"
+  
+  # Unicode strings
+  - id: "canonical-005"
+    description: "Unicode character handling"
+    input:
+      text: "Hello 世界 🌍"
+      escaped: "Line1\nLine2"
+    canonical: '{"escaped":"Line1\nLine2","text":"Hello 世界 🌍"}'
+    note: "Unicode MUST be preserved, control chars escaped"
+  
+  # Empty values
+  - id: "canonical-006"
+    description: "Empty values and null"
+    input:
+      empty_string: ""
+      empty_object: {}
+      empty_array: []
+      null_value: null
+    canonical: '{"empty_array":[],"empty_object":{},"empty_string":"","null_value":null}'
+    note: "Empty values MUST be included"
+  
+  # No whitespace
+  - id: "canonical-007"
+    description: "No extra whitespace"
+    input:
+      key: "value"
+    canonical: '{"key":"value"}'
+    note: "NO spaces, newlines, or indentation"
+  
+  # Boolean values
+  - id: "canonical-008"
+    description: "Boolean values"
+    input:
+      true_val: true
+      false_val: false
+    canonical: '{"false_val":false,"true_val":true}'
+    note: "Booleans as lowercase true/false"
+  
+  # IPC Envelope example
+  - id: "canonical-009"
+    description: "Complete IPC envelope"
+    input:
+      version: "v1.0.0"
+      message_type: "command"
+      message_id: "550e8400-e29b-41d4-a716-446655440000"
+      timestamp: "2026-01-09T15:00:00Z"
+      payload:
+        command_type: "invoke"
+        target:
+          capability: "storage.create"
+    canonical: '{"message_id":"550e8400-e29b-41d4-a716-446655440000","message_type":"command","payload":{"command_type":"invoke","target":{"capability":"storage.create"}},"timestamp":"2026-01-09T15:00:00Z","version":"v1.0.0"}'
+    note: "Real-world envelope canonicalization"
+
+# Canonicalization rules
+rules:
+  key_ordering: alphabetical
+  whitespace: none
+  unicode: preserve_valid_utf8
+  numbers: minimal_representation
+  strings: escape_control_characters
+  arrays: preserve_order
+  objects: sort_keys_recursively
+
+# Implementation notes
+implementation:
+  - "Use RFC 8785 JSON Canonicalization Scheme (JCS)"
+  - "All implementations MUST produce identical output"
+  - "Use these vectors to validate canonicalization"
+  - "Hash comparison requires canonical form"
+  - "Signatures MUST be computed on canonical form"

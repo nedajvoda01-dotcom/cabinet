@@ -1,0 +1,32 @@
+{
+  "command_type": "invoke",
+  "target": {
+    "capability": "storage.listings.create",
+    "version": "v1.0.0"
+  },
+  "args": {
+    "data": {
+      "external_id": "CAR-2026-001",
+      "brand": "Toyota",
+      "model": "Camry",
+      "year": 2026,
+      "price": 28500,
+      "mileage": 0,
+      "condition": "new"
+    }
+  },
+  "options": {
+    "timeout_ms": 5000,
+    "priority": "normal",
+    "idempotency_key": "create-car-2026-001"
+  },
+  "context": {
+    "actor": {
+      "id": "user-admin-001",
+      "type": "user",
+      "roles": ["admin", "editor"],
+      "scopes": ["storage:write", "storage:read"]
+    },
+    "chain_depth": 0
+  }
+}

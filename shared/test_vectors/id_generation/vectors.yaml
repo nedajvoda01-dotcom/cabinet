@@ -1,0 +1,138 @@
+# ID Generation Test Vectors
+# Test vectors for deterministic ID generation
+
+version: v1.0.0
+
+# UUID v4 generation (random, non-deterministic)
+uuid_v4:
+  description: "UUIDv4 for message IDs and unique identifiers"
+  format: "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+  version: 4
+  variant: RFC4122
+  examples:
+    - "550e8400-e29b-41d4-a716-446655440000"
+    - "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+    - "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+  note: "Use crypto-random source, NOT deterministic"
+  
+  validation:
+    - "Byte 6 (version): 0x40-0x4F (starts with 4)"
+    - "Byte 8 (variant): 0x80-0xBF (10xxxxxx in binary)"
+    - "Lowercase hexadecimal with dashes"
+    - "Total length: 36 characters"
+
+# Content-based IDs (deterministic)
+content_based_ids:
+  description: "Deterministic IDs based on content hash"
+  algorithm: "SHA-256 first 16 bytes formatted as UUID"
+  
+  vectors:
+    # Import ID (based on CSV hash)
+    - id: "import-id-001"
+      description: "Import ID from CSV content hash"
+      input: "external_id,brand,model\nCAR-001,Toyota,Camry\n"
+      process:
+        - "SHA-256 hash of content"
+        - "Take first 16 bytes"
+        - "Format as UUID with version bits set"
+      output: "import-f8c3d54e-8c6e-45f6-a7e8-d9e0f1e2e3e4"
+      note: "Prefix 'import-' + deterministic UUID"
+    
+    # Listing ID (based on external_id)
+    - id: "listing-id-001"
+      description: "Listing ID from external_id"
+      input: "CAR-2026-001"
+      process:
+        - "SHA-256 hash of external_id"
+        - "Take first 16 bytes"
+        - "Format as UUID"
+      output: "listing-a1b2c3d4-e5f6-47b8-89d0-e1f2a3b4c5d6"
+      note: "Prefix 'listing-' + deterministic UUID"
+    
+    # Trace ID (random per request)
+    - id: "trace-id-001"
+      description: "Trace ID for distributed tracing"
+      format: "trace-{uuid-v4}"
+      examples:
+        - "trace-550e8400-e29b-41d4-a716-446655440000"
+        - "trace-7c9e6679-7425-40de-944b-e07fc1f90ae7"
+      note: "Random UUID v4 with 'trace-' prefix"
+
+# Prefixes for different entity types
+id_prefixes:
+  message: "msg-"
+  envelope: "env-"
+  import: "import-"
+  listing: "listing-"
+  user: "user-"
+  session: "session-"
+  trace: "trace-"
+  span: "span-"
+  workflow: "workflow-"
+  job: "job-"
+
+# ID format rules
+format_rules:
+  structure: "{prefix}{uuid}"
+  prefix: "lowercase-alphanumeric-with-hyphens"
+  uuid: "standard-uuid-format"
+  total_length: "variable (prefix + 36 chars for UUID)"
+  examples:
+    valid:
+      - "msg-550e8400-e29b-41d4-a716-446655440000"
+      - "user-admin-001"
+      - "listing-a1b2c3d4-e5f6-47b8-89d0-e1f2a3b4c5d6"
+    invalid:
+      - "MSG-550E8400-E29B-41D4-A716-446655440000"  # uppercase
+      - "550e8400-e29b-41d4-a716-446655440000"      # missing prefix
+      - "msg_550e8400-e29b-41d4-a716-446655440000"  # underscore in prefix
+
+# Use cases
+use_cases:
+  random_ids:
+    when: "Unique, non-predictable IDs needed"
+    use: UUID v4
+    examples:
+      - "Message IDs"
+      - "Session IDs"
+      - "Trace IDs"
+  
+  deterministic_ids:
+    when: "Idempotency or deduplication needed"
+    use: "Content-based hash"
+    examples:
+      - "Import IDs (from CSV hash)"
+      - "Listing IDs (from external_id)"
+      - "Capability IDs (from name)"
+  
+  human_readable:
+    when: "For developer/admin visibility"
+    use: "Prefix + sequential or hash"
+    examples:
+      - "user-admin-001"
+      - "session-2026-01-09-001"
+
+# Validation rules
+validation:
+  uuid_v4:
+    - "Match regex: ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    - "Lowercase only"
+    - "36 characters total"
+  
+  prefixed_id:
+    - "Match regex: ^[a-z][a-z0-9-]*-[0-9a-f-]+$"
+    - "Prefix: lowercase alphanumeric with hyphens"
+    - "Suffix: UUID or other identifier"
+  
+  uniqueness:
+    - "Random IDs: cryptographically random"
+    - "Deterministic IDs: collision-resistant hash"
+
+# Implementation notes
+implementation:
+  - "Use crypto-random source for UUID v4"
+  - "Never use predictable sources (timestamp, counter)"
+  - "For deterministic IDs: SHA-256 → first 16 bytes → UUID format"
+  - "Always lowercase"
+  - "Validate format on parse"
+  - "Include prefix for entity type clarity"

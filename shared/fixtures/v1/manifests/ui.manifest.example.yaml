@@ -1,0 +1,120 @@
+manifest_version: v1.0.0
+
+ui:
+  id: admin-ui
+  name: "Admin Dashboard"
+  description: "Administrative interface for managing the system"
+  version: v1.0.0
+  type: web
+  entry_point: "/index.html"
+  icon: "/assets/admin-icon.svg"
+  theme:
+    primary_color: "#1976D2"
+    logo_url: "/assets/logo.svg"
+
+permissions:
+  allowed_capabilities:
+    - storage.listings.create
+    - storage.listings.list
+    - storage.listings.get
+    - storage.listings.update
+    - storage.listings.delete
+    - pricing.calculate
+    - automation.workflow.create
+    - automation.workflow.list
+    - import.run
+  
+  required_scopes:
+    - storage:read
+    - storage:write
+    - pricing:read
+    - automation:write
+  
+  result_profile: internal_ui
+
+profiles:
+  - id: admin
+    name: "Administrator"
+    description: "Full system access"
+    default: true
+    capabilities:
+      - storage.listings.create
+      - storage.listings.list
+      - storage.listings.get
+      - storage.listings.update
+      - storage.listings.delete
+      - pricing.calculate
+      - automation.workflow.create
+      - automation.workflow.list
+      - import.run
+    routes:
+      - "/dashboard"
+      - "/listings"
+      - "/pricing"
+      - "/automation"
+      - "/import"
+  
+  - id: editor
+    name: "Editor"
+    description: "Can create and edit listings"
+    capabilities:
+      - storage.listings.create
+      - storage.listings.list
+      - storage.listings.get
+      - storage.listings.update
+    routes:
+      - "/dashboard"
+      - "/listings"
+
+routes:
+  - path: "/dashboard"
+    component: "pages/Dashboard.js"
+    name: "Dashboard"
+    public: false
+  
+  - path: "/listings"
+    component: "pages/Listings.js"
+    name: "Listings"
+    required_capabilities:
+      - storage.listings.list
+    public: false
+  
+  - path: "/listings/new"
+    component: "pages/ListingNew.js"
+    name: "New Listing"
+    required_capabilities:
+      - storage.listings.create
+    public: false
+  
+  - path: "/listings/:id"
+    component: "pages/ListingDetail.js"
+    name: "Listing Detail"
+    required_capabilities:
+      - storage.listings.get
+    public: false
+  
+  - path: "/import"
+    component: "pages/Import.js"
+    name: "Import"
+    required_capabilities:
+      - import.run
+    public: false
+
+dependencies:
+  kernel_version: v1.0.0
+  modules:
+    - module_id: car-storage
+      version_constraint: ">=v1.0.0"
+    - module_id: pricing
+      version_constraint: ">=v1.0.0"
+      optional: true
+
+build:
+  framework: react
+  build_command: "npm run build"
+  output_directory: "dist"
+  assets:
+    scripts:
+      - "/assets/app.js"
+    styles:
+      - "/assets/app.css"

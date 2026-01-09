@@ -1,0 +1,166 @@
+# IPC Envelope Conformance Suite
+# Tests for envelope structure validation
+
+version: v1.0.0
+suite: ipc_envelope
+
+description: "Validates IPC envelope structure, required fields, and format"
+
+tests:
+  # Valid envelope tests
+  - id: "envelope-valid-001"
+    name: "Minimal valid envelope"
+    input:
+      version: "v1.0.0"
+      message_id: "550e8400-e29b-41d4-a716-446655440000"
+      timestamp: "2026-01-09T15:00:00Z"
+      message_type: "command"
+      payload: {}
+    expected: "VALID"
+    note: "All required fields present"
+  
+  - id: "envelope-valid-002"
+    name: "Full envelope with optional fields"
+    input:
+      version: "v1.0.0"
+      message_id: "550e8400-e29b-41d4-a716-446655440000"
+      correlation_id: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+      timestamp: "2026-01-09T15:00:00Z"
+      message_type: "command"
+      sender:
+        id: "kernel-main"
+        type: "kernel"
+      receiver:
+        id: "module-storage"
+        type: "module"
+      payload: {}
+      security:
+        checksum: "abc123"
+    expected: "VALID"
+    note: "All fields including optional"
+  
+  # Invalid envelope tests
+  - id: "envelope-invalid-001"
+    name: "Missing required field: version"
+    input:
+      message_id: "550e8400-e29b-41d4-a716-446655440000"
+      timestamp: "2026-01-09T15:00:00Z"
+      message_type: "command"
+      payload: {}
+    expected: "INVALID"
+    error_code: "VALIDATION_ERROR"
+    error_field: "version"
+    note: "Must reject missing version"
+  
+  - id: "envelope-invalid-002"
+    name: "Invalid version format"
+    input:
+      version: "1.0.0"  # Missing 'v' prefix
+      message_id: "550e8400-e29b-41d4-a716-446655440000"
+      timestamp: "2026-01-09T15:00:00Z"
+      message_type: "command"
+      payload: {}
+    expected: "INVALID"
+    error_code: "VALIDATION_ERROR"
+    error_field: "version"
+    note: "Version must match pattern v1.x.x"
+  
+  - id: "envelope-invalid-003"
+    name: "Invalid message_id format"
+    input:
+      version: "v1.0.0"
+      message_id: "not-a-uuid"
+      timestamp: "2026-01-09T15:00:00Z"
+      message_type: "command"
+      payload: {}
+    expected: "INVALID"
+    error_code: "VALIDATION_ERROR"
+    error_field: "message_id"
+    note: "message_id must be valid UUID v4"
+  
+  - id: "envelope-invalid-004"
+    name: "Invalid timestamp format"
+    input:
+      version: "v1.0.0"
+      message_id: "550e8400-e29b-41d4-a716-446655440000"
+      timestamp: "2026-01-09 15:00:00"  # Not ISO 8601
+      message_type: "command"
+      payload: {}
+    expected: "INVALID"
+    error_code: "VALIDATION_ERROR"
+    error_field: "timestamp"
+    note: "timestamp must be ISO 8601"
+  
+  - id: "envelope-invalid-005"
+    name: "Invalid message_type"
+    input:
+      version: "v1.0.0"
+      message_id: "550e8400-e29b-41d4-a716-446655440000"
+      timestamp: "2026-01-09T15:00:00Z"
+      message_type: "invalid_type"
+      payload: {}
+    expected: "INVALID"
+    error_code: "VALIDATION_ERROR"
+    error_field: "message_type"
+    note: "message_type must be from enum"
+  
+  - id: "envelope-invalid-006"
+    name: "Missing required field: payload"
+    input:
+      version: "v1.0.0"
+      message_id: "550e8400-e29b-41d4-a716-446655440000"
+      timestamp: "2026-01-09T15:00:00Z"
+      message_type: "command"
+    expected: "INVALID"
+    error_code: "VALIDATION_ERROR"
+    error_field: "payload"
+    note: "payload is required"
+  
+  # Unknown fields (forward compatibility)
+  - id: "envelope-forward-001"
+    name: "Unknown field should be ignored"
+    input:
+      version: "v1.0.0"
+      message_id: "550e8400-e29b-41d4-a716-446655440000"
+      timestamp: "2026-01-09T15:00:00Z"
+      message_type: "command"
+      payload: {}
+      unknown_field: "future_feature"
+    expected: "VALID"
+    note: "Forward compatibility: ignore unknown fields"
+  
+  # Sender/receiver validation
+  - id: "envelope-sender-001"
+    name: "Invalid sender type"
+    input:
+      version: "v1.0.0"
+      message_id: "550e8400-e29b-41d4-a716-446655440000"
+      timestamp: "2026-01-09T15:00:00Z"
+      message_type: "command"
+      sender:
+        id: "test"
+        type: "invalid_type"
+      payload: {}
+    expected: "INVALID"
+    error_code: "VALIDATION_ERROR"
+    error_field: "sender.type"
+    note: "sender.type must be from enum"
+
+# Validation requirements
+requirements:
+  - "MUST validate against envelope.schema.yaml"
+  - "MUST check all required fields"
+  - "MUST validate field formats (UUID, ISO 8601, etc.)"
+  - "MUST reject invalid message_type values"
+  - "MUST ignore unknown fields (forward compatibility)"
+  - "SHOULD provide clear error messages"
+
+# Metrics
+metrics:
+  - metric: "validation_time_ms"
+    description: "Time to validate envelope"
+    target: "<10ms"
+  
+  - metric: "error_clarity"
+    description: "Error messages include field name and reason"
+    target: "100%"

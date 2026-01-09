@@ -1,0 +1,151 @@
+# Canonical YAML Test Vectors
+# These vectors ensure YAML canonicalization is deterministic and consistent
+
+version: v1.0.0
+
+# Test vectors for YAML canonicalization
+# Canonical YAML format for deterministic comparisons
+
+vectors:
+  # Basic key ordering
+  - id: "yaml-canonical-001"
+    description: "Simple object with unordered keys"
+    input: |
+      z_field: last
+      a_field: first
+      m_field: middle
+    canonical: |
+      a_field: first
+      m_field: middle
+      z_field: last
+    note: "Keys MUST be sorted alphabetically"
+  
+  # Nested structures
+  - id: "yaml-canonical-002"
+    description: "Nested objects"
+    input: |
+      outer:
+        z: 3
+        a: 1
+        m: 2
+      other: value
+    canonical: |
+      other: value
+      outer:
+        a: 1
+        m: 2
+        z: 3
+    note: "All nesting levels sorted"
+  
+  # Arrays (order preserved)
+  - id: "yaml-canonical-003"
+    description: "Arrays maintain order"
+    input: |
+      items:
+        - 3
+        - 1
+        - 2
+    canonical: |
+      items:
+        - 3
+        - 1
+        - 2
+    note: "Array order MUST be preserved"
+  
+  # String quoting
+  - id: "yaml-canonical-004"
+    description: "String quoting consistency"
+    input: |
+      plain: simple
+      quoted: "needs quotes: special"
+      multiline: |
+        Line 1
+        Line 2
+    canonical: |
+      multiline: "Line 1\nLine 2\n"
+      plain: simple
+      quoted: "needs quotes: special"
+    note: "Consistent quoting, multiline to quoted"
+  
+  # Numbers and booleans
+  - id: "yaml-canonical-005"
+    description: "Type preservation"
+    input: |
+      integer: 42
+      float: 3.14
+      boolean_true: true
+      boolean_false: false
+      null_value: null
+    canonical: |
+      boolean_false: false
+      boolean_true: true
+      float: 3.14
+      integer: 42
+      null_value: null
+    note: "Types preserved, no quotes on numbers/booleans"
+  
+  # Indentation
+  - id: "yaml-canonical-006"
+    description: "Consistent indentation"
+    input: |
+      level1:
+          level2:
+              level3: deep
+    canonical: |
+      level1:
+        level2:
+          level3: deep
+    note: "2-space indentation consistently"
+  
+  # Comments removed
+  - id: "yaml-canonical-007"
+    description: "Comments stripped"
+    input: |
+      # This is a comment
+      key: value  # inline comment
+      # Another comment
+      other: data
+    canonical: |
+      key: value
+      other: data
+    note: "All comments MUST be removed"
+  
+  # Anchors and aliases resolved
+  - id: "yaml-canonical-008"
+    description: "Anchors resolved"
+    input: |
+      defaults: &defaults
+        timeout: 30
+        retry: 3
+      config:
+        <<: *defaults
+        name: example
+    canonical: |
+      config:
+        name: example
+        retry: 3
+        timeout: 30
+      defaults:
+        retry: 3
+        timeout: 30
+    note: "Anchors/aliases MUST be resolved and removed"
+
+# Canonicalization rules
+rules:
+  key_ordering: alphabetical_recursive
+  indentation: 2_spaces
+  quotes: minimal_required
+  comments: remove_all
+  anchors: resolve_and_remove
+  arrays: preserve_order
+  multiline: convert_to_quoted
+  trailing_newline: none
+  empty_lines: remove
+
+# Implementation notes
+implementation:
+  - "Canonical YAML is deterministic and minimal"
+  - "Parse YAML, sort keys, emit with consistent formatting"
+  - "Use for hashing and comparison"
+  - "All implementations MUST produce identical output"
+  - "Comments and anchors are NOT preserved"

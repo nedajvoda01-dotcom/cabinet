@@ -1,0 +1,103 @@
+manifest_version: v1.0.0
+
+module:
+  id: car-storage
+  name: "Car Storage Adapter"
+  description: "Manages car listing data storage and retrieval"
+  version: v1.0.0
+  type: adapter
+  author:
+    name: "Cabinet Team"
+    email: "team@cabinet.example"
+  license: MIT
+
+capabilities:
+  - id: storage.listings.create
+    name: "Create Listing"
+    description: "Create a new car listing"
+    handler: "invoke.php::handleCreateListing"
+    visibility: public
+    category: storage
+  
+  - id: storage.listings.list
+    name: "List Listings"
+    description: "Query and list car listings"
+    handler: "invoke.php::handleListListings"
+    visibility: public
+    category: storage
+  
+  - id: storage.listings.get
+    name: "Get Listing"
+    description: "Retrieve a specific listing by ID"
+    handler: "invoke.php::handleGetListing"
+    visibility: public
+    category: storage
+  
+  - id: storage.listings.update
+    name: "Update Listing"
+    description: "Update an existing listing"
+    handler: "invoke.php::handleUpdateListing"
+    visibility: public
+    category: storage
+  
+  - id: storage.listings.delete
+    name: "Delete Listing"
+    description: "Delete a listing"
+    handler: "invoke.php::handleDeleteListing"
+    visibility: public
+    category: storage
+  
+  - id: storage.listings.upsert_batch
+    name: "Batch Upsert Listings"
+    description: "Create or update multiple listings (internal only)"
+    handler: "invoke.php::handleUpsertBatch"
+    visibility: internal
+    category: storage
+  
+  - id: storage.imports.register
+    name: "Register Import"
+    description: "Register a new import operation (internal only)"
+    handler: "invoke.php::handleRegisterImport"
+    visibility: internal
+    category: storage
+  
+  - id: storage.imports.mark_done
+    name: "Mark Import Done"
+    description: "Mark an import as completed (internal only)"
+    handler: "invoke.php::handleMarkImportDone"
+    visibility: internal
+    category: storage
+
+runtime:
+  language: php
+  language_version: "8.1"
+  dependencies:
+    - name: "symfony/yaml"
+      version: "^6.0"
+    - name: "psr/log"
+      version: "^3.0"
+
+endpoints:
+  invoke: "http://adapter-car-storage/invoke.php"
+  health: "http://adapter-car-storage/health.php"
+
+configuration:
+  storage_path:
+    type: string
+    required: true
+    default: "/var/lib/storage"
+    description: "Path to storage directory"
+  
+  max_listings:
+    type: number
+    required: false
+    default: 10000
+    description: "Maximum number of listings"
+
+security:
+  trusted: false
+  network_access: mesh
+  file_system_access: true
+
+lifecycle:
+  health_check_interval_seconds: 30

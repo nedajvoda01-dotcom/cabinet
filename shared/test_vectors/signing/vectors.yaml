@@ -1,0 +1,141 @@
+# Digital Signature Test Vectors (Optional)
+# Test vectors for message signing and verification
+
+version: v1.0.0
+
+# Note: Signing is OPTIONAL in v1.0.0
+# Implement if message authentication beyond checksums is required
+
+signature_algorithms:
+  recommended:
+    - algorithm: Ed25519
+      key_size: 256
+      signature_size: 512
+      performance: high
+      security: high
+      note: "Preferred for modern systems"
+    
+    - algorithm: ECDSA-P256-SHA256
+      key_size: 256
+      signature_size: variable
+      performance: medium
+      security: high
+      note: "Widely supported alternative"
+  
+  not_recommended:
+    - algorithm: RSA-2048-SHA256
+      reason: "Larger keys and signatures, slower"
+    - algorithm: DSA
+      reason: "Legacy algorithm"
+
+# Signing process
+signing_process:
+  steps:
+    1_canonicalize:
+      description: "Convert payload to canonical form"
+      method: "Use shared/test_vectors/canonical_json"
+    
+    2_hash:
+      description: "Hash the canonical payload"
+      algorithm: SHA-256
+      encoding: UTF-8
+    
+    3_sign:
+      description: "Sign the hash with private key"
+      algorithm: Ed25519
+      output_format: base64
+    
+    4_attach:
+      description: "Attach signature to envelope"
+      location: "envelope.security.signature"
+      format: "base64-encoded"
+
+# Verification process
+verification_process:
+  steps:
+    1_extract:
+      description: "Extract signature from envelope"
+      location: "envelope.security.signature"
+    
+    2_canonicalize:
+      description: "Canonicalize payload"
+      note: "Must produce same canonical form as signing"
+    
+    3_hash:
+      description: "Hash canonical payload"
+      algorithm: SHA-256
+    
+    4_verify:
+      description: "Verify signature with public key"
+      algorithm: Ed25519
+      result: "true/false"
+
+# Test vectors (Ed25519)
+vectors:
+  - id: "sign-001"
+    description: "Simple message signature"
+    algorithm: Ed25519
+    private_key: "7c9e6679742540de944be07fc1f90ae77c9e6679742540de944be07fc1f90ae7"
+    public_key: "f47ac10b58cc4372a5670e02b2c3d479f47ac10b58cc4372a5670e02b2c3d479"
+    message_canonical: '{"key":"value"}'
+    message_hash_sha256: "cd6357efdd966de8c0cb2f876cc89ec74ce35f0968e11743987084bd42fb8944"
+    signature_base64: "3g7t5ZK8B7q3YzP4X2L1H6J9K0M5N8P3Q4R7S0T9U2V5W8X1Y4Z7A0B3C6D9E2F5G8H1I4J7K0M3N6P9Q2R5S8T1U4V7W0X3Y6Z9"
+    note: "Example signature (actual values would differ)"
+
+# Key management
+key_management:
+  generation:
+    - "Generate keys with crypto-secure random source"
+    - "Store private keys securely (HSM, key vault)"
+    - "Distribute public keys through trusted channel"
+  
+  rotation:
+    - "Support key rotation without downtime"
+    - "Version keys in envelope metadata"
+    - "Maintain multiple active keys during transition"
+  
+  revocation:
+    - "Maintain revocation list"
+    - "Check key validity before verification"
+    - "Reject signatures from revoked keys"
+
+# When to use signatures
+use_cases:
+  required:
+    - "Inter-organization communication"
+    - "Untrusted networks"
+    - "Long-term audit trails"
+    - "Regulatory compliance"
+  
+  optional:
+    - "Internal trusted networks"
+    - "Development environments"
+    - "Performance-critical paths"
+
+# Integration with envelope
+envelope_integration:
+  signature_field: "envelope.security.signature"
+  public_key_id: "envelope.security.key_id"
+  signature_algorithm: "envelope.security.signature_algorithm"
+  
+  example:
+    version: "v1.0.0"
+    message_id: "550e8400-e29b-41d4-a716-446655440000"
+    timestamp: "2026-01-09T15:00:00Z"
+    message_type: "command"
+    payload:
+      command_type: "invoke"
+    security:
+      signature: "3g7t5ZK8B7q3YzP4X2L1H6J9K0M5N8P3Q4R7S0T9U2V5W8X1Y4Z7A0B3C6D9E2F5G8H1I4J7K0M3N6P9Q2R5S8T1U4V7W0X3Y6Z9"
+      signature_algorithm: "Ed25519"
+      key_id: "key-2026-01"
+
+# Implementation notes
+implementation:
+  - "Signatures are OPTIONAL in v1.0.0"
+  - "If implemented, use Ed25519"
+  - "Sign canonical form, not raw JSON"
+  - "Include key_id for key rotation support"
+  - "Verify signatures before processing"
+  - "Cache public keys to reduce lookups"
+  - "Use libsodium or equivalent library"

@@ -1,0 +1,192 @@
+# Canonicalization Conformance Suite
+# Tests for deterministic JSON/YAML canonicalization
+
+version: v1.0.0
+suite: canonicalization
+
+description: "Validates canonical encoding for deterministic hashing and comparison"
+
+tests:
+  # JSON canonicalization
+  - id: "canon-json-001"
+    name: "JSON key ordering"
+    input:
+      z_field: "last"
+      a_field: "first"
+      m_field: "middle"
+    expected_canonical: '{"a_field":"first","m_field":"middle","z_field":"last"}'
+    format: json
+    note: "Keys MUST be sorted alphabetically"
+  
+  - id: "canon-json-002"
+    name: "Nested object sorting"
+    input:
+      outer:
+        z: 3
+        a: 1
+      other: "value"
+    expected_canonical: '{"other":"value","outer":{"a":1,"z":3}}'
+    format: json
+    note: "All levels sorted recursively"
+  
+  - id: "canon-json-003"
+    name: "No whitespace in canonical JSON"
+    input:
+      key: "value"
+    expected_canonical: '{"key":"value"}'
+    format: json
+    note: "NO spaces, newlines, or indentation"
+  
+  - id: "canon-json-004"
+    name: "Array order preserved"
+    input:
+      items: [3, 1, 2]
+    expected_canonical: '{"items":[3,1,2]}'
+    format: json
+    note: "Array elements keep original order"
+  
+  - id: "canon-json-005"
+    name: "Numbers without exponent"
+    input:
+      integer: 42
+      float: 3.14
+    expected_canonical: '{"float":3.14,"integer":42}'
+    format: json
+    note: "Numbers in minimal form"
+  
+  # YAML canonicalization
+  - id: "canon-yaml-001"
+    name: "YAML key ordering"
+    input: |
+      z_field: last
+      a_field: first
+      m_field: middle
+    expected_canonical: |
+      a_field: first
+      m_field: middle
+      z_field: last
+    format: yaml
+    note: "Keys sorted alphabetically"
+  
+  - id: "canon-yaml-002"
+    name: "YAML consistent indentation"
+    input: |
+      level1:
+          level2:
+              level3: deep
+    expected_canonical: |
+      level1:
+        level2:
+          level3: deep
+    format: yaml
+    note: "2-space indentation"
+  
+  - id: "canon-yaml-003"
+    name: "YAML comments removed"
+    input: |
+      # Comment
+      key: value  # inline
+    expected_canonical: |
+      key: value
+    format: yaml
+    note: "All comments stripped"
+  
+  - id: "canon-yaml-004"
+    name: "YAML anchors resolved"
+    input: |
+      defaults: &defaults
+        timeout: 30
+      config:
+        <<: *defaults
+        name: test
+    expected_canonical: |
+      config:
+        name: test
+        timeout: 30
+      defaults:
+        timeout: 30
+    format: yaml
+    note: "Anchors and aliases resolved"
+  
+  # Idempotency tests
+  - id: "canon-idempotent-001"
+    name: "Canonicalize twice gives same result"
+    input:
+      z: "last"
+      a: "first"
+    test:
+      - "Canonicalize input → result1"
+      - "Canonicalize result1 → result2"
+      - "Assert result1 === result2"
+    note: "Canonicalization is idempotent"
+  
+  # Hash consistency
+  - id: "canon-hash-001"
+    name: "Different order, same hash after canonicalization"
+    input1:
+      a: 1
+      b: 2
+    input2:
+      b: 2
+      a: 1
+    test:
+      - "canonical1 = canonicalize(input1)"
+      - "canonical2 = canonicalize(input2)"
+      - "hash1 = sha256(canonical1)"
+      - "hash2 = sha256(canonical2)"
+      - "Assert hash1 === hash2"
+    note: "Canonical form enables deterministic hashing"
+
+# Requirements
+requirements:
+  json:
+    - "MUST sort object keys alphabetically at all levels"
+    - "MUST remove all whitespace"
+    - "MUST preserve array order"
+    - "MUST use minimal number representation"
+    - "MUST escape control characters"
+    - "MUST use lowercase for hex digits in escapes"
+    - "SHOULD implement RFC 8785 (JSON Canonicalization Scheme)"
+  
+  yaml:
+    - "MUST sort object keys alphabetically at all levels"
+    - "MUST use 2-space indentation"
+    - "MUST remove all comments"
+    - "MUST resolve all anchors and aliases"
+    - "MUST use minimal quoting"
+    - "MUST preserve array order"
+    - "MUST remove trailing whitespace"
+
+# Use cases
+use_cases:
+  - name: "Content hashing for deduplication"
+    process:
+      - "Canonicalize content"
+      - "SHA-256 hash"
+      - "Compare hashes for duplicates"
+  
+  - name: "Message integrity verification"
+    process:
+      - "Canonicalize payload"
+      - "Include checksum in envelope.security"
+      - "Receiver re-canonicalizes and verifies"
+  
+  - name: "Schema comparison"
+    process:
+      - "Canonicalize both schemas"
+      - "Text diff on canonical forms"
+      - "Detect actual changes vs formatting"
+
+# Metrics
+metrics:
+  - metric: "canonicalization_time_ms"
+    description: "Time to canonicalize message"
+    target: "<5ms for typical messages"
+  
+  - metric: "idempotency"
+    description: "Canonicalize(Canonicalize(x)) === Canonicalize(x)"
+    target: "100%"
+  
+  - metric: "determinism"
+    description: "Multiple calls produce identical output"
+    target: "100%"
