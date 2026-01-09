@@ -199,14 +199,11 @@ fn generate_report(
     errors: &[String],
     warnings: &[String],
 ) -> Value {
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
+    // NOTE: No timestamp in report body to ensure determinism
+    // Per shared/canonicalization requirements: reports must be bit-for-bit reproducible
     
     json!({
         "version": "1.0.0",
-        "timestamp": format!("{}", now),
         "tool": "diff_builder",
         "status": if errors.is_empty() { "SUCCESS" } else { "FAILED" },
         "deterministic": true,
@@ -223,11 +220,11 @@ fn generate_report(
             "generate_commands": "Diff is declarative only, not executable"
         },
         "summary": {
-            "total_diffs": diffs.len(),
             "added": added,
+            "errors": errors.len(),
             "modified": modified,
             "removed": removed,
-            "errors": errors.len(),
+            "total_diffs": diffs.len(),
             "warnings": warnings.len()
         },
         "errors": errors,

@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Governance Runtime Runner
+# Runs all governance guards and generates deterministic report
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+echo "🛡️  Governance Runtime - Running all guards..."
+
+cd "$REPO_ROOT"
+
+# Track results
+TOTAL_GUARDS=0
+PASSED_GUARDS=0
+FAILED_GUARDS=0
+GUARD_RESULTS=()
+
+# Run each guard in guards/ directory
+for guard_script in governance/guards/*; do
+    if [ -f "$guard_script" ] && [ -x "$guard_script" ]; then
+        TOTAL_GUARDS=$((TOTAL_GUARDS + 1))
+        guard_name=$(basename "$guard_script")
+        
+        echo ""
+        echo "Running guard: $guard_name"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        
+        if "$guard_script"; then
+            PASSED_GUARDS=$((PASSED_GUARDS + 1))
+            GUARD_RESULTS+=("$guard_name:PASS")
+            echo "✅ $guard_name: PASS"
+        else
+            FAILED_GUARDS=$((FAILED_GUARDS + 1))
+            GUARD_RESULTS+=("$guard_name:FAIL")
+            echo "❌ $guard_name: FAIL"
+        fi
+    fi
+done
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📊 Governance Runtime Summary"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Total guards: $TOTAL_GUARDS"
+echo "Passed: $PASSED_GUARDS"
+echo "Failed: $FAILED_GUARDS"
+echo ""
+
+# Write results for report generation
+mkdir -p /tmp/governance-runtime
+echo "TOTAL_GUARDS=$TOTAL_GUARDS" > /tmp/governance-runtime/results.txt
+echo "PASSED_GUARDS=$PASSED_GUARDS" >> /tmp/governance-runtime/results.txt
+echo "FAILED_GUARDS=$FAILED_GUARDS" >> /tmp/governance-runtime/results.txt
+for result in "${GUARD_RESULTS[@]}"; do
+    echo "GUARD_RESULT=$result" >> /tmp/governance-runtime/results.txt
+done
+
+# Generate report
+"$SCRIPT_DIR/report"
+
+# Exit with failure if any guard failed
+if [ $FAILED_GUARDS -gt 0 ]; then
+    echo "❌ Governance runtime FAILED"
+    exit 1
+else
+    echo "✅ Governance runtime PASSED"
+    exit 0
+fi

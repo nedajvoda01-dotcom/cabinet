@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Governance Runtime Report Generator
+# Generates deterministic governance report (no timestamps in report body)
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+cd "$REPO_ROOT"
+
+# Read results from run script
+RESULTS_FILE="/tmp/governance-runtime/results.txt"
+if [ ! -f "$RESULTS_FILE" ]; then
+    echo "⚠️  No results file found, creating empty report"
+    TOTAL_GUARDS=0
+    PASSED_GUARDS=0
+    FAILED_GUARDS=0
+    GUARD_RESULTS=()
+else
+    # Source the results
+    source "$RESULTS_FILE"
+    
+    # Parse guard results into array
+    GUARD_RESULTS=()
+    while IFS= read -r line; do
+        if [[ "$line" == GUARD_RESULT=* ]]; then
+            GUARD_RESULTS+=("${line#GUARD_RESULT=}")
+        fi
+    done < "$RESULTS_FILE"
+fi
+
+# Create report directory
+mkdir -p dist/reports
+
+# Generate deterministic JSON report (no timestamp in body)
+cat > dist/reports/governance_report.json << JSON
+{
+  "version": "1.0.0",
+  "tool": "governance_runtime",
+  "status": "$([ $FAILED_GUARDS -eq 0 ] && echo "PASS" || echo "FAIL")",
+  "deterministic": true,
+  "inputs": {
+    "guards": "governance/guards/*",
+    "contracts": "shared/contracts/**",
+    "schemas": "shared/schemas/**",
+    "compatibility": "shared/compatibility/**"
+  },
+  "outputs": {
+    "report": "dist/reports/governance_report.json"
+  },
+  "summary": {
+    "failed_guards": $FAILED_GUARDS,
+    "passed_guards": $PASSED_GUARDS,
+    "total_guards": $TOTAL_GUARDS
+  },
+  "guard_results": [
+$(IFS=$'\n'; for result in "${GUARD_RESULTS[@]}"; do
+    guard_name="${result%%:*}"
+    guard_status="${result##*:}"
+    echo "    {\"guard\": \"$guard_name\", \"status\": \"$guard_status\"},"
+done | sed '$ s/,$//')
+  ]
+}
+JSON
+
+echo "📄 Governance report written to: dist/reports/governance_report.json"

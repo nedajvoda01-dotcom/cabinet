@@ -8,6 +8,7 @@ pub mod sandbox;
 pub mod result_gate;
 pub mod observed;
 pub mod primitives;
+pub mod config;
 
 #[cfg(test)]
 mod tests;
