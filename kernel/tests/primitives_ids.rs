@@ -80,7 +80,8 @@ fn test_entity_message_id() {
     let id = entities::message_id();
     
     assert!(id.starts_with("msg-"));
-    assert!(id.len() > 40); // prefix + uuid
+    // msg- (4) + uuid (36) = 40 chars total
+    assert_eq!(id.len(), 40);
 }
 
 #[test]
