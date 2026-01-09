@@ -2,69 +2,43 @@
 # Declares intended UI applications and user profiles
 
 ui_applications:
-  - id: "admin-ui"
-    name: "Admin Dashboard"
-    description: "Full administrative interface for internal users"
+  - id: "main_ui"
+    name: "Main UI Application"
+    description: "Primary user interface for the Cabinet platform"
     target_users:
       - admin
-      - manager
       - editor
+      - viewer
     features:
-      - "Manage car listings (CRUD)"
-      - "Import CSV data"
-      - "Configure pricing"
-      - "Manage automation workflows"
-  
-  - id: "public-ui"
-    name: "Public Catalog"
-    description: "Read-only catalog for public/guest users"
-    target_users:
-      - public
-      - guest
-    features:
-      - "Browse car listings"
-      - "View individual car details"
-      - "Search and filter"
+      - "Access system through backend_ui gateway"
+      - "Session management"
+      - "Role-based access control"
+    backend_binding: "backend-ui"
+    note: "UI intentionally not implemented in core - stub only"
 
 user_profiles:
   - id: "admin"
     name: "Administrator"
     description: "Full system access for administrators"
     capabilities:
-      - "storage.listings.create"
-      - "storage.listings.list"
-      - "storage.listings.get"
-      - "storage.listings.update"
-      - "storage.listings.delete"
-      - "import.run"
-      - "pricing.calculate"
-      - "automation.workflow.create"
-      - "automation.workflow.list"
+      - "backend.ui.health"
+      - "backend.ui.session.open"
+      - "backend.ui.invoke"
     result_profile: "internal_ui"
   
   - id: "editor"
     name: "Editor"
     description: "Can create and edit listings but not delete"
     capabilities:
-      - "storage.listings.create"
-      - "storage.listings.list"
-      - "storage.listings.get"
-      - "storage.listings.update"
-      - "pricing.calculate"
+      - "backend.ui.health"
+      - "backend.ui.session.open"
+      - "backend.ui.invoke"
     result_profile: "internal_ui"
   
   - id: "viewer"
     name: "Viewer"
     description: "Read-only access to listings"
     capabilities:
-      - "storage.listings.list"
-      - "storage.listings.get"
+      - "backend.ui.health"
+      - "backend.ui.session.open"
     result_profile: "internal_ui"
-  
-  - id: "public"
-    name: "Public User"
-    description: "Public access with limited data visibility"
-    capabilities:
-      - "storage.listings.list"
-      - "storage.listings.get"
-    result_profile: "public_ui"

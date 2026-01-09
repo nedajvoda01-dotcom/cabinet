@@ -4,112 +4,51 @@ policy: deny_by_default
 # Runtime routing configuration
 # Defines which components can communicate with each other
 # ALL routes must be explicitly defined - deny by default
+# Theme 8 & 9: Minimal edges only for system closure
 
 routes:
-  # Main UI to Storage Module
-  - id: main-ui-to-storage
+  # Main UI to Backend UI (only allowed UI-to-module edge)
+  - id: main-ui-to-backend-ui
     from:
       type: ui
       id: main_ui
-      capability: storage.*
     to:
       type: module
-      id: storage-module
+      id: backend-ui
     conditions:
       scopes:
-        - storage:read
+        - ui:access
+      roles:
+        - admin
+        - editor
+        - viewer
+    metadata:
+      description: "Allow main UI to access backend_ui gateway only"
+      enabled: true
+      priority: 100
+  
+  # Backend UI to Ads API Parser (example module invocation)
+  - id: backend-ui-to-ads-parser
+    from:
+      type: module
+      id: backend-ui
+    to:
+      type: module
+      id: ads-api-parser
+    conditions:
+      scopes:
         - storage:write
       roles:
         - admin
         - editor
     metadata:
-      description: "Allow main UI to access storage capabilities"
+      description: "Allow backend_ui to invoke ads_api_parser"
       enabled: true
       priority: 50
-  
-  # Main UI to Import
-  - id: main-ui-to-import
-    from:
-      type: ui
-      id: main_ui
-    to:
-      type: module
-      id: storage-module
-      capability: import.run
-    conditions:
-      scopes:
-        - storage:write
-      roles:
-        - admin
-    metadata:
-      description: "Allow admins to run imports"
-      enabled: true
-      priority: 50
-  
-  # Internal capability chains for import workflow
-  - id: import-to-hash
-    from:
-      type: module
-      id: storage-module
-      capability: import.run
-    to:
-      type: module
-      id: storage-module
-      capability: parser.calculate_hash
-    metadata:
-      description: "Import can calculate content hashes"
-      enabled: true
-  
-  - id: import-to-register
-    from:
-      type: module
-      id: storage-module
-      capability: import.run
-    to:
-      type: module
-      id: storage-module
-      capability: storage.imports.register
-    metadata:
-      description: "Import can register import operations"
-      enabled: true
-  
-  - id: import-to-upsert
-    from:
-      type: module
-      id: storage-module
-      capability: import.run
-    to:
-      type: module
-      id: storage-module
-      capability: storage.listings.upsert_batch
-    metadata:
-      description: "Import can batch upsert listings"
-      enabled: true
-  
-  - id: import-to-mark-done
-    from:
-      type: module
-      id: storage-module
-      capability: import.run
-    to:
-      type: module
-      id: storage-module
-      capability: storage.imports.mark_done
-    metadata:
-      description: "Import can mark completion"
-      enabled: true
-
-# Explicitly allowed capability chains
-capability_chains:
-  import.run:
-    - parser.calculate_hash
-    - storage.imports.register
-    - storage.listings.upsert_batch
-    - storage.imports.mark_done
 
 # Global routing restrictions
 restrictions:
-  max_chain_depth: 10
+  max_chain_depth: 5
   
   # Capabilities that are globally blocked from direct invocation
   blocked_capabilities:

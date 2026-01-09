@@ -1,0 +1,66 @@
+manifest_version: v1.0.0
+
+module:
+  id: backend-ui
+  name: "Backend UI Module"
+  description: "Backend API gateway for UI applications - handles authentication and routing"
+  version: v1.0.0
+  type: service
+  author:
+    name: "Cabinet Team"
+    email: "team@cabinet.example"
+  license: MIT
+
+capabilities:
+  - id: backend.ui.health
+    name: "Health Check"
+    description: "Backend UI health check endpoint"
+    handler: "entrypoint.php::handleHealth"
+    visibility: public
+    category: system
+  
+  - id: backend.ui.session.open
+    name: "Open Session"
+    description: "Open a new UI session"
+    handler: "entrypoint.php::handleSessionOpen"
+    visibility: public
+    category: auth
+  
+  - id: backend.ui.invoke
+    name: "Invoke Module Command"
+    description: "Proxy command to authorized module (checks permissions)"
+    handler: "entrypoint.php::handleInvoke"
+    visibility: public
+    category: routing
+
+runtime:
+  language: php
+  language_version: "8.1"
+  dependencies:
+    - name: "psr/log"
+      version: "^3.0"
+
+endpoints:
+  invoke: "http://backend-ui/entrypoint.php"
+  health: "http://backend-ui/entrypoint.php?cmd=health"
+
+configuration:
+  state_path:
+    type: string
+    required: true
+    default: "state/"
+    description: "Path to state directory for sessions"
+  
+  config_path:
+    type: string
+    required: true
+    default: "config/"
+    description: "Path to configuration directory"
+
+security:
+  trusted: false
+  network_access: mesh
+  file_system_access: true
+
+lifecycle:
+  health_check_interval_seconds: 30
