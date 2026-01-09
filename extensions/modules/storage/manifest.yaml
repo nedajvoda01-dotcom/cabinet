@@ -1,0 +1,68 @@
+manifest_version: v1.0.0
+
+module:
+  id: storage-module
+  name: "Storage Module"
+  description: "Core storage module for managing data persistence"
+  version: v1.0.0
+  type: extension
+  author:
+    name: "Cabinet Team"
+    email: "team@cabinet.example"
+  license: MIT
+
+capabilities:
+  - id: storage.listings.create
+    name: "Create Listing"
+    description: "Create a new listing"
+    handler: "handlers/create.handler"
+    visibility: public
+    category: storage
+  
+  - id: storage.listings.list
+    name: "List Listings"
+    description: "Query and list listings"
+    handler: "handlers/list.handler"
+    visibility: public
+    category: storage
+  
+  - id: storage.listings.get
+    name: "Get Listing"
+    description: "Retrieve a specific listing"
+    handler: "handlers/get.handler"
+    visibility: public
+    category: storage
+  
+  - id: storage.listings.update
+    name: "Update Listing"
+    description: "Update an existing listing"
+    handler: "handlers/update.handler"
+    visibility: public
+    category: storage
+  
+  - id: storage.listings.delete
+    name: "Delete Listing"
+    description: "Delete a listing"
+    handler: "handlers/delete.handler"
+    visibility: public
+    category: storage
+  
+  - id: storage.listings.upsert_batch
+    name: "Batch Upsert"
+    description: "Create or update multiple listings (internal only)"
+    handler: "handlers/upsert_batch.handler"
+    visibility: internal
+    category: storage
+
+runtime:
+  language: rust
+  language_version: "1.70"
+
+endpoints:
+  invoke: "http://storage-module:8080/invoke"
+  health: "http://storage-module:8080/health"
+
+security:
+  trusted: false
+  network_access: mesh
+  file_system_access: true

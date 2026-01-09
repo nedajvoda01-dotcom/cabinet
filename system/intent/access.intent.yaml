@@ -1,0 +1,56 @@
+# Access Intent
+# Declares roles and their intended permissions
+
+roles:
+  - id: "admin"
+    name: "Administrator"
+    description: "Full system access"
+    scopes:
+      - "storage:read"
+      - "storage:write"
+      - "storage:delete"
+      - "pricing:read"
+      - "pricing:write"
+      - "automation:read"
+      - "automation:write"
+      - "admin"  # Special admin scope for internal operations
+  
+  - id: "editor"
+    name: "Editor"
+    description: "Can create and edit but not delete"
+    scopes:
+      - "storage:read"
+      - "storage:write"
+      - "pricing:read"
+  
+  - id: "viewer"
+    name: "Viewer"
+    description: "Read-only access"
+    scopes:
+      - "storage:read"
+      - "pricing:read"
+  
+  - id: "public"
+    name: "Public User"
+    description: "Anonymous/guest access"
+    scopes:
+      - "storage:read"  # Limited via result profile
+
+scope_groups:
+  - id: "storage_full"
+    scopes:
+      - "storage:read"
+      - "storage:write"
+      - "storage:delete"
+    description: "Full storage access"
+  
+  - id: "storage_readonly"
+    scopes:
+      - "storage:read"
+    description: "Read-only storage access"
+  
+  - id: "pricing_full"
+    scopes:
+      - "pricing:read"
+      - "pricing:write"
+    description: "Full pricing access"

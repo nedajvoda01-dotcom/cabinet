@@ -1,0 +1,123 @@
+version: v1.0.0
+policy: deny_by_default
+
+# Runtime routing configuration
+# Defines which components can communicate with each other
+# ALL routes must be explicitly defined - deny by default
+
+routes:
+  # Main UI to Storage Module
+  - id: main-ui-to-storage
+    from:
+      type: ui
+      id: main_ui
+      capability: storage.*
+    to:
+      type: module
+      id: storage-module
+    conditions:
+      scopes:
+        - storage:read
+        - storage:write
+      roles:
+        - admin
+        - editor
+    metadata:
+      description: "Allow main UI to access storage capabilities"
+      enabled: true
+      priority: 50
+  
+  # Main UI to Import
+  - id: main-ui-to-import
+    from:
+      type: ui
+      id: main_ui
+    to:
+      type: module
+      id: storage-module
+      capability: import.run
+    conditions:
+      scopes:
+        - storage:write
+      roles:
+        - admin
+    metadata:
+      description: "Allow admins to run imports"
+      enabled: true
+      priority: 50
+  
+  # Internal capability chains for import workflow
+  - id: import-to-hash
+    from:
+      type: module
+      id: storage-module
+      capability: import.run
+    to:
+      type: module
+      id: storage-module
+      capability: parser.calculate_hash
+    metadata:
+      description: "Import can calculate content hashes"
+      enabled: true
+  
+  - id: import-to-register
+    from:
+      type: module
+      id: storage-module
+      capability: import.run
+    to:
+      type: module
+      id: storage-module
+      capability: storage.imports.register
+    metadata:
+      description: "Import can register import operations"
+      enabled: true
+  
+  - id: import-to-upsert
+    from:
+      type: module
+      id: storage-module
+      capability: import.run
+    to:
+      type: module
+      id: storage-module
+      capability: storage.listings.upsert_batch
+    metadata:
+      description: "Import can batch upsert listings"
+      enabled: true
+  
+  - id: import-to-mark-done
+    from:
+      type: module
+      id: storage-module
+      capability: import.run
+    to:
+      type: module
+      id: storage-module
+      capability: storage.imports.mark_done
+    metadata:
+      description: "Import can mark completion"
+      enabled: true
+
+# Explicitly allowed capability chains
+capability_chains:
+  import.run:
+    - parser.calculate_hash
+    - storage.imports.register
+    - storage.listings.upsert_batch
+    - storage.imports.mark_done
+
+# Global routing restrictions
+restrictions:
+  max_chain_depth: 10
+  
+  # Capabilities that are globally blocked from direct invocation
+  blocked_capabilities:
+    - system.shutdown
+    - kernel.debug
+    - kernel.config.modify
+  
+  # Network segments allowed for communication
+  allowed_networks:
+    - mesh    # Internal module-to-module
+    - edge    # UI-to-platform

@@ -1,0 +1,51 @@
+# Company Intent
+# High-level business goals and constraints for the Cabinet system
+
+company:
+  name: "Cabinet Platform"
+  domain: "automotive"
+  description: "Thin platform for managing automotive listings with capability-based architecture"
+
+business_goals:
+  - id: "secure_architecture"
+    description: "Maintain a secure, capability-based architecture with clear boundaries"
+    priority: "critical"
+    metrics:
+      - name: "Zero unauthorized access"
+        target: "100% authorization enforcement"
+      - name: "Audit coverage"
+        target: "100% of capability invocations logged"
+  
+  - id: "extensibility"
+    description: "Enable adding new adapters and UI without platform code changes"
+    priority: "high"
+    metrics:
+      - name: "New adapter deployment time"
+        target: "<1 hour"
+      - name: "Platform modifications for new features"
+        target: "Zero modifications required"
+  
+  - id: "performance"
+    description: "Maintain fast response times for user interactions"
+    priority: "high"
+    metrics:
+      - name: "API response time p95"
+        target: "<200ms"
+      - name: "Throughput"
+        target: ">1000 req/sec"
+
+constraints:
+  regulatory:
+    - "GDPR"  # Data protection for European users
+    - "PCI-DSS"  # If handling payments
+  
+  budget:
+    currency: "USD"
+    monthly_limit: 5000
+  
+  availability:
+    sla_percentage: 99.9
+    maintenance_windows:
+      - day: "sunday"
+        start_time: "02:00"
+        end_time: "04:00"

@@ -1,0 +1,150 @@
+manifest_version: v1.0.0
+
+ui:
+  id: main_ui
+  name: "Main UI Application"
+  description: "Primary user interface for the Cabinet platform"
+  version: v1.0.0
+  type: web
+  entry_point: "/index.html"
+  icon: "/assets/icon.svg"
+  theme:
+    primary_color: "#1976D2"
+    logo_url: "/assets/logo.svg"
+
+permissions:
+  allowed_capabilities:
+    - storage.listings.create
+    - storage.listings.list
+    - storage.listings.get
+    - storage.listings.update
+    - storage.listings.delete
+    - import.run
+    - pricing.calculate
+    - pricing.rules.list
+    - automation.workflow.create
+    - automation.workflow.list
+  
+  required_scopes:
+    - storage:read
+    - storage:write
+    - pricing:read
+    - automation:read
+  
+  result_profile: internal_ui
+
+profiles:
+  - id: admin
+    name: "Administrator"
+    description: "Full system access"
+    default: false
+    capabilities:
+      - storage.listings.create
+      - storage.listings.list
+      - storage.listings.get
+      - storage.listings.update
+      - storage.listings.delete
+      - import.run
+      - pricing.calculate
+      - automation.workflow.create
+      - automation.workflow.list
+    routes:
+      - "/dashboard"
+      - "/listings"
+      - "/import"
+      - "/pricing"
+      - "/automation"
+  
+  - id: editor
+    name: "Editor"
+    description: "Can create and edit"
+    default: false
+    capabilities:
+      - storage.listings.create
+      - storage.listings.list
+      - storage.listings.get
+      - storage.listings.update
+    routes:
+      - "/dashboard"
+      - "/listings"
+  
+  - id: viewer
+    name: "Viewer"
+    description: "Read-only access"
+    default: true
+    capabilities:
+      - storage.listings.list
+      - storage.listings.get
+    routes:
+      - "/dashboard"
+      - "/listings"
+
+routes:
+  - path: "/dashboard"
+    component: "pages/Dashboard"
+    name: "Dashboard"
+    public: false
+  
+  - path: "/listings"
+    component: "pages/Listings"
+    name: "Listings"
+    required_capabilities:
+      - storage.listings.list
+    public: false
+  
+  - path: "/listings/new"
+    component: "pages/ListingNew"
+    name: "New Listing"
+    required_capabilities:
+      - storage.listings.create
+    public: false
+  
+  - path: "/listings/:id"
+    component: "pages/ListingDetail"
+    name: "Listing Detail"
+    required_capabilities:
+      - storage.listings.get
+    public: false
+  
+  - path: "/import"
+    component: "pages/Import"
+    name: "Import"
+    required_capabilities:
+      - import.run
+    public: false
+  
+  - path: "/pricing"
+    component: "pages/Pricing"
+    name: "Pricing"
+    required_capabilities:
+      - pricing.calculate
+    public: false
+  
+  - path: "/automation"
+    component: "pages/Automation"
+    name: "Automation"
+    required_capabilities:
+      - automation.workflow.list
+    public: false
+
+dependencies:
+  kernel_version: v1.0.0
+  modules:
+    - module_id: car-storage
+      version_constraint: ">=v1.0.0"
+    - module_id: pricing
+      version_constraint: ">=v1.0.0"
+      optional: true
+    - module_id: automation
+      version_constraint: ">=v1.0.0"
+      optional: true
+
+build:
+  framework: react
+  build_command: "npm run build"
+  output_directory: "dist"
+  assets:
+    scripts:
+      - "/assets/app.js"
+    styles:
+      - "/assets/app.css"

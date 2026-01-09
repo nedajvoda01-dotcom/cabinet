@@ -1,0 +1,70 @@
+# Limits Intent
+# Declares intended rate limits and resource constraints
+
+global_limits:
+  max_requests_per_second: 1000
+  max_concurrent_requests: 100
+  max_chain_depth: 10
+  max_request_size_bytes: 10485760  # 10MB
+  max_response_size_bytes: 52428800  # 50MB
+
+per_capability_limits:
+  # Write operations (stricter limits)
+  - capability_pattern: "storage.*.create"
+    limits:
+      requests_per_minute: 100
+      timeout_ms: 5000
+      max_input_size_bytes: 1048576  # 1MB
+      max_output_size_bytes: 1048576
+  
+  - capability_pattern: "storage.*.update"
+    limits:
+      requests_per_minute: 200
+      timeout_ms: 5000
+      max_input_size_bytes: 1048576
+      max_output_size_bytes: 1048576
+  
+  - capability_pattern: "storage.*.delete"
+    limits:
+      requests_per_minute: 50
+      timeout_ms: 3000
+      max_input_size_bytes: 102400  # 100KB
+      max_output_size_bytes: 102400
+  
+  # Read operations (more permissive)
+  - capability_pattern: "storage.*.list"
+    limits:
+      requests_per_minute: 500
+      timeout_ms: 3000
+      max_input_size_bytes: 102400
+      max_output_size_bytes: 5242880  # 5MB
+  
+  - capability_pattern: "storage.*.get"
+    limits:
+      requests_per_minute: 1000
+      timeout_ms: 2000
+      max_input_size_bytes: 102400
+      max_output_size_bytes: 1048576
+  
+  # Import operations (batch processing)
+  - capability_pattern: "import.*"
+    limits:
+      requests_per_minute: 10
+      timeout_ms: 60000  # 60 seconds
+      max_input_size_bytes: 10485760  # 10MB
+      max_output_size_bytes: 1048576
+  
+  # Internal operations (stricter control)
+  - capability_pattern: "storage.imports.*"
+    limits:
+      requests_per_minute: 100
+      timeout_ms: 5000
+      max_input_size_bytes: 1048576
+      max_output_size_bytes: 1048576
+  
+  - capability_pattern: "storage.listings.upsert_batch"
+    limits:
+      requests_per_minute: 20
+      timeout_ms: 30000  # 30 seconds
+      max_input_size_bytes: 10485760  # 10MB
+      max_output_size_bytes: 1048576

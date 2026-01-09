@@ -1,0 +1,57 @@
+# Routing Intent
+# Declares intended communication paths between components
+
+policy: "deny_by_default"
+
+allowed_paths:
+  # Admin UI to Storage
+  - from: "admin-ui"
+    to: "car-storage"
+    capabilities:
+      - "storage.listings.*"
+      - "import.run"
+    reason: "Admins need full access to storage operations"
+  
+  # Admin UI to Pricing
+  - from: "admin-ui"
+    to: "pricing"
+    capabilities:
+      - "pricing.*"
+    reason: "Admins need to configure pricing"
+  
+  # Admin UI to Automation
+  - from: "admin-ui"
+    to: "automation"
+    capabilities:
+      - "automation.workflow.*"
+    reason: "Admins need to manage workflows"
+  
+  # Public UI to Storage (read-only)
+  - from: "public-ui"
+    to: "car-storage"
+    capabilities:
+      - "storage.listings.list"
+      - "storage.listings.get"
+    reason: "Public users can browse listings"
+  
+  # Automation to Storage
+  - from: "automation"
+    to: "car-storage"
+    capabilities:
+      - "storage.listings.*"
+    reason: "Workflows need to modify listings"
+  
+  # Automation to Pricing
+  - from: "automation"
+    to: "pricing"
+    capabilities:
+      - "pricing.calculate"
+    reason: "Workflows may need pricing calculations"
+
+capability_chains:
+  # Import workflow chain
+  import.run:
+    - "parser.calculate_hash"
+    - "storage.imports.register"
+    - "storage.listings.upsert_batch"
+    - "storage.imports.mark_done"
