@@ -105,7 +105,9 @@ function handleInvoke(array $payload): array
     ]);
 }
 
-// Main execution if run directly
+// Main execution if run directly (supports both CLI and HTTP for flexibility)
+// CLI: for testing and standalone execution
+// HTTP: for web-based IPC invocation
 if (php_sapi_name() === 'cli' || !empty($_SERVER['REQUEST_METHOD'])) {
     // Read IPC input from stdin or HTTP POST
     $input = file_get_contents('php://stdin') ?: file_get_contents('php://input');
