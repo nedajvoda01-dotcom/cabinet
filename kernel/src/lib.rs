@@ -8,6 +8,9 @@ pub mod sandbox;
 pub mod result_gate;
 pub mod observed;
 
+#[cfg(test)]
+mod tests;
+
 use serde_json::Value;
 use std::collections::HashMap;
 use std::error::Error;
