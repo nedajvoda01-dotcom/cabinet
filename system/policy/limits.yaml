@@ -1,0 +1,93 @@
+# Resource Limits Policy
+# Sandbox limits for module execution
+
+version: v1.0.0
+
+# Global defaults
+defaults:
+  timeout_ms: 30000
+  max_timeout_ms: 300000
+  max_memory_mb: 512
+  max_cpu_percent: 80
+  max_output_bytes: 1048576  # 1MB
+  max_input_bytes: 10485760  # 10MB
+
+# Per-module limits
+module_limits:
+  storage-module:
+    timeout_ms: 60000
+    max_memory_mb: 1024
+    max_cpu_percent: 90
+    max_output_bytes: 10485760  # 10MB
+    max_input_bytes: 52428800   # 50MB
+    allowed_file_paths:
+      - "/mnt/data/extensions/modules/storage/state"
+      - "/mnt/data/extensions/modules/storage/config"
+    readonly_paths:
+      - "/mnt/data/shared/contracts"
+      - "/mnt/data/extensions/routing.yaml"
+  
+  pricing-module:
+    timeout_ms: 10000
+    max_memory_mb: 256
+    max_cpu_percent: 50
+    max_output_bytes: 524288  # 512KB
+    max_input_bytes: 1048576  # 1MB
+    allowed_file_paths:
+      - "/mnt/data/extensions/modules/pricing/state"
+      - "/mnt/data/extensions/modules/pricing/config"
+    readonly_paths:
+      - "/mnt/data/shared/contracts"
+  
+  automation-module:
+    timeout_ms: 120000
+    max_memory_mb: 512
+    max_cpu_percent: 70
+    max_output_bytes: 5242880  # 5MB
+    max_input_bytes: 10485760  # 10MB
+    allowed_file_paths:
+      - "/mnt/data/extensions/modules/automation/state"
+      - "/mnt/data/extensions/modules/automation/config"
+    readonly_paths:
+      - "/mnt/data/shared/contracts"
+      - "/mnt/data/extensions/routing.yaml"
+
+# Filesystem jail configuration
+filesystem:
+  # Paths modules are NEVER allowed to access
+  forbidden_paths:
+    - "/mnt/data/system/intent"
+    - "/mnt/data/system/policy"
+    - "/mnt/data/kernel"
+    - "/etc/passwd"
+    - "/etc/shadow"
+    - "/root"
+    - "/home"
+    - "/var/run"
+    - "/proc"
+    - "/sys"
+  
+  # Symlink protection
+  follow_symlinks: false
+  detect_path_traversal: true
+  
+  # Path validation
+  validate_canonical_paths: true
+
+# Process limits
+process:
+  max_processes_per_module: 1
+  max_file_descriptors: 100
+  max_threads: 10
+  
+# Network limits
+network:
+  allow_outbound: false
+  allow_inbound: false
+  allowed_protocols: []
+  
+# Kill behavior on limit exceeded
+on_limit_exceeded:
+  action: kill
+  grace_period_ms: 1000
+  report_to_audit: true
