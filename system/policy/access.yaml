@@ -1,0 +1,135 @@
+# Access Control Policy
+# Defines roles and their capabilities (deny-by-default)
+
+version: v1.0.0
+policy: deny_by_default
+
+roles:
+  admin:
+    description: "Administrator with full access"
+    scopes:
+      - "storage:read"
+      - "storage:write"
+      - "storage:delete"
+      - "pricing:read"
+      - "pricing:write"
+      - "automation:read"
+      - "automation:write"
+      - "admin"
+    capabilities:
+      - "storage.*"
+      - "pricing.*"
+      - "automation.*"
+      - "import.run"
+    rate_limit_per_minute: 1000
+    max_request_size_bytes: 10485760  # 10MB
+    
+  editor:
+    description: "Editor - can create and edit but not delete"
+    scopes:
+      - "storage:read"
+      - "storage:write"
+      - "pricing:read"
+    capabilities:
+      - "storage.listings.create"
+      - "storage.listings.list"
+      - "storage.listings.get"
+      - "storage.listings.update"
+      - "pricing.calculate"
+    rate_limit_per_minute: 100
+    max_request_size_bytes: 5242880  # 5MB
+    
+  viewer:
+    description: "Viewer - read-only access"
+    scopes:
+      - "storage:read"
+      - "pricing:read"
+    capabilities:
+      - "storage.listings.list"
+      - "storage.listings.get"
+      - "pricing.calculate"
+    rate_limit_per_minute: 200
+    max_request_size_bytes: 1048576  # 1MB
+    
+  public:
+    description: "Public/guest - limited read access"
+    scopes:
+      - "storage:read"
+    capabilities:
+      - "storage.listings.list"
+      - "storage.listings.get"
+    rate_limit_per_minute: 50
+    max_request_size_bytes: 524288  # 512KB
+
+# Capability-specific requirements
+capability_requirements:
+  "storage.listings.create":
+    required_scopes:
+      - "storage:write"
+    required_roles:
+      - "admin"
+      - "editor"
+  
+  "storage.listings.update":
+    required_scopes:
+      - "storage:write"
+    required_roles:
+      - "admin"
+      - "editor"
+  
+  "storage.listings.delete":
+    required_scopes:
+      - "storage:delete"
+    required_roles:
+      - "admin"
+  
+  "storage.listings.list":
+    required_scopes:
+      - "storage:read"
+    required_roles:
+      - "admin"
+      - "editor"
+      - "viewer"
+      - "public"
+  
+  "storage.listings.get":
+    required_scopes:
+      - "storage:read"
+    required_roles:
+      - "admin"
+      - "editor"
+      - "viewer"
+      - "public"
+  
+  "import.run":
+    required_scopes:
+      - "storage:write"
+      - "admin"
+    required_roles:
+      - "admin"
+  
+  # Internal capabilities - admin only (effectively blocks direct access)
+  "storage.imports.register":
+    required_scopes:
+      - "admin"
+    required_roles:
+      - "admin"
+  
+  "storage.imports.mark_done":
+    required_scopes:
+      - "admin"
+    required_roles:
+      - "admin"
+  
+  "storage.listings.upsert_batch":
+    required_scopes:
+      - "admin"
+    required_roles:
+      - "admin"
+
+# Global defaults
+defaults:
+  default_rate_limit_per_minute: 100
+  default_max_request_size_bytes: 1048576
+  default_timeout_ms: 30000
+  max_timeout_ms: 300000

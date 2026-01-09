@@ -1,0 +1,120 @@
+# Routing Policy
+# Deny-by-default routing configuration
+# Derived from extensions/routing.yaml
+
+version: v1.0.0
+policy: deny_by_default
+
+# Allowed routing edges
+routes:
+  # UI to module routes
+  - id: main-ui-to-storage
+    from:
+      type: ui
+      id: main_ui
+    to:
+      type: module
+      id: storage-module
+    allowed_capabilities:
+      - "storage.listings.*"
+    conditions:
+      required_scopes:
+        - "storage:read"
+      allowed_roles:
+        - "admin"
+        - "editor"
+        - "viewer"
+        - "public"
+    enabled: true
+  
+  - id: main-ui-to-import
+    from:
+      type: ui
+      id: main_ui
+    to:
+      type: module
+      id: storage-module
+    allowed_capabilities:
+      - "import.run"
+    conditions:
+      required_scopes:
+        - "storage:write"
+      allowed_roles:
+        - "admin"
+    enabled: true
+  
+  # Internal capability chains (module-to-module within same module)
+  - id: import-to-hash
+    from:
+      type: module
+      id: storage-module
+      capability: "import.run"
+    to:
+      type: module
+      id: storage-module
+    allowed_capabilities:
+      - "parser.calculate_hash"
+    enabled: true
+    internal: true
+  
+  - id: import-to-register
+    from:
+      type: module
+      id: storage-module
+      capability: "import.run"
+    to:
+      type: module
+      id: storage-module
+    allowed_capabilities:
+      - "storage.imports.register"
+    enabled: true
+    internal: true
+  
+  - id: import-to-upsert
+    from:
+      type: module
+      id: storage-module
+      capability: "import.run"
+    to:
+      type: module
+      id: storage-module
+    allowed_capabilities:
+      - "storage.listings.upsert_batch"
+    enabled: true
+    internal: true
+  
+  - id: import-to-mark-done
+    from:
+      type: module
+      id: storage-module
+      capability: "import.run"
+    to:
+      type: module
+      id: storage-module
+    allowed_capabilities:
+      - "storage.imports.mark_done"
+    enabled: true
+    internal: true
+
+# Explicit capability chains
+capability_chains:
+  "import.run":
+    - "parser.calculate_hash"
+    - "storage.imports.register"
+    - "storage.listings.upsert_batch"
+    - "storage.imports.mark_done"
+
+# Global restrictions
+restrictions:
+  max_chain_depth: 10
+  
+  # Globally blocked capabilities
+  blocked_capabilities:
+    - "system.shutdown"
+    - "kernel.debug"
+    - "kernel.config.modify"
+  
+  # Network segments
+  allowed_networks:
+    - mesh    # Internal module-to-module
+    - edge    # UI-to-platform
