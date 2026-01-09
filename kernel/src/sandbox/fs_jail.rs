@@ -113,9 +113,11 @@ fn canonicalize_path(path: &str) -> Result<String, Box<dyn Error>> {
         }
     }
     
-    let mut result = String::from("/");
-    result.push_str(&components.join("/"));
-    Ok(result)
+    if components.is_empty() {
+        Ok("/".to_string())
+    } else {
+        Ok(format!("/{}", components.join("/")))
+    }
 }
 
 /// Checks if a path is attempting to access system/intent (CRITICAL CHECK)

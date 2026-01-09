@@ -171,9 +171,9 @@ mod tests {
         assert!(redacted["data"]["id"].is_string());
         assert!(redacted["data"]["brand"].is_string());
         
-        // Should remove non-allowed fields
-        assert!(redacted["data"]["owner_email"].is_null());
-        assert!(redacted["data"]["internal_notes"].is_null());
+        // Should remove non-allowed fields (they won't exist in the redacted object)
+        assert!(redacted["data"].get("owner_email").is_none());
+        assert!(redacted["data"].get("internal_notes").is_none());
     }
     
     #[test]
