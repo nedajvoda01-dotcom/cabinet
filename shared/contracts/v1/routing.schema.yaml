@@ -1,0 +1,224 @@
+# Routing Schema v1
+# Defines structure for routing configuration
+# Changes MUST follow lifecycle.yaml rules
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/v1/routing.schema.json"
+
+title: "Routing Configuration"
+description: "Defines routing rules and allowlists for inter-module communication"
+
+type: object
+required:
+  - version
+  - policy
+  - routes
+
+properties:
+  version:
+    type: string
+    description: "Routing configuration version"
+    pattern: "^v1\\.[0-9]+\\.[0-9]+$"
+    const: "v1.0.0"
+  
+  policy:
+    type: string
+    description: "Default routing policy"
+    enum:
+      - "deny_by_default"  # Recommended: explicit allowlist
+      - "allow_by_default" # Not recommended: explicit denylist
+    default: "deny_by_default"
+  
+  routes:
+    type: array
+    description: "Allowed routing paths"
+    items:
+      type: object
+      required:
+        - from
+        - to
+      properties:
+        id:
+          type: string
+          description: "Unique route identifier"
+          pattern: "^[a-z][a-z0-9-]*$"
+        
+        from:
+          type: object
+          description: "Source of the route"
+          required:
+            - type
+            - id
+          properties:
+            type:
+              type: string
+              enum: ["ui", "module", "kernel", "any"]
+            
+            id:
+              type: string
+              description: "Specific ID or wildcard (*)"
+            
+            capability:
+              type: string
+              description: "Specific capability pattern"
+              pattern: "^[a-z*][a-z0-9_.*]*$"
+        
+        to:
+          type: object
+          description: "Destination of the route"
+          required:
+            - type
+            - id
+          properties:
+            type:
+              type: string
+              enum: ["module", "kernel"]
+            
+            id:
+              type: string
+              description: "Target module ID"
+            
+            capability:
+              type: string
+              description: "Target capability"
+              pattern: "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+        
+        conditions:
+          type: object
+          description: "Conditions for this route to apply"
+          properties:
+            scopes:
+              type: array
+              description: "Required OAuth scopes"
+              items:
+                type: string
+            
+            roles:
+              type: array
+              description: "Required user roles"
+              items:
+                type: string
+            
+            time_of_day:
+              type: object
+              description: "Time-based restrictions"
+              properties:
+                start:
+                  type: string
+                  pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+                end:
+                  type: string
+                  pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+            
+            rate_limit:
+              type: object
+              description: "Rate limiting for this route"
+              properties:
+                requests_per_minute:
+                  type: integer
+                  minimum: 1
+                requests_per_hour:
+                  type: integer
+                  minimum: 1
+        
+        metadata:
+          type: object
+          description: "Additional metadata"
+          properties:
+            description:
+              type: string
+            
+            enabled:
+              type: boolean
+              default: true
+            
+            priority:
+              type: integer
+              description: "Route priority (higher = checked first)"
+              minimum: 0
+              maximum: 100
+              default: 50
+            
+            tags:
+              type: array
+              items:
+                type: string
+  
+  capability_chains:
+    type: object
+    description: "Allowed capability chain patterns"
+    additionalProperties:
+      type: array
+      description: "Capabilities that can be chained from this capability"
+      items:
+        type: string
+        pattern: "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+  
+  restrictions:
+    type: object
+    description: "Global routing restrictions"
+    properties:
+      max_chain_depth:
+        type: integer
+        description: "Maximum capability chain depth"
+        minimum: 1
+        maximum: 20
+        default: 10
+      
+      blocked_capabilities:
+        type: array
+        description: "Globally blocked capabilities"
+        items:
+          type: string
+      
+      allowed_networks:
+        type: array
+        description: "Allowed network segments"
+        items:
+          type: string
+          enum: ["edge", "mesh", "internal"]
+
+additionalProperties: false
+
+examples:
+  - version: "v1.0.0"
+    policy: "deny_by_default"
+    routes:
+      - id: "ui-to-storage"
+        from:
+          type: "ui"
+          id: "admin-ui"
+          capability: "storage.*"
+        to:
+          type: "module"
+          id: "car-storage"
+        conditions:
+          scopes: ["storage:read", "storage:write"]
+          roles: ["admin"]
+        metadata:
+          description: "Allow admin UI to access storage"
+          enabled: true
+      
+      - id: "import-chain"
+        from:
+          type: "module"
+          id: "car-storage"
+          capability: "import.run"
+        to:
+          type: "module"
+          id: "car-storage"
+        metadata:
+          description: "Allow import capability to chain to internal capabilities"
+    
+    capability_chains:
+      "import.run":
+        - "parser.calculate_hash"
+        - "storage.imports.register"
+        - "storage.listings.upsert_batch"
+        - "storage.imports.mark_done"
+    
+    restrictions:
+      max_chain_depth: 10
+      blocked_capabilities:
+        - "system.shutdown"
+        - "kernel.debug"

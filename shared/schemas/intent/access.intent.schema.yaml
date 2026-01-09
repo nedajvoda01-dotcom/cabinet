@@ -1,0 +1,62 @@
+# Access Intent Schema
+# Defines structure for access control intent declarations
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/intent/access.intent.schema.json"
+
+title: "Access Intent"
+description: "Intent declarations for access control and permissions"
+
+type: object
+required:
+  - roles
+  - scope_groups
+
+properties:
+  roles:
+    type: array
+    description: "Roles that should exist in the system"
+    items:
+      type: object
+      required:
+        - id
+        - name
+        - scopes
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*$"
+        
+        name:
+          type: string
+        
+        description:
+          type: string
+        
+        scopes:
+          type: array
+          description: "Scopes granted to this role"
+          items:
+            type: string
+  
+  scope_groups:
+    type: array
+    description: "Logical groups of scopes"
+    items:
+      type: object
+      required:
+        - id
+        - scopes
+      properties:
+        id:
+          type: string
+        
+        scopes:
+          type: array
+          items:
+            type: string
+        
+        description:
+          type: string
+
+additionalProperties: false

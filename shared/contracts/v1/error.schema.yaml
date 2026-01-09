@@ -1,0 +1,172 @@
+# IPC Error Schema v1
+# Defines structure for error messages
+# Changes MUST follow lifecycle.yaml rules
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/v1/error.schema.json"
+
+title: "IPC Error"
+description: "Error payload for IPC envelope message_type: error"
+
+type: object
+required:
+  - error_code
+  - message
+  - severity
+
+properties:
+  error_code:
+    type: string
+    description: "Machine-readable error code"
+    pattern: "^[A-Z][A-Z0-9_]*$"
+    examples: 
+      - "VALIDATION_ERROR"
+      - "PERMISSION_DENIED"
+      - "RESOURCE_NOT_FOUND"
+      - "TIMEOUT"
+      - "INTERNAL_ERROR"
+  
+  message:
+    type: string
+    description: "Human-readable error message"
+    minLength: 1
+    maxLength: 1000
+  
+  severity:
+    type: string
+    description: "Error severity level"
+    enum:
+      - "fatal"      # System cannot recover
+      - "error"      # Operation failed but system stable
+      - "warning"    # Potential problem but operation succeeded
+      - "info"       # Informational
+  
+  details:
+    type: object
+    description: "Detailed error information"
+    properties:
+      field:
+        type: string
+        description: "Field that caused the error (for validation errors)"
+      
+      validation_errors:
+        type: array
+        description: "List of validation errors"
+        items:
+          type: object
+          required:
+            - field
+            - message
+          properties:
+            field:
+              type: string
+            message:
+              type: string
+            constraint:
+              type: string
+              description: "Constraint that was violated"
+            value:
+              description: "Value that failed validation"
+      
+      context:
+        type: object
+        description: "Additional context about the error"
+        additionalProperties: true
+      
+      hint:
+        type: string
+        description: "Hint for resolving the error"
+      
+      documentation_url:
+        type: string
+        format: uri
+        description: "URL to relevant documentation"
+  
+  retry:
+    type: object
+    description: "Retry information"
+    properties:
+      retryable:
+        type: boolean
+        description: "Whether the operation can be retried"
+        default: false
+      
+      retry_after_seconds:
+        type: integer
+        description: "Suggested retry delay in seconds"
+        minimum: 0
+      
+      max_retries:
+        type: integer
+        description: "Maximum recommended retries"
+        minimum: 0
+        maximum: 10
+  
+  trace:
+    type: object
+    description: "Error trace information (for debugging)"
+    properties:
+      trace_id:
+        type: string
+        description: "Distributed trace ID"
+      
+      span_id:
+        type: string
+        description: "Trace span ID"
+      
+      stack_trace:
+        type: array
+        description: "Stack trace (only in debug mode)"
+        items:
+          type: object
+          properties:
+            file:
+              type: string
+            line:
+              type: integer
+            function:
+              type: string
+      
+      occurred_at:
+        type: string
+        format: date-time
+        description: "When the error occurred"
+
+additionalProperties: false
+
+examples:
+  - error_code: "VALIDATION_ERROR"
+    message: "Invalid input data"
+    severity: "error"
+    details:
+      validation_errors:
+        - field: "email"
+          message: "Invalid email format"
+          constraint: "format"
+          value: "not-an-email"
+      hint: "Provide a valid email address"
+    retry:
+      retryable: false
+  
+  - error_code: "PERMISSION_DENIED"
+    message: "You do not have permission to access this resource"
+    severity: "error"
+    details:
+      context:
+        required_scope: "admin:write"
+        user_scopes: ["user:read"]
+      documentation_url: "https://docs.axiom.mini/permissions"
+    retry:
+      retryable: false
+  
+  - error_code: "TIMEOUT"
+    message: "Operation timed out"
+    severity: "error"
+    details:
+      context:
+        timeout_ms: 5000
+        elapsed_ms: 5001
+    retry:
+      retryable: true
+      retry_after_seconds: 5
+      max_retries: 3

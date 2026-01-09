@@ -1,0 +1,244 @@
+# Module Manifest Schema v1
+# Defines structure for module manifests
+# Changes MUST follow lifecycle.yaml rules
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/v1/module.manifest.schema.json"
+
+title: "Module Manifest"
+description: "Manifest file that describes a module and its capabilities"
+
+type: object
+required:
+  - manifest_version
+  - module
+  - capabilities
+
+properties:
+  manifest_version:
+    type: string
+    description: "Manifest schema version"
+    pattern: "^v1\\.[0-9]+\\.[0-9]+$"
+    const: "v1.0.0"
+  
+  module:
+    type: object
+    description: "Module metadata"
+    required:
+      - id
+      - name
+      - version
+      - type
+    properties:
+      id:
+        type: string
+        description: "Unique module identifier"
+        pattern: "^[a-z][a-z0-9-]*$"
+        examples: ["car-storage", "pricing-engine", "auth-service"]
+      
+      name:
+        type: string
+        description: "Human-readable module name"
+        minLength: 1
+        maxLength: 100
+      
+      description:
+        type: string
+        description: "Module description"
+        maxLength: 500
+      
+      version:
+        type: string
+        description: "Module version (semantic versioning)"
+        pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+      
+      type:
+        type: string
+        description: "Module type"
+        enum: ["adapter", "extension", "plugin", "service"]
+      
+      author:
+        type: object
+        properties:
+          name:
+            type: string
+          email:
+            type: string
+            format: email
+          url:
+            type: string
+            format: uri
+      
+      license:
+        type: string
+        description: "License identifier"
+        examples: ["MIT", "Apache-2.0", "GPL-3.0"]
+      
+      homepage:
+        type: string
+        format: uri
+      
+      repository:
+        type: object
+        properties:
+          type:
+            type: string
+            enum: ["git", "svn", "mercurial"]
+          url:
+            type: string
+            format: uri
+  
+  capabilities:
+    type: array
+    description: "List of capabilities provided by this module"
+    minItems: 1
+    items:
+      type: object
+      required:
+        - id
+        - name
+        - handler
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+        
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        
+        description:
+          type: string
+          maxLength: 500
+        
+        handler:
+          type: string
+          description: "Handler function or file path"
+        
+        visibility:
+          type: string
+          enum: ["public", "internal", "system"]
+          default: "public"
+        
+        category:
+          type: string
+  
+  runtime:
+    type: object
+    description: "Runtime requirements"
+    properties:
+      language:
+        type: string
+        enum: ["php", "python", "nodejs", "rust", "go", "ruby", "java"]
+      
+      language_version:
+        type: string
+        description: "Minimum language version required"
+      
+      dependencies:
+        type: array
+        description: "External dependencies"
+        items:
+          type: object
+          required:
+            - name
+            - version
+          properties:
+            name:
+              type: string
+            version:
+              type: string
+            optional:
+              type: boolean
+              default: false
+      
+      environment:
+        type: object
+        description: "Required environment variables"
+        additionalProperties:
+          type: object
+          properties:
+            required:
+              type: boolean
+              default: false
+            description:
+              type: string
+            default:
+              type: string
+  
+  endpoints:
+    type: object
+    description: "Module endpoints"
+    required:
+      - invoke
+    properties:
+      invoke:
+        type: string
+        format: uri
+        description: "Primary invoke endpoint"
+      
+      health:
+        type: string
+        format: uri
+        description: "Health check endpoint"
+      
+      metrics:
+        type: string
+        format: uri
+        description: "Metrics endpoint"
+  
+  configuration:
+    type: object
+    description: "Module configuration options"
+    additionalProperties:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["string", "number", "boolean", "array", "object"]
+        required:
+          type: boolean
+          default: false
+        default:
+          description: "Default value"
+        description:
+          type: string
+  
+  security:
+    type: object
+    description: "Security configuration"
+    properties:
+      trusted:
+        type: boolean
+        description: "Whether this module is trusted (can access internal APIs)"
+        default: false
+      
+      network_access:
+        type: string
+        enum: ["none", "mesh", "internet"]
+        default: "mesh"
+      
+      file_system_access:
+        type: boolean
+        default: false
+  
+  lifecycle:
+    type: object
+    description: "Lifecycle hooks"
+    properties:
+      on_load:
+        type: string
+        description: "Script to run on module load"
+      
+      on_unload:
+        type: string
+        description: "Script to run on module unload"
+      
+      health_check_interval_seconds:
+        type: integer
+        minimum: 5
+        maximum: 300
+        default: 30
+
+additionalProperties: false

@@ -1,0 +1,60 @@
+# Result Profiles Intent Schema
+# Defines structure for result profiles intent declarations
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/intent/result_profiles.intent.schema.json"
+
+title: "Result Profiles Intent"
+description: "Intent declarations for result filtering profiles"
+
+type: object
+required:
+  - profiles
+
+properties:
+  profiles:
+    type: array
+    description: "Result profiles that should exist"
+    items:
+      type: object
+      required:
+        - id
+        - name
+        - purpose
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*$"
+        
+        name:
+          type: string
+        
+        purpose:
+          type: string
+          description: "Why this profile exists"
+        
+        max_response_size:
+          type: integer
+          description: "Maximum response size in bytes"
+        
+        max_array_size:
+          type: integer
+          description: "Maximum array size"
+        
+        field_policies:
+          type: object
+          description: "Field visibility policies"
+          additionalProperties:
+            type: object
+            properties:
+              allowed_fields:
+                type: array
+                items:
+                  type: string
+              
+              denied_fields:
+                type: array
+                items:
+                  type: string
+
+additionalProperties: false

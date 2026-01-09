@@ -1,0 +1,69 @@
+# Limits Intent Schema
+# Defines structure for limits intent declarations
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/intent/limits.intent.schema.json"
+
+title: "Limits Intent"
+description: "Intent declarations for rate limits and resource constraints"
+
+type: object
+required:
+  - global_limits
+  - per_capability_limits
+
+properties:
+  global_limits:
+    type: object
+    description: "Global system limits"
+    properties:
+      max_requests_per_second:
+        type: integer
+        minimum: 1
+      
+      max_concurrent_requests:
+        type: integer
+        minimum: 1
+      
+      max_chain_depth:
+        type: integer
+        minimum: 1
+        maximum: 20
+      
+      max_request_size_bytes:
+        type: integer
+        minimum: 1
+      
+      max_response_size_bytes:
+        type: integer
+        minimum: 1
+  
+  per_capability_limits:
+    type: array
+    description: "Limits for specific capabilities"
+    items:
+      type: object
+      required:
+        - capability_pattern
+        - limits
+      properties:
+        capability_pattern:
+          type: string
+          description: "Capability pattern (supports wildcards)"
+        
+        limits:
+          type: object
+          properties:
+            requests_per_minute:
+              type: integer
+            
+            timeout_ms:
+              type: integer
+            
+            max_input_size_bytes:
+              type: integer
+            
+            max_output_size_bytes:
+              type: integer
+
+additionalProperties: false

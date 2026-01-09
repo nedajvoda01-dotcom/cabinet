@@ -1,0 +1,118 @@
+# IPC Envelope Schema v1
+# Wire-level ABI for kernel ↔ extensions communication
+# Any change to this schema MUST follow versioning rules in shared/contracts/versions.yaml
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/v1/envelope.schema.json"
+
+title: "IPC Envelope"
+description: "Outer wrapper for all IPC messages between kernel and extensions"
+
+type: object
+required:
+  - version
+  - message_id
+  - timestamp
+  - message_type
+  - payload
+
+properties:
+  version:
+    type: string
+    description: "Protocol version (semantic versioning)"
+    pattern: "^v1\\.[0-9]+\\.[0-9]+$"
+    examples: ["v1.0.0", "v1.1.0"]
+  
+  message_id:
+    type: string
+    description: "Unique message identifier (UUID v4)"
+    pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+  
+  correlation_id:
+    type: string
+    description: "Optional correlation ID for request-response pairs"
+    pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+  
+  timestamp:
+    type: string
+    description: "ISO 8601 timestamp with timezone"
+    format: "date-time"
+  
+  message_type:
+    type: string
+    description: "Type of message being transmitted"
+    enum:
+      - "command"
+      - "result"
+      - "error"
+      - "capability_query"
+      - "capability_response"
+  
+  sender:
+    type: object
+    description: "Information about the message sender"
+    required:
+      - id
+      - type
+    properties:
+      id:
+        type: string
+        description: "Sender identifier"
+      type:
+        type: string
+        enum: ["kernel", "extension", "module"]
+      metadata:
+        type: object
+        description: "Optional sender metadata"
+        additionalProperties: true
+  
+  receiver:
+    type: object
+    description: "Information about the intended receiver"
+    required:
+      - id
+      - type
+    properties:
+      id:
+        type: string
+        description: "Receiver identifier"
+      type:
+        type: string
+        enum: ["kernel", "extension", "module"]
+  
+  payload:
+    type: object
+    description: "The actual message content (validated separately based on message_type)"
+    additionalProperties: true
+  
+  security:
+    type: object
+    description: "Security metadata for the message"
+    properties:
+      signature:
+        type: string
+        description: "Digital signature of the payload"
+      checksum:
+        type: string
+        description: "SHA-256 checksum of canonical payload"
+      nonce:
+        type: string
+        description: "Cryptographic nonce for replay protection"
+
+additionalProperties: false
+
+examples:
+  - version: "v1.0.0"
+    message_id: "550e8400-e29b-41d4-a716-446655440000"
+    timestamp: "2026-01-09T15:00:00Z"
+    message_type: "command"
+    sender:
+      id: "kernel-main"
+      type: "kernel"
+    receiver:
+      id: "module-storage"
+      type: "module"
+    payload:
+      command: "invoke"
+      capability: "storage.create"
+      args: {}

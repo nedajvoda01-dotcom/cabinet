@@ -1,0 +1,127 @@
+# Invariants Schema
+# Defines structure for system invariants
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/invariants.schema.json"
+
+title: "System Invariants"
+description: "System-wide invariants that must always hold true"
+
+type: object
+required:
+  - version
+  - invariants
+
+properties:
+  version:
+    type: string
+    pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+  
+  invariants:
+    type: array
+    description: "List of invariants"
+    items:
+      type: object
+      required:
+        - id
+        - type
+        - description
+        - assertion
+      properties:
+        id:
+          type: string
+          pattern: "^[A-Z][A-Z0-9_]*$"
+          description: "Unique invariant identifier"
+          examples: ["NO_BYPASS", "DENY_BY_DEFAULT", "AUDIT_ALL"]
+        
+        type:
+          type: string
+          enum: ["security", "consistency", "performance", "compliance"]
+        
+        description:
+          type: string
+          description: "Human-readable description"
+        
+        assertion:
+          type: string
+          description: "Formal assertion or rule"
+        
+        severity:
+          type: string
+          enum: ["critical", "high", "medium", "low"]
+          default: "high"
+        
+        enforcement:
+          type: string
+          enum: ["compile_time", "runtime", "continuous"]
+          description: "When this invariant is enforced"
+        
+        validation:
+          type: object
+          description: "How to validate this invariant"
+          properties:
+            method:
+              type: string
+              enum: ["static_analysis", "runtime_check", "audit_log", "manual"]
+            
+            frequency:
+              type: string
+              enum: ["every_request", "periodic", "on_demand"]
+            
+            checker:
+              type: string
+              description: "Tool or script that validates this invariant"
+        
+        exceptions:
+          type: array
+          description: "Known exceptions to this invariant"
+          items:
+            type: object
+            properties:
+              condition:
+                type: string
+              reason:
+                type: string
+              approved_by:
+                type: string
+              expires_at:
+                type: string
+                format: date
+
+additionalProperties: false
+
+examples:
+  - version: "v1.0.0"
+    invariants:
+      - id: "NO_BYPASS"
+        type: "security"
+        description: "No capability can bypass policy checks"
+        assertion: "ALL capability invocations MUST pass through Policy.check()"
+        severity: "critical"
+        enforcement: "runtime"
+        validation:
+          method: "runtime_check"
+          frequency: "every_request"
+          checker: "kernel/src/policy/enforce.rs"
+      
+      - id: "DENY_BY_DEFAULT"
+        type: "security"
+        description: "All routes are deny-by-default"
+        assertion: "NO route is allowed unless explicitly listed in routing.yaml"
+        severity: "critical"
+        enforcement: "compile_time"
+        validation:
+          method: "static_analysis"
+          frequency: "on_demand"
+          checker: "governance/guards/routing_guard"
+      
+      - id: "AUDIT_ALL"
+        type: "compliance"
+        description: "All capability invocations must be audited"
+        assertion: "EVERY capability invocation generates an audit log entry"
+        severity: "high"
+        enforcement: "runtime"
+        validation:
+          method: "audit_log"
+          frequency: "periodic"
+          checker: "tooling/audit_checker"

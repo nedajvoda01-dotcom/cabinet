@@ -1,0 +1,141 @@
+# IPC Command Schema v1
+# Defines structure for command messages in IPC envelopes
+# Changes MUST follow lifecycle.yaml rules
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/v1/command.schema.json"
+
+title: "IPC Command"
+description: "Command payload for IPC envelope message_type: command"
+
+type: object
+required:
+  - command_type
+  - target
+
+properties:
+  command_type:
+    type: string
+    description: "Type of command to execute"
+    enum:
+      - "invoke"      # Invoke a capability
+      - "query"       # Query for information
+      - "subscribe"   # Subscribe to events
+      - "unsubscribe" # Unsubscribe from events
+  
+  target:
+    type: object
+    description: "Target of the command"
+    required:
+      - capability
+    properties:
+      capability:
+        type: string
+        description: "Capability identifier (dot-notation)"
+        pattern: "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+        examples: ["storage.create", "auth.verify", "routing.resolve"]
+      
+      module_id:
+        type: string
+        description: "Optional specific module to target"
+      
+      version:
+        type: string
+        description: "Optional capability version constraint"
+        pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+  
+  args:
+    type: object
+    description: "Arguments for the command"
+    additionalProperties: true
+  
+  options:
+    type: object
+    description: "Execution options"
+    properties:
+      timeout_ms:
+        type: integer
+        description: "Timeout in milliseconds"
+        minimum: 0
+        maximum: 300000
+        default: 30000
+      
+      priority:
+        type: string
+        enum: ["low", "normal", "high"]
+        default: "normal"
+      
+      idempotency_key:
+        type: string
+        description: "Key for idempotent operations"
+      
+      trace_id:
+        type: string
+        description: "Distributed tracing ID"
+  
+  context:
+    type: object
+    description: "Execution context"
+    properties:
+      actor:
+        type: object
+        description: "Actor performing the command"
+        required:
+          - id
+          - type
+        properties:
+          id:
+            type: string
+          type:
+            type: string
+            enum: ["user", "system", "service"]
+          roles:
+            type: array
+            items:
+              type: string
+          scopes:
+            type: array
+            items:
+              type: string
+      
+      parent_command_id:
+        type: string
+        description: "ID of parent command (for chains)"
+      
+      chain_depth:
+        type: integer
+        description: "Depth in command chain"
+        minimum: 0
+        maximum: 10
+        default: 0
+
+additionalProperties: false
+
+examples:
+  - command_type: "invoke"
+    target:
+      capability: "storage.listings.create"
+      version: "v1.0.0"
+    args:
+      data:
+        brand: "Toyota"
+        model: "Camry"
+        year: 2020
+    options:
+      timeout_ms: 5000
+      priority: "normal"
+    context:
+      actor:
+        id: "user-123"
+        type: "user"
+        roles: ["admin"]
+        scopes: ["storage:write"]
+  
+  - command_type: "query"
+    target:
+      capability: "routing.list_endpoints"
+    args:
+      filter:
+        module: "storage"
+    options:
+      timeout_ms: 1000

@@ -1,0 +1,212 @@
+# Kernel ↔ Contracts Compatibility Matrix
+# Defines which kernel versions are compatible with which ABI contract versions
+
+version: v1.0.0
+last_updated: "2026-01-09"
+
+# Compatibility rules
+compatibility_policy:
+  # Support N and N-1 major versions concurrently
+  concurrent_major_versions: 2
+  
+  # All minor versions within a major version are compatible
+  minor_version_compatibility: backwards_compatible
+  
+  # Patch versions are always compatible within minor version
+  patch_version_compatibility: fully_compatible
+
+# Kernel versions and their supported ABI versions
+kernel_versions:
+  # Current stable kernel
+  - kernel_version: v1.0.0
+    released: "2026-01-09"
+    status: stable
+    supported_contract_versions:
+      min: v1.0.0
+      max: v1.x.x  # Any v1 minor/patch
+    supported_contracts:
+      - envelope: v1.0.0
+      - command: v1.0.0
+      - result: v1.0.0
+      - error: v1.0.0
+      - capability: v1.0.0
+    supported_manifests:
+      - module: v1.0.0
+      - ui: v1.0.0
+      - routing: v1.0.0
+    notes: "Initial stable release"
+
+  # Future kernel versions (examples)
+  # - kernel_version: v1.1.0
+  #   released: "2026-06-01"
+  #   status: stable
+  #   supported_contract_versions:
+  #     min: v1.0.0
+  #     max: v1.x.x
+  #   supported_contracts:
+  #     - envelope: v1.0.0
+  #     - command: v1.1.0  # New fields added
+  #     - result: v1.0.0
+  #     - error: v1.0.0
+  #     - capability: v1.1.0  # New fields added
+  #   notes: "Added support for new capability features"
+
+  # - kernel_version: v2.0.0
+  #   released: "2027-01-01"
+  #   status: beta
+  #   supported_contract_versions:
+  #     min: v1.0.0  # Still supports v1 for transition
+  #     max: v2.x.x  # New v2 contracts
+  #   supported_contracts:
+  #     - envelope: v2.0.0  # Breaking changes
+  #     - command: v2.0.0
+  #     - result: v2.0.0
+  #     - error: v2.0.0
+  #     - capability: v2.0.0
+  #   notes: "Major revision with breaking changes, v1 supported for migration"
+
+# Contract versions and their compatible kernels
+contract_versions:
+  - contract_version: v1.0.0
+    released: "2026-01-09"
+    status: stable
+    compatible_kernel_versions:
+      min: v1.0.0
+      max: v1.x.x  # All v1 kernels
+    notes: "Initial stable ABI"
+
+# Validation rules
+validation:
+  # How kernel validates version compatibility at runtime
+  runtime_check:
+    method: "compare_versions"
+    on_mismatch: "reject_with_error"
+    error_code: "VERSION_MISMATCH"
+  
+  # Startup validation
+  startup_check:
+    validate_schemas: true
+    validate_fixtures: true
+    fail_on_invalid: true
+
+# Upgrade paths
+upgrade_paths:
+  # From v1.0.0 contracts to v1.x.x contracts
+  - from: v1.0.0
+    to: v1.x.x
+    type: backwards_compatible
+    kernel_action: no_upgrade_required
+    extension_action: optional_upgrade
+    notes: "Minor/patch updates are fully backwards compatible"
+  
+  # Example for future v2 upgrade
+  # - from: v1.x.x
+  #   to: v2.0.0
+  #   type: breaking
+  #   kernel_action: upgrade_required
+  #   extension_action: upgrade_required
+  #   transition_period_months: 12
+  #   migration_guide: shared/docs/migration_v1_to_v2.md
+  #   notes: "Breaking changes require coordinated upgrade"
+
+# Feature compatibility
+features:
+  # Which kernel versions support which contract features
+  ipc_envelope:
+    v1.0.0:
+      - basic_envelope
+      - correlation_id
+      - security_metadata
+    # v1.1.0:
+    #   - all v1.0.0 features
+    #   - distributed_tracing
+    #   - compression_support
+  
+  command_types:
+    v1.0.0:
+      - invoke
+      - query
+      - subscribe
+      - unsubscribe
+    # v1.1.0:
+    #   - all v1.0.0 types
+    #   - batch_invoke
+  
+  error_handling:
+    v1.0.0:
+      - structured_errors
+      - error_codes
+      - stack_traces
+      - retry_info
+    # v1.1.0:
+    #   - all v1.0.0 features
+    #   - error_chaining
+    #   - localized_messages
+
+# Extension compatibility
+extensions:
+  # What extensions need to do for compatibility
+  requirements:
+    - "MUST support all contract versions supported by target kernel"
+    - "MUST handle unknown fields gracefully (forward compatibility)"
+    - "MUST validate messages against schema"
+    - "MUST check version in envelope"
+    - "SHOULD support N and N-1 contract versions"
+  
+  validation:
+    - "Extensions MUST validate incoming messages"
+    - "Extensions MUST use canonical encoding for outgoing messages"
+    - "Extensions MUST handle version mismatches gracefully"
+
+# Testing matrix
+testing:
+  # Required test combinations
+  test_matrix:
+    - kernel: v1.0.0
+      contracts: v1.0.0
+      status: required
+      coverage: full
+    
+    # Future test combinations
+    # - kernel: v1.1.0
+    #   contracts: v1.0.0
+    #   status: required
+    #   coverage: backwards_compatibility
+    
+    # - kernel: v1.1.0
+    #   contracts: v1.1.0
+    #   status: required
+    #   coverage: full
+    
+    # - kernel: v1.0.0
+    #   contracts: v1.1.0
+    #   status: required
+    #   coverage: forwards_compatibility
+
+# Deprecation tracking
+deprecated:
+  # Track deprecated combinations
+  combinations: []
+    # Example:
+    # - kernel: v0.9.0
+    #   contracts: v0.9.0
+    #   deprecated_since: "2025-12-01"
+    #   removal_date: "2026-06-01"
+    #   replacement:
+    #     kernel: v1.0.0
+    #     contracts: v1.0.0
+
+# Support lifecycle
+support:
+  # How long each combination is supported
+  active:
+    duration: "until_next_major_version"
+    updates: "security_and_bugs"
+  
+  deprecated:
+    duration: "12_months"
+    updates: "security_only"
+  
+  retired:
+    duration: "0"
+    updates: "none"

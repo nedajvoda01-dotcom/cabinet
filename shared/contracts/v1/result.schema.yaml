@@ -1,0 +1,145 @@
+# IPC Result Schema v1
+# Defines structure for successful result messages
+# Changes MUST follow lifecycle.yaml rules
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://axiom.mini/schemas/v1/result.schema.json"
+
+title: "IPC Result"
+description: "Success result payload for IPC envelope message_type: result"
+
+type: object
+required:
+  - status
+  - data
+
+properties:
+  status:
+    type: string
+    description: "Result status"
+    enum:
+      - "success"
+      - "partial_success"
+    default: "success"
+  
+  data:
+    description: "The actual result data (can be any valid JSON type)"
+    oneOf:
+      - type: object
+      - type: array
+      - type: string
+      - type: number
+      - type: boolean
+      - type: "null"
+  
+  metadata:
+    type: object
+    description: "Metadata about the result"
+    properties:
+      execution_time_ms:
+        type: integer
+        description: "Execution time in milliseconds"
+        minimum: 0
+      
+      cached:
+        type: boolean
+        description: "Whether result was served from cache"
+        default: false
+      
+      cache_ttl_seconds:
+        type: integer
+        description: "Cache time-to-live in seconds"
+        minimum: 0
+      
+      pagination:
+        type: object
+        description: "Pagination information"
+        properties:
+          page:
+            type: integer
+            minimum: 1
+          per_page:
+            type: integer
+            minimum: 1
+            maximum: 1000
+          total_items:
+            type: integer
+            minimum: 0
+          total_pages:
+            type: integer
+            minimum: 0
+          has_next:
+            type: boolean
+          has_prev:
+            type: boolean
+      
+      warnings:
+        type: array
+        description: "Non-fatal warnings"
+        items:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            context:
+              type: object
+              additionalProperties: true
+  
+  links:
+    type: object
+    description: "HATEOAS links for related resources"
+    additionalProperties:
+      type: object
+      required:
+        - href
+      properties:
+        href:
+          type: string
+          format: uri
+        method:
+          type: string
+          enum: ["GET", "POST", "PUT", "PATCH", "DELETE"]
+          default: "GET"
+        templated:
+          type: boolean
+          default: false
+
+additionalProperties: false
+
+examples:
+  - status: "success"
+    data:
+      id: "listing-123"
+      brand: "Toyota"
+      model: "Camry"
+      year: 2020
+      price: 25000
+    metadata:
+      execution_time_ms: 45
+      cached: false
+    links:
+      self:
+        href: "/api/listings/listing-123"
+      update:
+        href: "/api/listings/listing-123"
+        method: "PUT"
+  
+  - status: "partial_success"
+    data:
+      items_processed: 95
+      items_failed: 5
+      failed_items:
+        - id: "item-1"
+          reason: "validation_error"
+    metadata:
+      execution_time_ms: 1250
+      warnings:
+        - code: "PARTIAL_FAILURE"
+          message: "Some items could not be processed"
+          context:
+            failed_count: 5
