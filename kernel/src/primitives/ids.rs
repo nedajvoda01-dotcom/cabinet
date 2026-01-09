@@ -19,16 +19,16 @@ pub fn generate_deterministic_id(seed: &str) -> String {
     // Take first 32 hex chars (16 bytes) from hash
     let hex_part = &hash[0..32];
     
-    // Format as UUID: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-    // Set version (4) and variant (RFC4122) bits
+    // Format as UUID: xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx
+    // Insert version 4 marker at position 12 (4xxx)
+    // Insert variant marker at position 16 (8xxx or 9xxx, using 8 for simplicity)
     format!(
-        "{}-{}-4{}-{}{}-{}",
-        &hex_part[0..8],
-        &hex_part[8..12],
-        &hex_part[13..16],  // Skip one char for version bit
-        "8",  // Variant bits (10xx in binary = 8-b in hex, use 8 for simplicity)
-        &hex_part[17..20],
-        &hex_part[20..32]
+        "{}-{}-4{}-8{}-{}",
+        &hex_part[0..8],     // 8 chars
+        &hex_part[8..12],    // 4 chars
+        &hex_part[12..15],   // 3 chars (version 4 already prefixed)
+        &hex_part[15..18],   // 3 chars (variant 8 already prefixed)
+        &hex_part[18..30]    // 12 chars
     )
 }
 
@@ -61,15 +61,25 @@ pub mod prefixes {
 /// Validate ID format
 /// Checks: prefix + UUID format, lowercase only
 pub fn validate_id_format(id: &str) -> Result<(), String> {
-    // Find the UUID part (after last hyphen in prefix)
-    let parts: Vec<&str> = id.splitn(2, |c: char| c == '-' && id.len() - c.len_utf8() > 36).collect();
+    // ID format: prefix-{uuid}
+    // Find the last occurrence of hyphen that's exactly 36 chars before the end
+    if id.len() < 37 {
+        return Err("ID too short".to_string());
+    }
     
-    if parts.len() != 2 {
+    // UUID is always last 36 characters
+    let uuid_start = id.len() - 36;
+    if uuid_start == 0 {
+        return Err("ID must have a prefix".to_string());
+    }
+    
+    // Check that there's a hyphen just before the UUID
+    if id.chars().nth(uuid_start - 1) != Some('-') {
         return Err("ID must have format: prefix-uuid".to_string());
     }
     
-    let prefix = parts[0];
-    let uuid_part = parts[1];
+    let prefix = &id[..uuid_start - 1];
+    let uuid_part = &id[uuid_start..];
     
     // Check prefix is lowercase alphanumeric with hyphens
     if !prefix.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-') {
@@ -81,7 +91,7 @@ pub fn validate_id_format(id: &str) -> Result<(), String> {
         return Err("UUID part must be 36 characters".to_string());
     }
     
-    // Check UUID format (rough validation)
+    // Check UUID format (hyphens at correct positions)
     let uuid_chars: Vec<char> = uuid_part.chars().collect();
     if uuid_chars[8] != '-' || uuid_chars[13] != '-' || uuid_chars[18] != '-' || uuid_chars[23] != '-' {
         return Err("Invalid UUID format".to_string());

@@ -203,10 +203,8 @@ fn generate_report(
     // Per shared/canonicalization requirements: reports must be bit-for-bit reproducible
     
     json!({
-        "version": "1.0.0",
-        "tool": "diff_builder",
-        "status": if errors.is_empty() { "SUCCESS" } else { "FAILED" },
         "deterministic": true,
+        "errors": errors,
         "inputs": {
             "desired": "system/canonical/desired/*.yaml",
             "observed": "system/canonical/observed/*.yaml"
@@ -216,9 +214,10 @@ fn generate_report(
             "report": "dist/reports/diff_report.json"
         },
         "prohibited_actions": {
-            "modify_inputs": "MUST NOT modify desired or observed",
-            "generate_commands": "Diff is declarative only, not executable"
+            "generate_commands": "Diff is declarative only, not executable",
+            "modify_inputs": "MUST NOT modify desired or observed"
         },
+        "status": if errors.is_empty() { "SUCCESS" } else { "FAILED" },
         "summary": {
             "added": added,
             "errors": errors.len(),
@@ -227,7 +226,8 @@ fn generate_report(
             "total_diffs": diffs.len(),
             "warnings": warnings.len()
         },
-        "errors": errors,
+        "tool": "diff_builder",
+        "version": "1.0.0",
         "warnings": warnings
     })
 }
