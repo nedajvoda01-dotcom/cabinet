@@ -7,6 +7,7 @@ pub mod routing;
 pub mod sandbox;
 pub mod result_gate;
 pub mod observed;
+pub mod primitives;
 
 #[cfg(test)]
 mod tests;

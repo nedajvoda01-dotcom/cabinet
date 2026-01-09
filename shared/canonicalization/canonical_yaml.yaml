@@ -1,0 +1,127 @@
+# Canonical YAML Rules
+# Single source of truth for YAML canonicalization across all tooling and kernel
+# Subset of YAML 1.2 features to ensure deterministic output
+
+version: v1.0.0
+
+description: |
+  Rules for producing deterministic, canonical YAML output.
+  All implementations (tooling/canonicalizer) MUST follow these rules exactly.
+  Uses a restricted subset of YAML to avoid ambiguity and ensure reproducibility.
+
+rules:
+  # Key Ordering
+  key_ordering:
+    method: alphabetical
+    description: "Mapping keys MUST be sorted alphabetically (lexicographically)"
+    case_sensitive: true
+    unicode_aware: true
+  
+  # Indentation
+  indentation:
+    spaces: 2
+    use_tabs: false
+    description: "Use 2 spaces for each indentation level"
+  
+  # Line Breaks
+  line_breaks:
+    style: unix
+    character: "\n"
+    trailing_newline: true
+    description: "Use Unix-style LF line endings, file ends with newline"
+  
+  # String Quoting
+  strings:
+    default_style: plain
+    quote_style: double
+    unicode: preserve_literal
+    description: "Use plain style when safe, double quotes when necessary"
+  
+  # Number Formatting
+  numbers:
+    integers: decimal_only
+    floats: standard_notation
+    no_octal: true
+    no_hex: true
+    no_underscores: true
+    special_values:
+      infinity: not_allowed
+      nan: not_allowed
+    description: "Plain decimal numbers only, no special notations"
+  
+  # Boolean Values
+  booleans:
+    true: "true"
+    false: "false"
+    case: lowercase
+    allowed_synonyms: none
+    description: "Lowercase true/false only, no yes/no/on/off"
+  
+  # Null Values
+  null:
+    representation: "null"
+    case: lowercase
+    allowed_synonyms: none
+    description: "Lowercase null only"
+  
+  # Lists (Sequences)
+  lists:
+    style: block
+    preserve_order: true
+    indicator: "-"
+    description: "Block style with dash, order preserved"
+  
+  # Mappings (Objects)
+  mappings:
+    style: block
+    sort_keys: true
+    recursive: true
+    separator: ":"
+    space_after_colon: true
+    description: "Block style, keys sorted at all levels"
+  
+  # Comments
+  comments:
+    allowed: false
+    description: "No comments in canonical form (data only)"
+  
+  # Anchors and Aliases
+  anchors_aliases:
+    allowed: false
+    description: "No anchors (&) or aliases (*) in canonical form"
+
+# Prohibited YAML Features
+prohibited:
+  - feature: "Flow style (inline)"
+    reason: "Use block style for consistency"
+  - feature: "Anchors and aliases"
+    reason: "Not deterministic, expand all references"
+  - feature: "Tags"
+    reason: "Implicit typing only"
+  - feature: "Comments"
+    reason: "Comments are not data, use separate docs"
+  - feature: "Multiple documents"
+    reason: "One document per file"
+
+# Validation
+validation:
+  method: "Compare against test vectors"
+  test_vectors: shared/test_vectors/canonical_yaml/vectors.yaml
+  requirement: "Implementation MUST produce exactly matching output for all test vectors"
+
+# Implementation Requirements
+implementations:
+  tooling_canonicalizer:
+    path: tooling/canonicalizer/src/main.rs
+    must_do:
+      - "Parse YAML input (accept full YAML)"
+      - "Convert to canonical subset"
+      - "Apply canonicalization rules"
+      - "Output canonical YAML"
+      - "Sort keys recursively"
+      - "Use block style"
+    must_not_do:
+      - "Emit flow style"
+      - "Include comments"
+      - "Use anchors/aliases"
+      - "Allow non-deterministic output"

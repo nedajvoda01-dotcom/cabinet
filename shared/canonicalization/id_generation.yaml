@@ -1,0 +1,210 @@
+# ID Generation Rules
+# Single source of truth for deterministic ID generation
+
+version: v1.0.0
+
+description: |
+  Rules for generating identifiers across the platform.
+  Mix of random (UUIDv4) and deterministic (content-based) IDs.
+
+# ID Types
+id_types:
+  random:
+    description: "Non-deterministic, cryptographically random IDs"
+    format: UUIDv4
+    use_when:
+      - "Unique identifier needed"
+      - "Non-predictability required"
+      - "No content to derive from"
+    examples:
+      - "Message IDs"
+      - "Session IDs"
+      - "Trace IDs"
+  
+  deterministic:
+    description: "Content-based, reproducible IDs"
+    format: "SHA-256 hash → UUID format"
+    use_when:
+      - "Idempotency required"
+      - "Deduplication needed"
+      - "Same content should produce same ID"
+    examples:
+      - "Import IDs (from CSV hash)"
+      - "Listing IDs (from external_id)"
+      - "Capability IDs (from name)"
+
+# UUID v4 Format
+uuid_v4:
+  description: "Random UUID version 4"
+  format: "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+  version_byte: "4"
+  variant_bits: "10xxxxxx"
+  source: cryptographic_random
+  total_length: 36
+  
+  validation:
+    regex: "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    case: lowercase
+    
+  prohibited:
+    - "Timestamp-based generation"
+    - "Counter-based generation"
+    - "Predictable sources"
+    - "Uppercase characters"
+
+# Content-Based IDs
+content_based:
+  description: "Deterministic IDs from content hash"
+  algorithm: SHA-256
+  process:
+    - "Hash content using SHA-256"
+    - "Take first 16 bytes of hash"
+    - "Format as UUID (set version/variant bits)"
+    - "Add prefix for entity type"
+  
+  example:
+    input: "CAR-2026-001"
+    hash: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6..."
+    uuid: "a1b2c3d4-e5f6-47b8-89d0-e1f2a3b4c5d6"
+    prefixed: "listing-a1b2c3d4-e5f6-47b8-89d0-e1f2a3b4c5d6"
+
+# ID Prefixes
+prefixes:
+  message: "msg-"
+  envelope: "env-"
+  import: "import-"
+  listing: "listing-"
+  user: "user-"
+  session: "session-"
+  trace: "trace-"
+  span: "span-"
+  workflow: "workflow-"
+  job: "job-"
+  
+  rules:
+    format: "lowercase-alphanumeric-with-hyphens"
+    pattern: "^[a-z][a-z0-9-]*-$"
+    trailing_hyphen: required
+
+# ID Format Rules
+format_rules:
+  structure: "{prefix}{uuid}"
+  prefix: "lowercase-alphanumeric-with-hyphens"
+  uuid: "standard-uuid-format (36 chars)"
+  total_length: "variable (prefix length + 36)"
+  case: lowercase_only
+  
+  examples:
+    valid:
+      - "msg-550e8400-e29b-41d4-a716-446655440000"
+      - "listing-a1b2c3d4-e5f6-47b8-89d0-e1f2a3b4c5d6"
+      - "trace-7c9e6679-7425-40de-944b-e07fc1f90ae7"
+    
+    invalid:
+      - "MSG-550E8400-E29B-41D4-A716-446655440000"  # uppercase
+      - "550e8400-e29b-41d4-a716-446655440000"      # no prefix
+      - "msg_550e8400-e29b-41d4-a716-446655440000"  # underscore
+
+# Use Cases by Entity
+entities:
+  messages:
+    id_type: random
+    prefix: "msg-"
+    format: "msg-{uuid-v4}"
+    rationale: "Each message is unique, no content to derive from at generation time"
+  
+  imports:
+    id_type: deterministic
+    prefix: "import-"
+    seed: "CSV file content hash"
+    format: "import-{hash-uuid}"
+    rationale: "Same CSV content should produce same import ID (deduplication)"
+  
+  listings:
+    id_type: deterministic
+    prefix: "listing-"
+    seed: "external_id field"
+    format: "listing-{hash-uuid}"
+    rationale: "Same external_id should produce same listing ID (idempotency)"
+  
+  sessions:
+    id_type: random
+    prefix: "session-"
+    format: "session-{uuid-v4}"
+    rationale: "Unique per session, unpredictable"
+  
+  traces:
+    id_type: random
+    prefix: "trace-"
+    format: "trace-{uuid-v4}"
+    rationale: "Unique per request, for distributed tracing"
+
+# Implementation Requirements
+implementations:
+  kernel_primitives:
+    path: kernel/src/primitives/ids.rs
+    must_do:
+      - "Generate UUID v4 from crypto-random source"
+      - "Generate deterministic IDs from seed"
+      - "Add prefix to generated IDs"
+      - "Validate ID format"
+      - "Return lowercase IDs"
+    must_not_do:
+      - "Use timestamp for ID generation"
+      - "Use sequential counters"
+      - "Depend on system clock"
+      - "Return uppercase IDs"
+  
+  tooling:
+    must_do:
+      - "Use kernel primitives for ID generation"
+      - "Apply correct prefix for entity type"
+      - "Validate generated IDs"
+    must_not_do:
+      - "Implement custom ID generation"
+      - "Use non-standard formats"
+
+# Validation
+validation:
+  method: "Compare against test vectors"
+  test_vectors: shared/test_vectors/id_generation/vectors.yaml
+  requirement: "Implementation MUST produce matching IDs for deterministic cases"
+  
+  format_validation:
+    - "Match prefix pattern"
+    - "Match UUID pattern"
+    - "Verify lowercase"
+    - "Verify total length"
+
+# Prohibited
+prohibited:
+  - description: "Predictable random IDs"
+    examples: ["timestamp-based", "sequential", "pseudo-random with fixed seed"]
+  - description: "Non-deterministic content-based IDs"
+    examples: ["including timestamp in seed", "including random salt"]
+  - description: "Uppercase IDs"
+    examples: ["MSG-ABC", "Listing-123"]
+  - description: "Missing or wrong prefix"
+    examples: ["550e8400-...", "msg_550e8400-..."]
+
+# Security Considerations
+security:
+  random_ids:
+    source: "Use cryptographically secure random number generator"
+    entropy: "Minimum 122 bits of entropy (UUIDv4 specification)"
+    predictability: "Must not be guessable"
+  
+  deterministic_ids:
+    collision_resistance: "SHA-256 provides strong collision resistance"
+    reversibility: "Cannot derive seed from ID (one-way hash)"
+    consistency: "Same seed always produces same ID"
+
+# Migration
+migration:
+  from_non_standard:
+    process:
+      - "Map existing IDs to new format"
+      - "Create mapping table (old -> new)"
+      - "Gradually transition references"
+      - "Maintain backward compatibility temporarily"
+    validation: "Ensure no ID collisions in new format"

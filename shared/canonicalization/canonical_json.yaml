@@ -1,0 +1,187 @@
+# Canonical JSON Rules
+# Single source of truth for JSON canonicalization across all tooling and kernel
+# Based on RFC 8785 (JSON Canonicalization Scheme)
+
+version: v1.0.0
+
+description: |
+  Rules for producing deterministic, canonical JSON output.
+  All implementations (tooling/canonicalizer, kernel/ipc/encode) MUST follow these rules exactly.
+  Any deviation results in non-deterministic output and is considered a defect.
+
+rules:
+  # Key Ordering
+  key_ordering:
+    method: alphabetical
+    description: "Object keys MUST be sorted alphabetically (lexicographically)"
+    case_sensitive: true
+    unicode_aware: true
+    example:
+      input: '{"z": 1, "a": 2, "m": 3}'
+      output: '{"a":2,"m":3,"z":1}'
+  
+  # Whitespace
+  whitespace:
+    spaces_after_colon: false
+    spaces_after_comma: false
+    spaces_inside_braces: false
+    spaces_inside_brackets: false
+    newlines: false
+    indentation: false
+    description: "NO whitespace except within string values"
+    example:
+      input: |
+        {
+          "key" : "value",
+          "number" : 42
+        }
+      output: '{"key":"value","number":42}'
+  
+  # String Encoding
+  strings:
+    encoding: UTF-8
+    escape_control_characters: true
+    escape_sequences:
+      - '\b' # backspace
+      - '\f' # form feed
+      - '\n' # line feed
+      - '\r' # carriage return
+      - '\t' # horizontal tab
+      - '\"' # quotation mark
+      - '\\' # reverse solidus
+    unicode_escape: false # Use literal Unicode, not \uXXXX unless required
+    description: "Preserve valid UTF-8, escape only control characters"
+    example:
+      valid: '"Hello 世界 ��"'
+      escaped: '"Line1\nLine2"'
+  
+  # Number Formatting
+  numbers:
+    format: minimal
+    no_leading_zeros: true
+    no_trailing_zeros_after_decimal: false # Keep as emitted by JSON serializer
+    no_plus_sign: true
+    exponent_notation: only_when_necessary
+    special_values:
+      infinity: not_allowed
+      nan: not_allowed
+    description: "Minimal representation without unnecessary characters"
+    examples:
+      valid: [0, 42, -100, 3.14159, 1.5e10]
+      invalid: ["+42", "042", "3.", ".5", "Infinity", "NaN"]
+  
+  # Boolean Values
+  booleans:
+    true: "true"
+    false: "false"
+    case: lowercase
+    description: "Lowercase true/false only"
+  
+  # Null Values
+  null:
+    representation: "null"
+    case: lowercase
+    description: "Lowercase null only"
+  
+  # Arrays
+  arrays:
+    preserve_order: true
+    description: "Array element order MUST be preserved exactly as specified"
+    example:
+      input: '[3, 1, 2]'
+      output: '[3,1,2]'
+  
+  # Objects
+  objects:
+    sort_keys: true
+    recursive: true
+    empty_allowed: true
+    description: "Keys sorted at ALL nesting levels"
+    example:
+      input: '{"outer": {"z": 3, "a": 1}, "other": "value"}'
+      output: '{"other":"value","outer":{"a":1,"z":3}}'
+  
+  # Empty Values
+  empty_values:
+    empty_string: '""'
+    empty_object: '{}'
+    empty_array: '[]'
+    description: "Empty values MUST be included and represented"
+
+# Prohibited Behaviors
+prohibited:
+  - description: "Different output for same semantic content"
+    example: "Same data with different key order produces different output"
+  - description: "Pretty printing or formatting for readability"
+    example: "Adding spaces, newlines, or indentation"
+  - description: "Locale-specific formatting"
+    example: "Using comma as decimal separator"
+  - description: "Non-deterministic ordering"
+    example: "Hash map iteration order"
+  - description: "Including metadata not in original data"
+    example: "Adding type hints or comments"
+
+# Implementation Requirements
+implementations:
+  tooling_canonicalizer:
+    path: tooling/canonicalizer/src/main.rs
+    must_do:
+      - "Parse JSON/YAML input"
+      - "Apply canonicalization rules recursively"
+      - "Output canonical JSON"
+      - "Ensure deterministic output (run twice = same result)"
+    must_not_do:
+      - "Change semantic meaning"
+      - "Add or remove data"
+      - "Use non-deterministic sorting"
+  
+  kernel_ipc_encode:
+    path: kernel/src/ipc/encode.rs
+    must_do:
+      - "Encode all outgoing IPC messages canonically"
+      - "Apply rules to envelope and payload"
+      - "Ensure bit-for-bit reproducibility"
+    must_not_do:
+      - "Include non-deterministic fields (like timestamp) in sorted content"
+      - "Use pretty printing"
+      - "Depend on locale or environment"
+
+# Validation
+validation:
+  method: "Compare against test vectors"
+  test_vectors: shared/test_vectors/canonical_json/vectors.yaml
+  requirement: "Implementation MUST produce exactly matching output for all test vectors"
+  
+# Compliance
+compliance:
+  standard: RFC 8785
+  deviations: none
+  rationale: "Ensures interoperability and cryptographic signature verification"
+
+# Use Cases
+use_cases:
+  - name: "IPC message encoding"
+    description: "Kernel encodes outgoing messages"
+    requirement: "Canonical form enables signature verification"
+  
+  - name: "Configuration canonicalization"
+    description: "Tooling canonicalizes YAML/JSON configs"
+    requirement: "Enables diff/merge without format noise"
+  
+  - name: "Content hashing"
+    description: "Hash canonical form for integrity"
+    requirement: "Same content = same hash"
+  
+  - name: "Cryptographic signing"
+    description: "Sign canonical representation"
+    requirement: "Signature verification requires exact reproduction"
+
+# Migration
+migration:
+  from_non_canonical:
+    process:
+      - "Parse existing JSON"
+      - "Apply canonicalization rules"
+      - "Verify semantic equivalence"
+      - "Replace with canonical form"
+    validation: "Round-trip test: parse(canonical) == parse(original)"
