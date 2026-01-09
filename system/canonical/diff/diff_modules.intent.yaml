@@ -1,0 +1,40 @@
+desired:
+  modules:
+  - dependencies: []
+    id: car-storage
+    provides:
+    - storage.listings.create
+    - storage.listings.list
+    - storage.listings.get
+    - storage.listings.update
+    - storage.listings.delete
+    - storage.listings.upsert_batch
+    - storage.imports.register
+    - storage.imports.mark_done
+    - import.run
+    - parser.calculate_hash
+    purpose: Manage car listing data storage, retrieval, and import operations
+    trust_level: untrusted
+  - dependencies:
+    - car-storage
+    id: pricing
+    provides:
+    - pricing.calculate
+    - pricing.rules.list
+    - pricing.rules.create
+    - pricing.rules.update
+    purpose: Calculate prices and apply pricing rules
+    trust_level: untrusted
+  - dependencies:
+    - car-storage
+    - pricing
+    id: automation
+    provides:
+    - automation.workflow.create
+    - automation.workflow.list
+    - automation.workflow.execute
+    - automation.workflow.schedule
+    purpose: Automate workflows and business processes
+    trust_level: untrusted
+filename: modules.intent.yaml
+status: added

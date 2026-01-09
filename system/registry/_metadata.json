@@ -1,0 +1,6 @@
+{
+  "built_at": 1767975007,
+  "note": "This is a READ-MODEL only. Source of truth is system/intent → system/canonical/desired",
+  "source": "system/canonical/desired",
+  "version": "1.0.0"
+}

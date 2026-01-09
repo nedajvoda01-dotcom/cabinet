@@ -1,0 +1,29 @@
+# Naming Convention Invariants
+
+category: "naming"
+description: "Naming conventions and uniqueness constraints"
+
+invariants:
+  - id: "capability_naming_format"
+    description: "Capability names must follow pattern: {domain}.{resource}.{action}"
+    severity: "high"
+    pattern: "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$"
+    examples:
+      valid:
+        - "storage.cars.list"
+        - "pricing.calculate.base"
+      invalid:
+        - "StorageCars"
+        - "storage-cars-list"
+        
+  - id: "adapter_naming_format"
+    description: "Adapter IDs must be lowercase with hyphens"
+    severity: "high"
+    pattern: "^[a-z][a-z0-9-]*[a-z0-9]$"
+    examples:
+      valid:
+        - "car-storage"
+        - "pricing-engine"
+      invalid:
+        - "Car_Storage"
+        - "pricing_engine"

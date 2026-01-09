@@ -1,0 +1,62 @@
+ui_applications:
+- description: Full administrative interface for internal users
+  features:
+  - Manage car listings (CRUD)
+  - Import CSV data
+  - Configure pricing
+  - Manage automation workflows
+  id: admin-ui
+  name: Admin Dashboard
+  target_users:
+  - admin
+  - manager
+  - editor
+- description: Read-only catalog for public/guest users
+  features:
+  - Browse car listings
+  - View individual car details
+  - Search and filter
+  id: public-ui
+  name: Public Catalog
+  target_users:
+  - public
+  - guest
+user_profiles:
+- capabilities:
+  - storage.listings.create
+  - storage.listings.list
+  - storage.listings.get
+  - storage.listings.update
+  - storage.listings.delete
+  - import.run
+  - pricing.calculate
+  - automation.workflow.create
+  - automation.workflow.list
+  description: Full system access for administrators
+  id: admin
+  name: Administrator
+  result_profile: internal_ui
+- capabilities:
+  - storage.listings.create
+  - storage.listings.list
+  - storage.listings.get
+  - storage.listings.update
+  - pricing.calculate
+  description: Can create and edit listings but not delete
+  id: editor
+  name: Editor
+  result_profile: internal_ui
+- capabilities:
+  - storage.listings.list
+  - storage.listings.get
+  description: Read-only access to listings
+  id: viewer
+  name: Viewer
+  result_profile: internal_ui
+- capabilities:
+  - storage.listings.list
+  - storage.listings.get
+  description: Public access with limited data visibility
+  id: public
+  name: Public User
+  result_profile: public_ui
