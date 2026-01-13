@@ -10,19 +10,28 @@ const UI_ID = 'cabinet';
 /**
  * Fetch capabilities from platform
  * This is called on app startup
+ * NOTE: Role is determined by the server based on authentication,
+ * NOT sent by the client (untrusted UI principle)
  */
 export async function fetchCapabilities() {
     try {
         const params = new URLSearchParams({
-            ui: UI_ID,
-            role: session.role
+            ui: UI_ID
+            // Role is determined server-side from auth context, NOT sent by client
         });
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // Add X-API-Key if we have a token (simulates authentication)
+        if (session.token) {
+            headers['X-API-Key'] = session.token;
+        }
         
         const response = await fetch(`${PLATFORM_URL}/capabilities?${params}`, {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: headers
         });
         
         if (!response.ok) {
@@ -30,6 +39,13 @@ export async function fetchCapabilities() {
         }
         
         const data = await response.json();
+        
+        // Update session with server-determined role (if different from what we thought)
+        // The server's role is the source of truth
+        if (data.role && data.role !== session.displayRole) {
+            session.displayRole = data.role;
+            session.save();
+        }
         
         // Store capabilities
         const capsList = data.capabilities || [];
@@ -53,22 +69,29 @@ export async function fetchCapabilities() {
 
 /**
  * Invoke a capability on the platform
+ * NOTE: Role and UI are determined server-side from authentication,
+ * NOT sent by client (follows untrusted UI principle)
  */
 export async function invoke(capability, payload) {
     try {
         const requestData = {
             capability: capability,
-            payload: payload,
-            ui: UI_ID,
-            role: session.role,
-            user_id: session.userId || 'anonymous'
+            payload: payload
+            // role, ui, user_id are determined server-side from auth context
         };
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // Add X-API-Key if we have a token (simulates authentication)
+        if (session.token) {
+            headers['X-API-Key'] = session.token;
+        }
         
         const response = await fetch(`${PLATFORM_URL}/invoke`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify(requestData)
         });
         

@@ -1,4 +1,6 @@
 // Login Page
+// NOTE: In production, role is determined server-side based on authentication
+// This demo simulates different users with different API keys
 
 import { createLayout } from '../components/Layout.js';
 import { session } from '../state/session.js';
@@ -9,24 +11,19 @@ export function render() {
     const content = `
         <div class="section">
             <h2>Login</h2>
-            <p class="info">Note: This is a demo. Any credentials will work.</p>
+            <p class="info">Note: This is a demo authentication system.</p>
+            <p class="info">In production, your role is determined server-side based on your credentials.</p>
             
             <div class="form-group">
-                <label>Username:</label>
-                <input type="text" id="username" placeholder="Enter username" value="demo">
-            </div>
-            
-            <div class="form-group">
-                <label>Password:</label>
-                <input type="password" id="password" placeholder="Enter password" value="password">
-            </div>
-            
-            <div class="form-group">
-                <label>Role:</label>
-                <select id="role">
-                    <option value="guest">Guest (Public Access)</option>
-                    <option value="admin">Admin (Full Access)</option>
+                <label>Select User Account:</label>
+                <select id="userAccount" class="form-control">
+                    <option value="guest">Guest User (Public Access - API Key: public_secret_key_67890)</option>
+                    <option value="admin">Admin User (Full Access - API Key: admin_secret_key_12345)</option>
                 </select>
+                <small class="text-muted">
+                    This simulates different users with different API keys.
+                    The server determines your role based on the API key.
+                </small>
             </div>
             
             <button class="btn btn-primary" id="loginBtn">Login</button>
@@ -45,28 +42,33 @@ function attachEvents() {
     const resultDiv = document.getElementById('loginResult');
     
     loginBtn.addEventListener('click', async () => {
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const role = document.getElementById('role').value;
-        
-        if (!username || !password) {
-            resultDiv.innerHTML = '<div class="error">Please enter username and password</div>';
-            return;
-        }
+        const userAccount = document.getElementById('userAccount').value;
         
         try {
             loginBtn.disabled = true;
             loginBtn.textContent = 'Logging in...';
             
-            // Simulate login (in real app, this would call auth API)
+            // Simulate login with different API keys
+            // In production, this would call a real auth API that returns a session token
+            const apiKeys = {
+                'guest': 'public_secret_key_67890',
+                'admin': 'admin_secret_key_12345'
+            };
+            
+            const apiKey = apiKeys[userAccount];
+            const userId = userAccount === 'admin' ? 'admin_user' : 'public_user';
+            
+            // Store API key as token (this simulates session management)
+            // NOTE: displayRole is only for UI display purposes
+            // The actual role is determined server-side from the API key
             session.set({
-                token: 'demo_token_' + Date.now(),
-                userId: username,
-                role: role,
-                uiProfile: role === 'admin' ? 'admin' : 'public'
+                token: apiKey,
+                userId: userId,
+                displayRole: userAccount, // Only for UI display, server ignores this
+                uiProfile: userAccount === 'admin' ? 'admin' : 'public'
             });
             
-            // Fetch capabilities for the new role
+            // Fetch capabilities - the server will determine role from the API key
             await fetchCapabilities();
             
             resultDiv.innerHTML = '<div class="success">Login successful! Redirecting...</div>';
